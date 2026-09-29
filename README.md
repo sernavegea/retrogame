@@ -22,7 +22,7 @@ No abras `index.html` con doble clic desde el disco: el guardado y los dobles ne
 
 ### Teclas del invitado
 
-Flechas para moverse, Z = B, X = A, A = Y, S = X, Q = L, W = R, Enter = Start, Mayúsculas = Select.
+Flechas para moverse, Z = B, X = A, A = Y, S = X, Q = L, W = R, 1 = L2, 2 = R2, Enter = Start, Mayúsculas = Select.
 
 ## Limitaciones conocidas
 

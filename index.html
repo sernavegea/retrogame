@@ -463,6 +463,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
         <option value="segaMS">Master System</option>
         <option value="gb">Game Boy / Color</option>
         <option value="gba">Game Boy Advance</option>
+        <option value="psx">PlayStation</option>
       </select>
     </div>
     <fieldset class="campo">
@@ -593,6 +594,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
     <div class="accion-btns">
       <button data-b="1">Y</button><button data-b="9">X</button><button data-b="11">R</button>
       <button data-b="0">B</button><button data-b="8">A</button><button data-b="10">L</button>
+      <button data-b="12">L2</button><button data-b="2">Sel</button><button data-b="13">R2</button>
       <button data-b="3" class="start">Start</button>
     </div>
   </div>
@@ -623,7 +625,7 @@ const COLORES = ['#35f2ff','#ff3fa4','#ffe14d','#7dff6a','#ff8a2a','#b98cff','#f
 const DEMOS = ['barras','estrellas','carretera','bloques'];
 
 const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
-const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11 };
+const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11, L2:12, R2:13 };
 
 /* ================== Utilidades ================== */
 const $ = id => document.getElementById(id);
@@ -907,10 +909,22 @@ function abrirMontar(m){
   $('f-rom').value = ''; $('f-bios').value = '';
   $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
   $('f-bios-actual').textContent = m && m.biosNombre ? `Ahora: ${m.biosNombre}.` : 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).';
-  $('f-quitar').hidden = !m; $('f-error').textContent = '';
+  $('f-quitar').hidden = !m; $('f-error').textContent = ''; pintarPistas();
   dlgMontar.showModal(); $('f-nombre').focus();
 }
 $('f-cancelar').addEventListener('click', () => dlgMontar.close());
+const PISTAS = {
+  arcade:        ['En arcade, el .zip con su nombre original, sin renombrar.', 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).'],
+  mame2003_plus: ['En arcade, el .zip con su nombre original, sin renombrar.', 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).'],
+  psx:           ['Un .chd o .pbp, o un .zip con el .cue y sus .bin. Para juegos de varios discos, un .zip con todos los discos y un archivo .m3u que los liste.',
+                  'Opcional, pero mejora la compatibilidad: la BIOS de tu consola (por ejemplo scph5501.bin).'],
+};
+function pintarPistas(){
+  if (editando) return;
+  const [r, b] = PISTAS[$('f-sistema').value] || ['El archivo del juego (.zip también vale).', 'No suele hacer falta.'];
+  $('f-rom-actual').textContent = r; $('f-bios-actual').textContent = b;
+}
+$('f-sistema').addEventListener('change', pintarPistas);
 
 $('form-montar').addEventListener('submit', async e => {
   e.preventDefault();
@@ -922,7 +936,8 @@ $('form-montar').addEventListener('submit', async e => {
   });
   if (rom){ m.rom = rom; m.romNombre = rom.name; }
   if (bios){ m.bios = bios; m.biosNombre = bios.name; }
-  $('f-guardar').disabled = true; $('f-error').textContent = 'Guardando…';
+  $('f-guardar').disabled = true;
+  $('f-error').textContent = rom && rom.size > 150 * 1048576 ? `Guardando ${Math.round(rom.size / 1048576)} MB, puede tardar un poco…` : 'Guardando…';
   try {
     await guardarMaquina(m);
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
@@ -1266,10 +1281,10 @@ function fijar(b, v){
 function soltarTodo(){ [...pulsados].forEach(b => fijar(b, false)); }
 $('mando').addEventListener('pointerdown', e => { const b = e.target.closest('[data-b]'); if (!b) return; e.preventDefault(); b.setPointerCapture(e.pointerId); fijar(+b.dataset.b, true); });
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev => $('mando').addEventListener(ev, e => { const b = e.target.closest('[data-b]'); if (b) fijar(+b.dataset.b, false); }));
-const TECLAS = { ArrowUp:BTN.ARRIBA, ArrowDown:BTN.ABAJO, ArrowLeft:BTN.IZQ, ArrowRight:BTN.DER, z:BTN.B, x:BTN.A, a:BTN.Y, s:BTN.X, q:BTN.L, w:BTN.R, Enter:BTN.START, Shift:BTN.SELECT };
+const TECLAS = { ArrowUp:BTN.ARRIBA, ArrowDown:BTN.ABAJO, ArrowLeft:BTN.IZQ, ArrowRight:BTN.DER, z:BTN.B, x:BTN.A, a:BTN.Y, s:BTN.X, q:BTN.L, w:BTN.R, '1':BTN.L2, '2':BTN.R2, Enter:BTN.START, Shift:BTN.SELECT };
 addEventListener('keydown', e => { if (modo !== 'invitado' || document.querySelector('dialog[open]')) return; const b = TECLAS[e.key.length === 1 ? e.key.toLowerCase() : e.key]; if (b !== undefined){ e.preventDefault(); fijar(b, true); } });
 addEventListener('keyup', e => { if (modo !== 'invitado') return; const b = TECLAS[e.key.length === 1 ? e.key.toLowerCase() : e.key]; if (b !== undefined) fijar(b, false); });
-const PAD = { 0:BTN.B, 1:BTN.A, 2:BTN.Y, 3:BTN.X, 4:BTN.L, 5:BTN.R, 8:BTN.SELECT, 9:BTN.START, 12:BTN.ARRIBA, 13:BTN.ABAJO, 14:BTN.IZQ, 15:BTN.DER };
+const PAD = { 0:BTN.B, 1:BTN.A, 2:BTN.Y, 3:BTN.X, 4:BTN.L, 5:BTN.R, 6:BTN.L2, 7:BTN.R2, 8:BTN.SELECT, 9:BTN.START, 12:BTN.ARRIBA, 13:BTN.ABAJO, 14:BTN.IZQ, 15:BTN.DER };
 const padPrevio = {};
 function leerMandoFisico(){
   const pad = navigator.getGamepads && [...navigator.getGamepads()].find(Boolean);
@@ -1505,7 +1520,7 @@ const intro = $('intro'), inicioIntro = performance.now();
 })();
 let introFuera = false;
 function entrarSalon(){
-  if (introFuera) return; introFuera = true;
+  if (introFuera || !intro.isConnected) return; introFuera = true;
   const puerta = $('intro-puerta').getBoundingClientRect(), svg = intro.querySelector('svg');
   svg.style.transformOrigin = `${puerta.left + puerta.width/2}px ${puerta.top + puerta.height*.55}px`;
   intro.classList.add('abriendo');
