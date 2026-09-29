@@ -169,6 +169,30 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 .accion-btns button{height:54px;border-radius:50%}
 .accion-btns .start{grid-column:1/-1;height:40px;border-radius:20px}
 
+.iniciales{display:flex;gap:.5rem;justify-content:center;margin:.3rem 0 .2rem}
+.iniciales input{width:3.2rem;height:3.8rem;text-align:center;font-family:var(--fuente-rotulo);font-size:2rem;text-transform:uppercase;
+  border-radius:8px;border:3px solid #5b5078;background:#0d0a1c;color:var(--neon-amarillo);caret-color:var(--neon-cian)}
+.iniciales input:focus{outline:none;border-color:var(--neon-cian);box-shadow:0 0 14px rgba(53,242,255,.4)}
+.foto-puntos{display:block;width:100%;max-width:320px;margin:0 auto .8rem;aspect-ratio:4/3;object-fit:contain;background:#000;border:3px solid #000;border-radius:8px}
+.foto-puntos[hidden]{display:none}
+.puntos-input{font-family:var(--fuente-rotulo)!important;font-size:1.6rem!important;text-align:right}
+.tabla-records{list-style:none;margin:0;padding:0;counter-reset:pos}
+.tabla-records li{display:grid;grid-template-columns:2.2rem 56px 4rem 1fr auto;gap:.6rem;align-items:center;padding:.35rem 0;border-bottom:1px dashed rgba(167,159,209,.25);counter-increment:pos}
+.tabla-records li::before{content:counter(pos) "º";color:var(--texto-suave)}
+.tabla-records li:first-child{color:var(--neon-amarillo)}
+.tabla-records img{width:56px;height:42px;object-fit:cover;background:#000;border-radius:4px;cursor:zoom-in}
+.tabla-records .sin-foto{width:56px;height:42px;background:#0d0a1c;border-radius:4px}
+.tabla-records b{font-family:var(--fuente-rotulo);font-weight:400;letter-spacing:.1em}
+.tabla-records .pts{text-align:right;font-family:var(--fuente-rotulo)}
+.tabla-records .borrar{background:none;border:0;color:var(--texto-suave);cursor:pointer;font-size:1.3rem;padding:0 .3rem}
+.tabla-records .nuevo{background:rgba(255,225,77,.12)}
+.stats{color:var(--texto-suave);margin:.8rem 0 0}
+.foto-grande{display:block;max-width:100%;margin:0 auto;image-rendering:pixelated}
+.record-pantalla{font-size:clamp(1rem,3vw,1.6rem);line-height:1.15}
+.record-pantalla h3{margin:0 0 .4rem;font-family:var(--fuente-rotulo);font-weight:400;color:var(--neon-amarillo);font-size:clamp(1.1rem,3.4vw,1.8rem)}
+.record-pantalla ol{list-style:none;margin:0;padding:0;text-align:left;display:inline-block}
+.record-pantalla li{display:flex;gap:1.2rem;justify-content:space-between}
+
 @media (prefers-reduced-motion: reduce){ .rotulo,.parpadeo,.precio .giro{animation:none} .ficha{transition:none} }
 </style>
 </head>
@@ -178,7 +202,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 
 <div class="barra-sup">
   <span id="pista">Anda con la rueda, las flechas o arrastrando.</span>
-  <button class="enlace" id="abrir-aviso">Aviso legal</button>
+  <span class="grupo"><button class="enlace" id="abrir-copia">Copia del salón</button><button class="enlace" id="abrir-aviso">Aviso legal</button></span>
 </div>
 
 <div class="hud">
@@ -260,6 +284,58 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
   </form>
 </dialog>
 
+<!-- Apuntar puntuación -->
+<dialog id="dlg-puntos">
+  <form id="form-puntos" method="dialog">
+    <h2 id="p-titulo">Apunta tu puntuación</h2>
+    <img class="foto-puntos" id="p-foto" alt="Pantalla del juego en el momento de apuntar">
+    <div class="campo">
+      <label for="p-i0" style="text-align:center">Tus iniciales</label>
+      <div class="iniciales" id="p-iniciales">
+        <input id="p-i0" maxlength="1" autocomplete="off" aria-label="Inicial 1">
+        <input id="p-i1" maxlength="1" autocomplete="off" aria-label="Inicial 2">
+        <input id="p-i2" maxlength="1" autocomplete="off" aria-label="Inicial 3">
+      </div>
+    </div>
+    <div class="campo">
+      <label for="p-puntos">Puntos que has hecho</label>
+      <input type="text" id="p-puntos" class="puntos-input" inputmode="numeric" autocomplete="off" maxlength="12">
+    </div>
+    <p class="error" id="p-error" aria-live="polite"></p>
+    <div class="pie-dialogo">
+      <button type="button" class="boton secundario" id="p-seguir">Seguir jugando</button>
+      <button type="button" class="boton secundario" id="p-sin">Salir sin apuntar</button>
+      <button type="submit" class="boton">Guardar puntuación</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Récords de una máquina -->
+<dialog id="dlg-records">
+  <h2 id="r-titulo">Récords</h2>
+  <div id="r-contenido"></div>
+  <p class="stats" id="r-stats"></p>
+  <div class="pie-dialogo"><button class="boton" id="r-cerrar">Cerrar</button></div>
+</dialog>
+
+<dialog id="dlg-foto" style="width:auto;max-width:calc(100% - 2rem)">
+  <img class="foto-grande" id="f-grande" alt="">
+  <div class="pie-dialogo"><button class="boton" id="fg-cerrar">Cerrar</button></div>
+</dialog>
+
+<!-- Copia del salón -->
+<dialog id="dlg-copia">
+  <h2>Copia del salón</h2>
+  <p>Guarda en un archivo tus máquinas, sus juegos, los récords y tu monedero. Para tenerlo todo en otro ordenador, abre esta web allí y carga el archivo.</p>
+  <div class="pie-dialogo" style="justify-content:flex-start">
+    <button class="boton" id="c-guardar">Guardar copia</button>
+    <button class="boton secundario" id="c-cargar">Cargar copia</button>
+    <input type="file" id="c-archivo" accept=".salon" hidden>
+  </div>
+  <p class="error" id="c-estado" aria-live="polite" style="color:var(--texto-suave)"></p>
+  <div class="pie-dialogo"><button class="boton secundario" id="c-cerrar">Cerrar</button></div>
+</dialog>
+
 <!-- Aviso legal -->
 <dialog id="dlg-aviso">
   <h2>Aviso legal</h2>
@@ -300,6 +376,8 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
   <div class="acciones">
     <button class="boton" id="jugar">Jugar · 5 duros</button>
     <button class="boton secundario" id="invitar" hidden>Invitar a dobles</button>
+    <button class="boton secundario" id="apuntar" hidden>Apuntar puntuación</button>
+    <button class="boton secundario" id="ver-records">Récords</button>
     <button class="boton secundario" id="editar">Editar máquina</button>
     <button class="boton secundario" id="salir">Volver al pasillo</button>
   </div>
@@ -336,21 +414,32 @@ function cargarScript(src){
 let db;
 function abrirDB(){
   return new Promise((ok, mal) => {
-    const r = indexedDB.open('recreativos', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('maquinas', { keyPath:'id' });
+    const r = indexedDB.open('recreativos', 2);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains('maquinas')) d.createObjectStore('maquinas', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('puntos')) d.createObjectStore('puntos', { keyPath:'maquina' });
+    };
     r.onsuccess = () => { db = r.result; ok(); };
     r.onerror = () => mal(r.error);
   });
 }
-function tx(modo, fn){
+function tx(modo, fn, almacen = 'maquinas'){
   return new Promise((ok, mal) => {
-    const t = db.transaction('maquinas', modo), s = t.objectStore('maquinas'), r = fn(s);
+    const t = db.transaction(almacen, modo), s = t.objectStore(almacen), r = fn(s);
     t.oncomplete = () => ok(r && r.result); t.onerror = () => mal(t.error);
   });
 }
 const leerMaquinas = () => tx('readonly', s => s.getAll()).then(l => (l || []).sort((a,b) => a.creado - b.creado));
 const guardarMaquina = m => tx('readwrite', s => s.put(m));
-const borrarMaquina = id => tx('readwrite', s => s.delete(id));
+const borrarMaquina = id => tx('readwrite', s => s.delete(id)).then(() => tx('readwrite', s => s.delete(id), 'puntos'));
+const leerPuntos = id => tx('readonly', s => s.get(id), 'puntos').then(r => (r && r.lista) || []);
+const guardarPuntos = (id, lista) => tx('readwrite', s => s.put({ maquina:id, lista }), 'puntos');
+const todosPuntos = () => tx('readonly', s => s.getAll(), 'puntos').then(l => l || []);
+const MAX_RECORDS = 10;
+const ordenar = l => l.sort((a,b) => b.pts - a.pts || a.fecha - b.fecha).slice(0, MAX_RECORDS);
+let topPorMaquina = {};   // maquina -> mejor récord, para las pantallas del pasillo
+async function refrescarTops(){ topPorMaquina = {}; for (const r of await todosPuntos()) if (r.lista && r.lista[0]) topPorMaquina[r.maquina] = r.lista[0]; }
 
 /* ================== Monedas ================== */
 const MONEDAS = {
@@ -374,7 +463,7 @@ function monedaSVG(v, px){
 }
 
 /* ================== Estado (monedero y ajustes) ================== */
-const INICIAL = { cartera:{5:4, 25:3, 100:1}, creditos:{}, nombreSalon:'Recreativos Galaxia' };
+const INICIAL = { cartera:{5:4, 25:3, 100:1}, creditos:{}, nombreSalon:'Recreativos Galaxia', stats:{}, iniciales:'' };
 let estado;
 try { estado = Object.assign(structuredClone(INICIAL), JSON.parse(localStorage.getItem('recreativos') || '{}')); }
 catch { estado = structuredClone(INICIAL); }
@@ -473,6 +562,14 @@ function dibujar(p, t){
   if (p.demo === 'libre'){
     c.fillStyle = '#5b5078'; c.fillRect(29,14,6,20); c.fillRect(22,21,20,6);
     if (((t/700)|0) % 2){ c.fillStyle = '#a79fd1'; c.fillRect(18,40,28,1); }
+    return;
+  }
+  const top = topPorMaquina[p.m.id];
+  if (top && !reducirMov && ((t/1000 + p.semilla) % 10) > 7){
+    c.fillStyle = '#ffe14d'; c.font = '9px VT323, monospace'; c.textAlign = 'center';
+    c.fillText('RECORD', 32, 14);
+    c.fillStyle = '#fff'; c.font = '11px VT323, monospace'; c.fillText(top.ini, 32, 28);
+    c.fillStyle = col; c.fillText(abreviar(top.pts), 32, 40);
     return;
   }
   if (p.demo === 'estrellas'){
@@ -611,7 +708,7 @@ $('form-montar').addEventListener('submit', async e => {
 $('f-quitar').addEventListener('click', async () => {
   if (!editando || !confirm(`¿Quitar "${editando.nombre}" del salón? Se borrará la ROM guardada.`)) return;
   await borrarMaquina(editando.id);
-  delete estado.creditos[editando.id]; guardar();
+  delete estado.creditos[editando.id]; delete estado.stats[editando.id]; guardar();
   maquinas = await leerMaquinas();
   dlgMontar.close(); cerrar(true); construir();
 });
@@ -620,8 +717,9 @@ $('f-quitar').addEventListener('click', async () => {
 const capa = $('abierta'), ficha = $('ficha'), info = $('info'), pantalla = $('pantalla');
 let actual = null, modo = null /* 'local' | 'invitado' */, jugando = false, animando = false, iframe = null;
 
-function abrir(p){
+async function abrir(p){
   actual = p; modo = 'local'; jugando = false;
+  listaAbierta = await leerPuntos(p.m.id);
   capa.classList.remove('invitado','jugando');
   bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false');
   pintarFicha(); pintarPantalla(); pintarBandeja();
@@ -636,6 +734,8 @@ function pintarFicha(){
   $('jugar').hidden = modo === 'invitado' || jugando;
   $('editar').hidden = modo === 'invitado' || jugando;
   $('invitar').hidden = !(modo === 'local' && jugando);
+  $('apuntar').hidden = !(modo === 'local' && jugando);
+  $('ver-records').hidden = modo === 'invitado' || jugando;
   $('salir').textContent = jugando ? 'Salir de la partida' : 'Volver al pasillo';
   $('texto-bandeja').textContent = jugando ? 'Echa otra moneda para más créditos' : 'Toca una moneda para echarla';
 }
@@ -651,6 +751,7 @@ function mostrarCapa(desde){
 function cerrar(forzar){
   if (animando && !forzar) return;
   if (jugando && !forzar && !confirm('¿Salir de la partida?')) return;
+  sumarTiempo(); clearInterval(turnoPantalla);
   pararEmulador(); cerrarRed();
   capa.classList.remove('visible','jugando','invitado');
   jugando = false; const antes = actual; modo = null;
@@ -658,9 +759,36 @@ function cerrar(forzar){
 }
 const nombreSistema = s => $('f-sistema').querySelector(`option[value="${s}"]`)?.textContent || s;
 const creditos = () => estado.creditos[actual.m.id] || 0;
+const stats = id => (estado.stats[id] = estado.stats[id] || { partidas:0, segundos:0, pesetas:0 });
+let inicioPartida = 0;
+function sumarTiempo(){
+  if (inicioPartida && actual){ stats(actual.m.id).segundos += Math.round((Date.now() - inicioPartida) / 1000); guardar(); }
+  inicioPartida = 0;
+}
+function textoStats(id){
+  const st = estado.stats[id];
+  if (!st || (!st.partidas && !st.segundos)) return 'Todavía no se ha jugado ninguna partida en esta máquina.';
+  const h = Math.floor(st.segundos / 3600), min = Math.round((st.segundos % 3600) / 60);
+  const tiempo = h ? `${h} h ${min} min` : `${min} min`;
+  return `${st.partidas} partida${st.partidas > 1 ? 's' : ''} jugada${st.partidas > 1 ? 's' : ''}, ${tiempo} de juego y ${st.pesetas} pesetas gastadas.`;
+}
+const abreviar = n => n >= 1e6 ? (n/1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e4 ? Math.round(n/1e3) + 'K' : String(n);
 
+let turnoPantalla = null, listaAbierta = [];
 function pintarPantalla(){
+  clearInterval(turnoPantalla);
   if (jugando) return;
+  if (modo === 'local' && listaAbierta.length && !reducirMov){
+    let ver = false;
+    turnoPantalla = setInterval(() => { ver = !ver; if (!jugando) (ver ? pintarRecordsPantalla : pintarPantallaBase)(); }, 3500);
+  }
+  pintarPantallaBase();
+}
+function pintarRecordsPantalla(){
+  pantalla.innerHTML = `<div id="mensaje" class="record-pantalla"><h3>Récords</h3><ol>${listaAbierta.slice(0,5).map(r =>
+    `<li><span>${escapar(r.ini)}</span><span>${r.pts.toLocaleString('es-ES')}</span></li>`).join('')}</ol></div>`;
+}
+function pintarPantallaBase(){
   const msg = modo === 'invitado'
     ? `<p>Conectando con la partida…</p>`
     : !creditos() ? `<p class="parpadeo">INSERTE MONEDA</p><p>5 duros la partida</p>`
@@ -707,6 +835,7 @@ function echar(v, desde){
         const n = CREDITOS_POR[v];
         sonido('moneda'); sonido('credito');
         ranura.classList.add('destello'); setTimeout(() => ranura.classList.remove('destello'), 500);
+        if (modo !== 'invitado'){ stats(actual.m.id).pesetas += v; guardar(); }
         if (modo === 'invitado') enviar({ t:'moneda', n });
         else if (jugando) meterFichas(0, n);
         else { estado.creditos[actual.m.id] = creditos() + n; guardar(); pintarPantalla(); }
@@ -719,7 +848,9 @@ function echar(v, desde){
 /* ---------- Jugar ---------- */
 $('jugar').addEventListener('click', jugar);
 $('editar').addEventListener('click', () => abrirMontar(actual.m));
-$('salir').addEventListener('click', () => cerrar());
+$('salir').addEventListener('click', () => { if (modo === 'local' && jugando && inicioPartida) pedirPuntuacion(true); else cerrar(); });
+$('apuntar').addEventListener('click', () => pedirPuntuacion(false));
+$('ver-records').addEventListener('click', () => mostrarRecords(actual.m));
 async function jugar(){
   if (animando || jugando) return;
   if (!creditos()){
@@ -779,6 +910,7 @@ addEventListener('message', e => {
   if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'ejs-inicio') return;
   info.textContent = ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
   if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
+  stats(actual.m.id).partidas++; guardar(); inicioPartida = Date.now();
   iframe.focus();
 });
 function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
@@ -914,6 +1046,168 @@ function leerMandoFisico(){
   for (const [b, v] of Object.entries(estadoPad)) if (padPrevio[b] !== v){ padPrevio[b] = v; fijar(+b, v); }
 }
 
+/* ================== Puntuaciones ================== */
+const dlgPuntos = $('dlg-puntos'), celdas = [0,1,2].map(i => $('p-i' + i));
+let alSalir = false, fotoActual = null;
+function pausar(si){ const e = emu(); try { si ? e && e.pause && e.pause() : e && e.play && e.play(); } catch {} }
+async function capturar(){
+  const e = emu();
+  if (!e || !e.screenshot) return null;
+  const blob = await Promise.race([new Promise(r => e.screenshot(b => r(b))), new Promise(r => setTimeout(() => r(null), 2500))]);
+  if (!blob) return null;
+  const img = await createImageBitmap(blob).catch(() => null);
+  if (!img) return null;
+  const ancho = 320, alto = Math.round(ancho * img.height / img.width);
+  const c = document.createElement('canvas'); c.width = ancho; c.height = alto;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, ancho, alto);
+  return c.toDataURL('image/jpeg', .8);
+}
+async function pedirPuntuacion(saliendo){
+  alSalir = saliendo;
+  pausar(true);
+  fotoActual = await capturar();
+  $('p-foto').hidden = !fotoActual; if (fotoActual) $('p-foto').src = fotoActual;
+  $('p-titulo').textContent = saliendo ? 'Fin de partida' : 'Apunta tu puntuación';
+  $('p-sin').hidden = !saliendo;
+  $('p-seguir').textContent = saliendo ? 'Seguir jugando' : 'Cancelar';
+  const ini = (estado.iniciales || '').padEnd(3, ' ');
+  celdas.forEach((c, i) => c.value = ini[i].trim());
+  $('p-puntos').value = ''; $('p-error').textContent = '';
+  dlgPuntos.showModal();
+  (estado.iniciales ? $('p-puntos') : celdas[0]).focus();
+}
+celdas.forEach((c, i) => {
+  c.addEventListener('input', () => { c.value = c.value.replace(/[^a-zñ0-9]/gi, '').toUpperCase().slice(-1); if (c.value && i < 2) celdas[i+1].focus(); else if (c.value) $('p-puntos').focus(); });
+  c.addEventListener('keydown', e => { if (e.key === 'Backspace' && !c.value && i > 0) celdas[i-1].focus(); });
+});
+$('p-puntos').addEventListener('input', e => {
+  const n = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  e.target.value = n ? Number(n).toLocaleString('es-ES') : '';
+});
+dlgPuntos.addEventListener('cancel', e => { e.preventDefault(); volverAlJuego(); });
+function volverAlJuego(){ dlgPuntos.close(); pausar(false); if (iframe) iframe.focus(); }
+$('p-seguir').addEventListener('click', volverAlJuego);
+$('p-sin').addEventListener('click', () => { dlgPuntos.close(); cerrar(true); });
+$('form-puntos').addEventListener('submit', async e => {
+  e.preventDefault();
+  const ini = celdas.map(c => c.value).join('');
+  const pts = parseInt($('p-puntos').value.replace(/\D/g, ''), 10);
+  if (ini.length < 1){ $('p-error').textContent = 'Pon al menos una inicial.'; celdas[0].focus(); return; }
+  if (!pts){ $('p-error').textContent = 'Escribe los puntos que has hecho.'; $('p-puntos').focus(); return; }
+  estado.iniciales = ini; guardar();
+  const nuevo = { ini, pts, fecha: Date.now(), foto: fotoActual };
+  const lista = ordenar([...(await leerPuntos(actual.m.id)), nuevo]);
+  const pos = lista.indexOf(nuevo) + 1;
+  await guardarPuntos(actual.m.id, lista);
+  listaAbierta = lista; await refrescarTops();
+  dlgPuntos.close();
+  if (pos === 1) sonido('credito');
+  const m = actual.m;
+  if (alSalir) cerrar(true); else { pausar(false); if (iframe) iframe.focus(); }
+  mostrarRecords(m, pos ? nuevo : null, pos ? '' : `No has entrado en los ${MAX_RECORDS} mejores esta vez.`);
+});
+
+async function mostrarRecords(m, resaltar, aviso){
+  const lista = await leerPuntos(m.id);
+  $('r-titulo').textContent = 'Récords de ' + m.nombre;
+  $('r-contenido').innerHTML = (aviso ? `<p>${escapar(aviso)}</p>` : '') + (lista.length
+    ? `<ol class="tabla-records">${lista.map((r, i) => `<li class="${resaltar && r.fecha === resaltar.fecha ? 'nuevo' : ''}">
+        ${r.foto ? `<img src="${r.foto}" alt="Pantalla de la partida de ${escapar(r.ini)}" data-i="${i}">` : '<span class="sin-foto"></span>'}
+        <b>${escapar(r.ini)}</b><span class="pts">${r.pts.toLocaleString('es-ES')}</span>
+        <button class="borrar" data-borrar="${i}" aria-label="Borrar la puntuación de ${escapar(r.ini)}">×</button></li>`).join('')}</ol>`
+    : '<p>Aún no hay récords. Al salir de una partida podrás apuntar tus puntos.</p>');
+  $('r-stats').textContent = textoStats(m.id);
+  $('r-contenido').onclick = async e => {
+    const img = e.target.closest('img[data-i]');
+    if (img){ $('f-grande').src = img.src; $('f-grande').alt = img.alt; $('dlg-foto').showModal(); return; }
+    const b = e.target.closest('[data-borrar]');
+    if (b && confirm('¿Borrar esta puntuación?')){
+      lista.splice(+b.dataset.borrar, 1); await guardarPuntos(m.id, lista);
+      if (actual && actual.m.id === m.id) listaAbierta = lista;
+      await refrescarTops(); mostrarRecords(m);
+    }
+  };
+  if (!$('dlg-records').open) $('dlg-records').showModal();
+}
+$('r-cerrar').addEventListener('click', () => $('dlg-records').close());
+$('fg-cerrar').addEventListener('click', () => $('dlg-foto').close());
+
+/* ================== Copia del salón (exportar / importar) ==================
+   Formato .salon: "SALON1\n" + 10 dígitos con el tamaño de la cabecera + cabecera JSON
+   + los archivos de ROM y BIOS uno detrás de otro, en el orden que indica la cabecera. */
+const MAGIA = 'SALON1\n';
+const dlgCopia = $('dlg-copia'), cEstado = $('c-estado');
+$('abrir-copia').addEventListener('click', () => { cEstado.textContent = ''; dlgCopia.showModal(); });
+$('c-cerrar').addEventListener('click', () => dlgCopia.close());
+
+$('c-guardar').addEventListener('click', async () => {
+  const lista = maquinas.filter(m => m.rom);
+  if (!lista.length){ cEstado.textContent = 'Tu salón no tiene máquinas todavía. Monta alguna antes de guardar la copia.'; return; }
+  cEstado.textContent = 'Preparando la copia…';
+  const partes = [], cabecera = { version:1, fecha:new Date().toISOString(),
+    salon:{ nombreSalon:estado.nombreSalon, cartera:estado.cartera, creditos:estado.creditos, stats:estado.stats, iniciales:estado.iniciales }, maquinas:[] };
+  const ids = new Set(lista.map(m => m.id));
+  cabecera.puntos = (await todosPuntos()).filter(r => ids.has(r.maquina));
+  for (const m of lista){
+    const f = { id:m.id, creado:m.creado, nombre:m.nombre, sistema:m.sistema, color:m.color, romNombre:m.romNombre, romTam:m.rom.size };
+    partes.push(m.rom);
+    if (m.bios){ f.biosNombre = m.biosNombre; f.biosTam = m.bios.size; partes.push(m.bios); }
+    cabecera.maquinas.push(f);
+  }
+  const json = new TextEncoder().encode(JSON.stringify(cabecera));
+  const archivo = new Blob([MAGIA, String(json.length).padStart(10, '0'), json, ...partes], { type:'application/octet-stream' });
+  const url = URL.createObjectURL(archivo), a = document.createElement('a');
+  a.href = url; a.download = `mi-salon-${new Date().toISOString().slice(0,10)}.salon`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  const mb = (archivo.size / 1048576).toFixed(1);
+  cEstado.textContent = `Copia guardada: ${lista.length} máquina${lista.length > 1 ? 's' : ''}, ${mb} MB. Búscala en tu carpeta de descargas.`;
+});
+
+$('c-cargar').addEventListener('click', () => $('c-archivo').click());
+$('c-archivo').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  cEstado.textContent = 'Leyendo la copia…';
+  try {
+    const inicio = await f.slice(0, 17).text();
+    if (!inicio.startsWith(MAGIA)) throw new Error('formato');
+    const largo = parseInt(inicio.slice(7, 17), 10);
+    const cab = JSON.parse(await f.slice(17, 17 + largo).text());
+    let pos = 17 + largo;
+    const nuevas = cab.maquinas.map(m => {
+      const maq = { id:m.id, creado:m.creado, nombre:m.nombre, sistema:m.sistema, color:m.color, romNombre:m.romNombre };
+      maq.rom = new File([f.slice(pos, pos + m.romTam)], m.romNombre); pos += m.romTam;
+      if (m.biosNombre){ maq.bios = new File([f.slice(pos, pos + m.biosTam)], m.biosNombre); maq.biosNombre = m.biosNombre; pos += m.biosTam; }
+      return maq;
+    });
+    if (pos > f.size) throw new Error('incompleto');
+    const repetidas = nuevas.filter(n => maquinas.some(m => m.id === n.id)).length;
+    const aviso = `Esta copia tiene ${nuevas.length} máquina${nuevas.length > 1 ? 's' : ''}` +
+      (repetidas ? ` (${repetidas} ya están en este salón y se actualizarán)` : '') +
+      '. También se usará el monedero y el nombre del salón de la copia. ¿Cargarla?';
+    if (!confirm(aviso)){ cEstado.textContent = ''; return; }
+    cEstado.textContent = 'Guardando las máquinas…';
+    for (const m of nuevas){ m.rom = new File([await m.rom.arrayBuffer()], m.romNombre); if (m.bios) m.bios = new File([await m.bios.arrayBuffer()], m.biosNombre); await guardarMaquina(m); }
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+    Object.assign(estado, { nombreSalon: cab.salon.nombreSalon || estado.nombreSalon, cartera: cab.salon.cartera || estado.cartera,
+      creditos: Object.assign({}, estado.creditos, cab.salon.creditos),
+      stats: Object.assign({}, estado.stats, cab.salon.stats || {}), iniciales: estado.iniciales || cab.salon.iniciales || '' });
+    for (const r of (cab.puntos || [])){
+      const mios = await leerPuntos(r.maquina), vistos = new Set(mios.map(x => x.fecha + x.ini + x.pts));
+      await guardarPuntos(r.maquina, ordenar([...mios, ...r.lista.filter(x => !vistos.has(x.fecha + x.ini + x.pts))]));
+    }
+    await refrescarTops();
+    guardar();
+    maquinas = await leerMaquinas(); construir(); pintarCartera();
+    cEstado.textContent = `Salón cargado: ${nuevas.length} máquina${nuevas.length > 1 ? 's' : ''}.`;
+  } catch (err) {
+    cEstado.textContent = err.message === 'formato' ? 'Ese archivo no es una copia del salón.'
+      : err.message === 'incompleto' ? 'La copia está incompleta o dañada. Vuelve a guardarla en el otro ordenador.'
+      : 'No se pudo cargar la copia. Puede que el navegador no tenga espacio libre.';
+  }
+});
+
 /* ================== Aviso, teclado y arranque ================== */
 $('abrir-aviso').addEventListener('click', () => $('dlg-aviso').showModal());
 $('cerrar-aviso').addEventListener('click', () => $('dlg-aviso').close());
@@ -924,7 +1218,7 @@ addEventListener('keydown', e => {
 let tRes; addEventListener('resize', () => { clearTimeout(tRes); tRes = setTimeout(construir, 200); });
 
 (async () => {
-  try { await abrirDB(); maquinas = await leerMaquinas(); await quitarLibresAntiguas(); }
+  try { await abrirDB(); maquinas = await leerMaquinas(); await quitarLibresAntiguas(); await refrescarTops(); }
   catch { $('pista').textContent = 'Este navegador no permite guardar máquinas (¿modo privado?).'; }
   construir(); pintarCartera(); requestAnimationFrame(bucle);
 })();
