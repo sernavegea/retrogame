@@ -4,13 +4,15 @@ Salón recreativo de los 90 en el navegador. Cada visitante monta sus propias m�
 
 ## Publicar en GitHub Pages
 
-1. Crea un repositorio público y sube `index.html`, `README.md` y `LICENSE`.
+1. Crea un repositorio público y sube `index.html`, `manifest.webmanifest`, `sw.js`, `README.md`, `LICENSE` y la carpeta `iconos`.
 2. En el repositorio, ve a Settings → Pages, elige la rama `main` y la carpeta raíz, y guarda.
 3. En un par de minutos la web estará en `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/`.
 
 No abras `index.html` con doble clic desde el disco: el guardado y los dobles necesitan servirse por `https`.
 
 ## Cómo funciona
+
+- **App instalable:** en Chrome/Edge (Android y ordenador) aparece "Instalar app" arriba a la derecha. En iPhone: Safari → Compartir → Añadir a pantalla de inicio. Al actualizar la web, sube también `sw.js` si cambia y sube el número de `VERSION` que tiene dentro.
 
 
 - **Máquinas:** cada usuario pulsa "Montar máquina" o la máquina libre, pone el nombre, el sistema, el color y la ROM. Todo se guarda en IndexedDB, en su navegador. La web no sube ni aloja ningún juego.

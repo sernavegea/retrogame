@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Recreativos Galaxia</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="iconos/favicon-32.png">
+<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Recreativos">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#05030c">
 <meta name="description" content="Tu propio salón recreativo de los 90 en el navegador. Monta tus máquinas con tus ROMs y juega a dobles con un código.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -193,6 +201,28 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 .record-pantalla ol{list-style:none;margin:0;padding:0;text-align:left;display:inline-block}
 .record-pantalla li{display:flex;gap:1.2rem;justify-content:space-between}
 
+/* Pantalla completa (sobre todo para móvil) */
+.barra-juego{display:none}
+.abierta.maximizada{overflow:hidden}
+.abierta.maximizada .pantalla-grande{position:fixed;inset:0;z-index:20;border-radius:0;aspect-ratio:auto;padding:0;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:none}
+.abierta.maximizada .pantalla-grande::after{display:none}
+.abierta.maximizada .pantalla-grande iframe,.abierta.maximizada .pantalla-grande video{position:relative;inset:auto}
+.abierta.maximizada .barra-juego{
+  display:flex;gap:.4rem;position:fixed;z-index:22;left:50%;transform:translateX(-50%);
+  top:calc(env(safe-area-inset-top,0px) + .4rem);padding:.3rem;border-radius:12px;background:rgba(5,3,12,.55);
+}
+.barra-juego button{font-family:var(--fuente-rotulo);font-size:.72rem;padding:.45rem .6rem;border-radius:8px;border:2px solid #000;cursor:pointer;
+  background:rgba(58,45,107,.9);color:var(--texto);display:flex;align-items:center;gap:.3rem}
+.barra-juego button:focus-visible{outline:3px solid var(--neon-cian);outline-offset:2px}
+.barra-juego .moneda-mini{background:rgba(90,50,23,.95);color:var(--cuero-texto)}
+.barra-juego .moneda-mini svg{width:20px;height:20px}
+.abierta.maximizada.invitado .mando{position:fixed;left:0;right:0;z-index:21;margin:0;width:auto;
+  bottom:calc(env(safe-area-inset-bottom,0px) + .6rem);padding:0 calc(env(safe-area-inset-left,0px) + .8rem) 0 calc(env(safe-area-inset-right,0px) + .8rem);pointer-events:none}
+.abierta.maximizada.invitado .mando > *{pointer-events:auto}
+.abierta.maximizada.invitado .mando button{background:rgba(47,37,80,.6);border-color:rgba(0,0,0,.6)}
+
 @media (prefers-reduced-motion: reduce){ .rotulo,.parpadeo,.precio .giro{animation:none} .ficha{transition:none} }
 </style>
 </head>
@@ -202,7 +232,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 
 <div class="barra-sup">
   <span id="pista">Anda con la rueda, las flechas o arrastrando.</span>
-  <span class="grupo"><button class="enlace" id="abrir-copia">Copia del salón</button><button class="enlace" id="abrir-aviso">Aviso legal</button></span>
+  <span class="grupo"><button class="enlace" id="instalar" hidden>Instalar app</button><button class="enlace" id="abrir-copia">Copia del salón</button><button class="enlace" id="abrir-aviso">Aviso legal</button></span>
 </div>
 
 <div class="hud">
@@ -358,6 +388,12 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
       </div>
     </div>
   </div>
+  <div class="barra-juego" id="barra-juego" aria-label="Controles de la partida">
+    <button class="moneda-mini" id="bj-moneda" aria-label="Echar una moneda de 25"><span id="bj-moneda-icono"></span><span id="bj-moneda-n"></span></button>
+    <button id="bj-apuntar">Récord</button>
+    <button id="bj-reducir">Reducir</button>
+    <button id="bj-salir">Salir</button>
+  </div>
   <div class="mando" id="mando" aria-label="Mando del jugador 2">
     <div class="cruceta">
       <button data-b="4" aria-label="Arriba">▲</button><button data-b="6" aria-label="Izquierda">◀</button>
@@ -377,6 +413,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
     <button class="boton" id="jugar">Jugar · 5 duros</button>
     <button class="boton secundario" id="invitar" hidden>Invitar a dobles</button>
     <button class="boton secundario" id="apuntar" hidden>Apuntar puntuación</button>
+    <button class="boton secundario" id="maximizar" hidden>Pantalla completa</button>
     <button class="boton secundario" id="ver-records">Récords</button>
     <button class="boton secundario" id="editar">Editar máquina</button>
     <button class="boton secundario" id="salir">Volver al pasillo</button>
@@ -735,6 +772,9 @@ function pintarFicha(){
   $('editar').hidden = modo === 'invitado' || jugando;
   $('invitar').hidden = !(modo === 'local' && jugando);
   $('apuntar').hidden = !(modo === 'local' && jugando);
+  $('maximizar').hidden = !jugando;
+  $('bj-apuntar').hidden = modo !== 'local';
+  $('bj-moneda-n').textContent = estado.cartera[25];
   $('ver-records').hidden = modo === 'invitado' || jugando;
   $('salir').textContent = jugando ? 'Salir de la partida' : 'Volver al pasillo';
   $('texto-bandeja').textContent = jugando ? 'Echa otra moneda para más créditos' : 'Toca una moneda para echarla';
@@ -751,7 +791,7 @@ function mostrarCapa(desde){
 function cerrar(forzar){
   if (animando && !forzar) return;
   if (jugando && !forzar && !confirm('¿Salir de la partida?')) return;
-  sumarTiempo(); clearInterval(turnoPantalla);
+  sumarTiempo(); clearInterval(turnoPantalla); reducir();
   pararEmulador(); cerrarRed();
   capa.classList.remove('visible','jugando','invitado');
   jugando = false; const antes = actual; modo = null;
@@ -800,6 +840,7 @@ function pintarBandeja(){
     `<button class="moneda-btn" data-v="${v}" ${estado.cartera[v] ? '' : 'disabled'} aria-label="Echar ${MONEDAS[v].nombre.toLowerCase()}, tienes ${estado.cartera[v]}">
       ${monedaSVG(v, 64)}<b>${estado.cartera[v]}</b></button>`).join('');
   pintarCartera();
+  $('bj-moneda-n').textContent = estado.cartera[25];
 }
 $('bandeja').addEventListener('click', e => {
   const b = e.target.closest('.moneda-btn'); if (!b || animando) return;
@@ -865,6 +906,7 @@ async function jugar(){
   const fichas = creditos();
   estado.creditos[actual.m.id] = 0; guardar();
   jugando = true; capa.classList.add('jugando'); pintarFicha();
+  if (esMovil) maximizar();
   iniciarEmulador(actual.m, fichas);
 }
 
@@ -889,6 +931,7 @@ async function iniciarEmulador(m, fichas){
   iframe = document.createElement('iframe');
   iframe.title = 'Juego: ' + m.nombre;
   iframe.allow = 'autoplay; gamepad; fullscreen';
+  iframe.setAttribute('allowfullscreen', '');
   iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#juego{width:100%;height:100%}</style></head>
   <body><div id="juego"></div><script>
     const d = parent.__juego;
@@ -1000,6 +1043,7 @@ function entrarComoInvitado(codigo){
         if (!pantalla.querySelector('video')) pantalla.innerHTML = '<div id="mensaje"><p>Conectando con la partida…</p></div>';
         info.textContent = d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
         mostrarCapa(null);
+        if (esMovil) maximizar();
       }
     });
     conexion.on('close', () => { if (unido){ info.textContent = 'El anfitrión ha cerrado la partida.'; soltarTodo(); } });
@@ -1045,6 +1089,42 @@ function leerMandoFisico(){
   if (ay < -.5) estadoPad[BTN.ARRIBA] = true; if (ay > .5) estadoPad[BTN.ABAJO] = true;
   for (const [b, v] of Object.entries(estadoPad)) if (padPrevio[b] !== v){ padPrevio[b] = v; fijar(+b, v); }
 }
+
+/* ================== Pantalla completa ================== */
+const esMovil = matchMedia('(pointer: coarse)').matches;
+$('bj-moneda-icono').innerHTML = monedaSVG(25, 22);
+function maximizar(){
+  capa.classList.add('maximizada');
+  const raiz = document.documentElement;
+  const pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+  if (pedir && !document.fullscreenElement){
+    try {
+      const r = pedir.call(raiz, { navigationUI:'hide' });
+      if (r && r.then) r.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+    } catch {}
+  }
+  setTimeout(() => { if (iframe) iframe.focus(); }, 300);
+}
+function reducir(){
+  capa.classList.remove('maximizada');
+  try { screen.orientation && screen.orientation.unlock && screen.orientation.unlock(); } catch {}
+  const salir = document.exitFullscreen || document.webkitExitFullscreen;
+  if ((document.fullscreenElement || document.webkitFullscreenElement) && salir) salir.call(document).catch?.(() => {});
+}
+$('maximizar').addEventListener('click', maximizar);
+$('bj-reducir').addEventListener('click', reducir);
+$('bj-salir').addEventListener('click', () => $('salir').click());
+$('bj-apuntar').addEventListener('click', () => $('apuntar').click());
+$('bj-moneda').addEventListener('click', () => {
+  if (animando) return;
+  const v = estado.cartera[25] ? 25 : estado.cartera[100] ? 100 : 0;
+  if (!v){ info.textContent = 'No te quedan monedas. Sal de la pantalla completa y cambia en tu monedero.'; return; }
+  estado.cartera[v]--; guardar(); pintarBandeja(); sonido('moneda'); sonido('credito');
+  const n = CREDITOS_POR[v];
+  if (modo === 'invitado') enviar({ t:'moneda', n });
+  else { stats(actual.m.id).pesetas += v; guardar(); meterFichas(0, n); }
+  $('bj-moneda-n').textContent = estado.cartera[25];
+});
 
 /* ================== Puntuaciones ================== */
 const dlgPuntos = $('dlg-puntos'), celdas = [0,1,2].map(i => $('p-i' + i));
@@ -1215,6 +1295,18 @@ addEventListener('keydown', e => {
   if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
   if (capa.classList.contains('visible')) cerrar(); else { bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false'); }
 });
+/* ================== App instalable ================== */
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+let avisoInstalar = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); avisoInstalar = e; $('instalar').hidden = false; });
+$('instalar').addEventListener('click', async () => {
+  if (!avisoInstalar) return;
+  avisoInstalar.prompt();
+  await avisoInstalar.userChoice.catch(() => {});
+  avisoInstalar = null; $('instalar').hidden = true;
+});
+addEventListener('appinstalled', () => { $('instalar').hidden = true; });
+
 let tRes; addEventListener('resize', () => { clearTimeout(tRes); tRes = setTimeout(construir, 200); });
 
 (async () => {
