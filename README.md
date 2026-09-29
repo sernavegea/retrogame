@@ -4,7 +4,7 @@ Salón recreativo de los 90 en el navegador. Cada visitante monta sus propias m�
 
 ## Publicar en GitHub Pages
 
-1. Crea un repositorio público y sube `index.html`, `README.md`, `LICENSE` y la carpeta `roms` entera (en la web de GitHub puedes arrastrar la carpeta tal cual).
+1. Crea un repositorio público y sube `index.html`, `README.md` y `LICENSE`.
 2. En el repositorio, ve a Settings → Pages, elige la rama `main` y la carpeta raíz, y guarda.
 3. En un par de minutos la web estará en `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/`.
 
@@ -12,7 +12,6 @@ No abras `index.html` con doble clic desde el disco: el guardado y los dobles ne
 
 ## Cómo funciona
 
-- **Juegos libres incluidos:** la primera vez que alguien entra, el salón monta solo cuatro máquinas con juegos homebrew de licencia libre (carpeta `roms/`, créditos en `roms/CREDITOS.md`). Si los quita, puede recuperarlos desde "Montar máquina" → "Añadir los juegos libres".
 
 - **Máquinas:** cada usuario pulsa "Montar máquina" o la máquina libre, pone el nombre, el sistema, el color y la ROM. Todo se guarda en IndexedDB, en su navegador. La web no sube ni aloja ningún juego.
 - **Emulación:** EmulatorJS 4.2.3 desde su CDN, dentro de un iframe por partida. Para cambiar de versión, edita `EJS_DATOS` al principio del script (por ejemplo `https://cdn.emulatorjs.org/stable/data/`).

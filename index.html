@@ -110,8 +110,6 @@ dialog::backdrop{background:rgba(5,3,12,.75)}
 .campo{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.9rem}
 .campo label,.campo legend{font-size:1.15rem}
 .campo small{color:var(--texto-suave);font-size:1rem;line-height:1.1}
-#f-libres-zona[hidden]{display:none}
-#f-libres{color:var(--neon-cian)}
 .campo input[type=text],.campo select{padding:.5rem .6rem;border-radius:6px;border:2px solid #5b5078;background:#0d0a1c;font-size:1.25rem}
 .campo input[type=text]:focus,.campo select:focus{outline:2px solid var(--neon-cian);outline-offset:1px}
 .campo input[type=file]{font-size:1rem}
@@ -205,7 +203,6 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 <dialog id="dlg-montar">
   <form id="form-montar" method="dialog">
     <h2 id="titulo-montar">Montar máquina</h2>
-    <p class="campo" id="f-libres-zona"><small>¿No tienes juegos? El salón trae varios libres y gratuitos. <button type="button" class="enlace" id="f-libres">Añadir los juegos libres</button></small></p>
     <div class="campo">
       <label for="f-nombre">Nombre en la marquesina</label>
       <input type="text" id="f-nombre" maxlength="28" required autocomplete="off">
@@ -269,8 +266,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
   <p>Esta web no aloja ni enlaza juegos. Cada usuario carga sus propios archivos, que se guardan solo en su navegador, y es responsable de tener derecho a usarlos.</p>
   <p>La emulación funciona con EmulatorJS y los núcleos de libretro, software libre bajo licencia GPL-3.0. El código de esta web se publica bajo la misma licencia.</p>
   <p>En las partidas a dobles la imagen viaja directamente entre los dos navegadores.</p>
-  <p>El salón incluye estos juegos libres, cuyos autores permiten redistribuirlos:</p>
-  <ul id="creditos"></ul>
+
   <div class="pie-dialogo"><button class="boton" id="cerrar-aviso">Entendido</button></div>
 </dialog>
 
@@ -319,13 +315,7 @@ const PRECIO = 25;
 const CREDITOS_POR = { 25:1, 100:4 };
 const COLORES = ['#35f2ff','#ff3fa4','#ffe14d','#7dff6a','#ff8a2a','#b98cff','#ff4a4a','#4affc8','#9fd4ff','#ffffff'];
 const DEMOS = ['barras','estrellas','carretera','bloques'];
-/* Juegos libres que trae el salón (archivos en la carpeta roms/) */
-const CATALOGO = [
-  { id:'stb',   nombre:'Super Tilt Bro.',        sistema:'nes', color:'#ff3fa4', archivo:'roms/super-tilt-bro.nes',             autor:'Sylvain Gadrat', licencia:'WTFPL', jugadores:'2 jugadores a la vez (versus)', fuente:'https://github.com/sgadrat/super-tilt-bro' },
-  { id:'dabg',  nombre:'Blaster Guys',           sistema:'nes', color:'#7dff6a', archivo:'roms/double-action-blaster-guys.nes', autor:'NovaSquirrel',   licencia:'zlib',  jugadores:'2 jugadores a la vez (cooperativo, A+B para unirse)', fuente:'https://github.com/NovaSquirrel/DABG' },
-  { id:'nova',  nombre:'Nova the Squirrel',      sistema:'nes', color:'#4affc8', archivo:'roms/nova-the-squirrel.nes',          autor:'NovaSquirrel',   licencia:'GPL-3.0 y CC BY-NC-SA 4.0', jugadores:'1 jugador', fuente:'https://github.com/NovaSquirrel/NovaTheSquirrel' },
-  { id:'ucity', nombre:'µCity',                  sistema:'gb',  color:'#ffe14d', archivo:'roms/ucity.gbc',                      autor:'Antonio Niño Díaz', licencia:'GPL-3.0 y CC BY-SA 4.0', jugadores:'1 jugador', fuente:'https://github.com/AntonioND/ucity' },
-];
+
 const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
 const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11 };
 
@@ -384,7 +374,7 @@ function monedaSVG(v, px){
 }
 
 /* ================== Estado (monedero y ajustes) ================== */
-const INICIAL = { cartera:{5:4, 25:3, 100:1}, creditos:{}, nombreSalon:'Recreativos Galaxia', sembrado:false };
+const INICIAL = { cartera:{5:4, 25:3, 100:1}, creditos:{}, nombreSalon:'Recreativos Galaxia' };
 let estado;
 try { estado = Object.assign(structuredClone(INICIAL), JSON.parse(localStorage.getItem('recreativos') || '{}')); }
 catch { estado = structuredClone(INICIAL); }
@@ -568,20 +558,12 @@ $('bolsa-acciones').addEventListener('click', e => {
   sonido('moneda'); guardar(); pintarCartera(); pintarBandeja();
 });
 
-/* ================== Juegos libres ================== */
-async function sembrar(){
-  const tengo = new Set(maquinas.map(m => m.catalogo).filter(Boolean));
-  let n = 0;
-  for (const [i, c] of CATALOGO.entries()){
-    if (tengo.has(c.id)) continue;
-    await guardarMaquina({ id:'libre-' + c.id, creado: Date.now() + i, catalogo:c.id, nombre:c.nombre, sistema:c.sistema, color:c.color, url:c.archivo, romNombre:c.archivo.split('/').pop() });
-    n++;
-  }
-  estado.sembrado = true; guardar();
-  maquinas = await leerMaquinas();
-  return n;
+/* Quita las máquinas de juegos libres que montaban versiones anteriores */
+async function quitarLibresAntiguas(){
+  const viejas = maquinas.filter(m => m.catalogo);
+  for (const m of viejas){ await borrarMaquina(m.id); delete estado.creditos[m.id]; }
+  if (viejas.length){ guardar(); maquinas = await leerMaquinas(); }
 }
-const fichaCatalogo = m => m.catalogo && CATALOGO.find(c => c.id === m.catalogo);
 
 /* ================== Montar / editar máquina ================== */
 const dlgMontar = $('dlg-montar');
@@ -597,17 +579,13 @@ function abrirMontar(m){
   const col = m ? m.color : COLORES[maquinas.length % COLORES.length];
   (document.querySelector(`#f-colores input[value="${col}"]`) || document.querySelector('#f-colores input')).checked = true;
   $('f-rom').value = ''; $('f-bios').value = '';
-  $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}${m.url && !m.rom ? ' (juego libre incluido)' : ''}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
+  $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
   $('f-bios-actual').textContent = m && m.biosNombre ? `Ahora: ${m.biosNombre}.` : 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).';
-  $('f-quitar').hidden = !m; $('f-error').textContent = ''; $('f-libres-zona').hidden = !!m;
+  $('f-quitar').hidden = !m; $('f-error').textContent = '';
   dlgMontar.showModal(); $('f-nombre').focus();
 }
 $('f-cancelar').addEventListener('click', () => dlgMontar.close());
-$('f-libres').addEventListener('click', async () => {
-  const n = await sembrar();
-  dlgMontar.close(); construir();
-  $('pista').textContent = n ? `Añadidos ${n} juegos libres al salón.` : 'Ya tienes todos los juegos libres en el salón.';
-});
+
 $('form-montar').addEventListener('submit', async e => {
   e.preventDefault();
   const nombre = $('f-nombre').value.trim(), rom = $('f-rom').files[0], bios = $('f-bios').files[0];
@@ -647,10 +625,7 @@ function abrir(p){
   capa.classList.remove('invitado','jugando');
   bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false');
   pintarFicha(); pintarPantalla(); pintarBandeja();
-  const cat = fichaCatalogo(p.m);
-  info.textContent = cat
-    ? `${nombreSistema(p.m.sistema)}. Juego libre de ${cat.autor} (${cat.licencia}). ${cat.jugadores}.`
-    : `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
+  info.textContent = `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
   mostrarCapa(p.boton);
   $('jugar').focus({ preventScroll:true });
 }
@@ -769,8 +744,14 @@ async function iniciarEmulador(m, fichas){
   let rom = m.rom;
   if (!rom && m.url){
     pantalla.innerHTML = '<div id="mensaje"><p>Cargando el juego…</p></div>';
-    try { const r = await fetch(m.url); if (!r.ok) throw 0; rom = await r.blob(); }
-    catch { pantalla.innerHTML = '<div id="mensaje"><p>No se encuentra el juego</p></div>'; info.textContent = `Falta el archivo ${m.url} en la web.`; return; }
+    const dir = new URL(m.url, location.href).href;
+    let estadoHttp = 'sin respuesta';
+    try { const r = await fetch(dir, { cache:'no-store' }); estadoHttp = r.status; if (!r.ok) throw 0; rom = await r.blob(); }
+    catch {
+      pantalla.innerHTML = '<div id="mensaje"><p>No se encuentra el juego</p></div>';
+      info.innerHTML = `Buscado en:<br><a href="${dir}" target="_blank" rel="noopener" style="color:var(--neon-cian);word-break:break-all">${escapar(dir)}</a><br>Respuesta: ${escapar(String(estadoHttp))}`;
+      jugando = false; capa.classList.remove('jugando'); pintarFicha(); return;
+    }
   }
   window.__juego = { rom, romNombre: m.romNombre, bios: m.bios || null, biosNombre: m.biosNombre || '', core: m.sistema, nombre: m.nombre, color: m.color };
   pantalla.innerHTML = '';
@@ -934,7 +915,6 @@ function leerMandoFisico(){
 }
 
 /* ================== Aviso, teclado y arranque ================== */
-$('creditos').innerHTML = CATALOGO.map(c => `<li><a href="${c.fuente}" target="_blank" rel="noopener" style="color:var(--neon-cian)">${escapar(c.nombre)}</a>, de ${escapar(c.autor)}. Licencia ${escapar(c.licencia)}.</li>`).join('');
 $('abrir-aviso').addEventListener('click', () => $('dlg-aviso').showModal());
 $('cerrar-aviso').addEventListener('click', () => $('dlg-aviso').close());
 addEventListener('keydown', e => {
@@ -944,7 +924,7 @@ addEventListener('keydown', e => {
 let tRes; addEventListener('resize', () => { clearTimeout(tRes); tRes = setTimeout(construir, 200); });
 
 (async () => {
-  try { await abrirDB(); maquinas = await leerMaquinas(); if (!estado.sembrado) await sembrar(); }
+  try { await abrirDB(); maquinas = await leerMaquinas(); await quitarLibresAntiguas(); }
   catch { $('pista').textContent = 'Este navegador no permite guardar máquinas (¿modo privado?).'; }
   construir(); pintarCartera(); requestAnimationFrame(bucle);
 })();
