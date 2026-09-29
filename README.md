@@ -1,10 +1,10 @@
-# Recreativos Galaxia
+# MenteRetro
 
 Salón recreativo de los 90 en el navegador. Cada visitante monta sus propias máquinas con sus ROMs, que se quedan guardadas en su navegador, y puede invitar a un amigo a jugar a dobles con un código.
 
 ## Publicar en GitHub Pages
 
-1. Crea un repositorio público y sube `index.html`, `manifest.webmanifest`, `sw.js`, `README.md`, `LICENSE` y la carpeta `iconos`.
+1. Crea un repositorio público y sube todo el contenido de esta carpeta: `index.html`, `que-es.html`, `manifest.webmanifest`, `sw.js`, `robots.txt`, `sitemap.xml`, `README.md`, `LICENSE` y las carpetas `iconos` y `capturas`.
 2. En el repositorio, ve a Settings → Pages, elige la rama `main` y la carpeta raíz, y guarda.
 3. En un par de minutos la web estará en `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/`.
 
@@ -33,3 +33,10 @@ Flechas para moverse, Z = B, X = A, A = Y, S = X, Q = L, W = R, Enter = Start, M
 ## Licencia
 
 GPL-3.0, igual que EmulatorJS y los núcleos de libretro. Ver `LICENSE`.
+
+## Posicionamiento (SEO)
+
+1. **Dirección.** Ahora mismo es `https://sernavegea.github.io/retrogame/` en `index.html`, `que-es.html`, `robots.txt` y `sitemap.xml`. Si pasas a un dominio propio, cámbiala en esos cuatro archivos (terminada en `/`).
+2. **Dominio propio (opcional, recomendado).** Cómpralo en cualquier registrador, añade en el DNS los registros que indica GitHub y ponlo en Settings → Pages → Custom domain. Marca "Enforce HTTPS".
+3. **Google Search Console.** Entra en search.google.com/search-console, añade la web, verifícala (con dominio propio, por DNS; con github.io, subiendo el archivo HTML que te da Google) y en "Sitemaps" envía `sitemap.xml`.
+4. **Comprueba la vista previa** al compartir el enlace por WhatsApp o Telegram: tiene que salir la fachada. Si no sale, revisa el paso 1.

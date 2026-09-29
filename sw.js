@@ -1,8 +1,8 @@
-/* Service worker de Recreativos Galaxia.
+/* Service worker de MenteRetro.
    Guarda la web para que abra aunque no haya conexión.
    Las ROMs no pasan por aquí: están en el navegador de cada usuario (IndexedDB). */
-const VERSION = 'recreativos-v1';
-const BASICOS = ['./', './index.html', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/apple-touch-icon.png', './iconos/favicon-32.png'];
+const VERSION = 'menteretro-v3';
+const BASICOS = ['./', './index.html', './que-es.html', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/apple-touch-icon.png', './iconos/favicon-32.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(BASICOS)).then(() => self.skipWaiting()));
