@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recreativos Galaxia</title>
+<meta name="description" content="Tu propio salón recreativo de los 90 en el navegador. Monta tus máquinas con tus ROMs y juega a dobles con un código.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fondo:#05030c; --pared:#1d1238; --moqueta:#0d0b2a;
+  --neon-rosa:#ff3fa4; --neon-cian:#35f2ff; --neon-amarillo:#ffe14d;
+  --texto:#e9e4ff; --texto-suave:#a79fd1; --cuero:#3d2210; --cuero-texto:#ffe9c7;
+  --fuente-rotulo:'Bungee','Arial Black',Impact,sans-serif;
+  --fuente-pantalla:'VT323','Courier New',monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --fondo:#05030c; --pared:#1d1238; --texto:#e9e4ff; } }
+:root[data-theme="dark"]{ --fondo:#05030c; --pared:#1d1238; --texto:#e9e4ff; }
+:root[data-theme="light"]{ --fondo:#0c0820; --pared:#2a1c4d; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--fondo);color:var(--texto);font-family:var(--fuente-pantalla);font-size:1.2rem;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+
+/* ============ Escena 3D ============ */
+.escena{position:fixed;inset:0;overflow:hidden;background:var(--fondo);perspective:700px;perspective-origin:50% 40%;touch-action:none;user-select:none;-webkit-user-select:none}
+.mundo{position:absolute;left:50%;top:40%;width:0;height:0;transform-style:preserve-3d}
+.plano{position:absolute;left:0;top:0;transform-origin:0 0}
+.suelo{
+  background:linear-gradient(transparent, rgba(0,0,0,.9)),
+    radial-gradient(circle at 20% 30%, rgba(255,225,77,.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 60%, rgba(53,242,255,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 45% 80%, rgba(255,63,164,.5) 0 4px, transparent 5px),
+    radial-gradient(circle at 85% 15%, rgba(120,255,120,.4) 0 3px, transparent 4px), var(--moqueta);
+  background-size:100% 100%,80px 80px,100px 100px,120px 120px,70px 70px,auto;
+}
+.techo{background:linear-gradient(transparent, rgba(0,0,0,.85)),
+  repeating-linear-gradient(180deg, transparent 0 320px, rgba(225,245,255,.95) 320px 334px, transparent 334px 460px) center / 240px 100% repeat-y, #0a0717}
+.lateral{background:linear-gradient(90deg, transparent, rgba(0,0,0,.9)), repeating-linear-gradient(90deg, #22163f 0 200px, #1b1133 200px 400px);
+  border-top:8px solid var(--neon-cian);box-shadow:0 0 30px rgba(53,242,255,.4)}
+.fondo-sala{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 3px, transparent 3px 70px), var(--pared)}
+.rotulo{margin:0;padding:0 40px;background:none;border:0;cursor:pointer;font-family:'Bungee Shade',var(--fuente-rotulo);font-weight:400;font-size:78px;line-height:.95;max-width:100%;overflow-wrap:anywhere;color:var(--neon-rosa);
+  text-shadow:0 0 8px var(--neon-rosa),0 0 30px var(--neon-rosa),0 0 70px rgba(255,63,164,.7);animation:encendido 2.6s steps(1,end) 1}
+.precio{display:flex;align-items:center;gap:22px;font-family:var(--fuente-rotulo);font-size:40px;color:var(--neon-amarillo);text-shadow:0 0 8px var(--neon-amarillo),0 0 24px rgba(255,225,77,.6)}
+.precio .giro{width:110px;height:110px;animation:girar 4s linear infinite}
+@keyframes girar{to{transform:rotateY(360deg)}}
+@keyframes encendido{0%{opacity:.1}8%{opacity:1}12%{opacity:.2}18%{opacity:1}40%{opacity:.35}44%{opacity:1}100%{opacity:1}}
+.puesto{position:absolute;left:0;top:0;width:190px}
+
+/* ============ Mueble ============ */
+.maquina{--color:var(--neon-cian);display:flex;flex-direction:column;align-items:stretch;width:190px;background:none;border:0;padding:0;cursor:pointer}
+.maquina:focus-visible,.rotulo:focus-visible{outline:4px solid var(--neon-amarillo);outline-offset:8px;border-radius:6px}
+.marquesina{position:relative;min-height:54px;margin:0 6px;border:4px solid #000;border-bottom:0;border-radius:6px 6px 0 0;display:grid;place-items:center;padding:4px 6px;
+  background:linear-gradient(#000 0 8%, var(--color) 8% 92%, #000 92%);box-shadow:0 0 24px var(--color), inset 0 0 18px rgba(255,255,255,.55)}
+.marquesina span{font-family:var(--fuente-rotulo);font-size:.95rem;line-height:1;color:#12062a;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.6);overflow-wrap:anywhere}
+.cuerpo{position:relative;background:linear-gradient(90deg,#140e20,#2a2140 18%,#2a2140 82%,#140e20);border:4px solid #000;border-top:0;padding:12px 12px 0}
+.cuerpo::before,.cuerpo::after{content:"";position:absolute;top:0;bottom:0;width:6px;background:var(--color);opacity:.85}
+.cuerpo::before{left:0}.cuerpo::after{right:0}
+.bisel{background:#050308;border-radius:10px;padding:10px;box-shadow:inset 0 0 0 3px #1c1628, inset 0 0 20px #000}
+.bisel canvas{display:block;width:100%;aspect-ratio:4/3;border-radius:12px/10px;image-rendering:pixelated;background:#000;box-shadow:0 0 16px rgba(53,242,255,.25)}
+.panel{position:relative;height:46px;margin:12px -12px 0;background:linear-gradient(#3b3158,#1e1830);border-top:3px solid #000;border-bottom:3px solid #000}
+.joystick{position:absolute;left:24px;top:14px;width:10px;height:22px;background:#111;border-radius:3px}
+.joystick::before{content:"";position:absolute;left:-7px;top:-12px;width:24px;height:24px;border-radius:50%;background:#e8203c;box-shadow:inset -3px -4px 0 rgba(0,0,0,.35)}
+.botones{position:absolute;right:18px;top:7px;display:grid;grid-template-columns:repeat(3,16px);gap:4px 6px}
+.botones i{width:14px;height:14px;border-radius:50%;background:var(--color);box-shadow:inset -2px -3px 0 rgba(0,0,0,.4)}
+.monedero{position:relative;display:flex;justify-content:center;gap:14px;padding:22px 0 14px}
+.monedero::before{content:"25 PTAS";position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--fuente-rotulo);font-size:.55rem;color:#1a0f00;background:var(--neon-amarillo);padding:1px 5px;border-radius:2px}
+.monedero i{width:22px;height:32px;border-radius:3px;background:#0a0710;border:2px solid #4b4166;display:grid;place-items:center}
+.monedero i::after{content:"";width:4px;height:14px;background:#ff5a2a;box-shadow:0 0 6px #ff5a2a}
+.base{height:22px;margin:0 -4px;background:#07050b;border:4px solid #000;border-top:0}
+.maquina.libre{--color:#5b5078}
+.maquina.libre .marquesina{box-shadow:none;background:linear-gradient(#000 0 8%, #5b5078 8% 92%, #000 92%)}
+.maquina.libre .monedero::before{content:"LIBRE"}
+
+/* ============ HUD ============ */
+.barra-sup{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;
+  padding:calc(env(safe-area-inset-top,0px) + .6rem) 1rem .6rem;pointer-events:none;color:var(--texto-suave);font-size:1.05rem;line-height:1.15}
+.barra-sup > *{pointer-events:auto}
+.enlace{background:none;border:0;padding:0;color:var(--texto-suave);text-decoration:underline;cursor:pointer}
+.hud{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:flex-end;justify-content:space-between;gap:.6rem;flex-wrap:wrap;
+  padding:.8rem 1rem calc(env(safe-area-inset-bottom,0px) + .8rem);pointer-events:none}
+.hud > *{pointer-events:auto}
+.grupo{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.boton{font-family:var(--fuente-rotulo);font-size:.9rem;padding:.65rem 1rem;border-radius:8px;cursor:pointer;border:3px solid #000;background:var(--neon-amarillo);color:#1a0f00;box-shadow:0 5px 0 #000}
+.boton:active{transform:translateY(3px);box-shadow:0 2px 0 #000}
+.boton:disabled{opacity:.45;cursor:not-allowed}
+.boton.secundario{background:#3a2d6b;color:var(--texto)}
+.boton.peligro{background:#8a1c2e;color:#fff}
+.boton:focus-visible,.moneda-btn:focus-visible,.cartera-btn:focus-visible,.mando button:focus-visible{outline:3px solid var(--neon-cian);outline-offset:3px}
+.cartera-btn{display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.35rem .9rem .35rem .35rem;border-radius:40px;background:#5a3217;border:3px solid #000;box-shadow:0 5px 0 #000;font-family:var(--fuente-rotulo);font-size:.95rem;color:var(--cuero-texto)}
+
+.bolsa{position:fixed;right:1rem;bottom:calc(env(safe-area-inset-bottom,0px) + 5.4rem);z-index:6;width:min(340px, calc(100% - 2rem));
+  background:var(--cuero);border:4px solid #000;border-radius:14px;padding:1rem;box-shadow:0 10px 0 #000, 0 20px 40px rgba(0,0,0,.6);color:var(--cuero-texto)}
+.bolsa[hidden]{display:none}
+.bolsa h2,dialog h2{margin:0 0 .6rem;font-family:var(--fuente-rotulo);font-size:1.1rem;font-weight:400}
+.fila-moneda{display:flex;align-items:center;gap:.7rem;padding:.3rem 0;font-size:1.25rem}
+.fila-moneda span{flex:1}
+.bolsa .total{margin:.5rem 0 .8rem;border-top:2px dashed rgba(255,233,199,.3);padding-top:.5rem}
+.bolsa .boton{width:100%;margin-top:.5rem;font-size:.8rem}
+
+/* ============ Diálogos ============ */
+dialog{width:min(460px, calc(100% - 2rem));max-height:calc(100dvh - 2rem);overflow:auto;background:#1a1233;color:var(--texto);border:4px solid #000;border-radius:14px;padding:1.2rem;box-shadow:0 10px 0 #000}
+dialog::backdrop{background:rgba(5,3,12,.75)}
+.campo{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.9rem}
+.campo label,.campo legend{font-size:1.15rem}
+.campo small{color:var(--texto-suave);font-size:1rem;line-height:1.1}
+.campo input[type=text],.campo select{padding:.5rem .6rem;border-radius:6px;border:2px solid #5b5078;background:#0d0a1c;font-size:1.25rem}
+.campo input[type=text]:focus,.campo select:focus{outline:2px solid var(--neon-cian);outline-offset:1px}
+.campo input[type=file]{font-size:1rem}
+fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
+.colores{display:flex;flex-wrap:wrap;gap:.5rem}
+.colores label{position:relative;width:34px;height:34px;border-radius:6px;border:3px solid #000;cursor:pointer}
+.colores input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.colores input:checked + i{position:absolute;inset:-7px;border:3px solid #fff;border-radius:9px}
+.colores input:focus-visible + i{position:absolute;inset:-7px;border:3px solid var(--neon-cian);border-radius:9px}
+.pie-dialogo{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:flex-end;margin-top:.4rem}
+.pie-dialogo .peligro{margin-right:auto}
+.codigo-input{font-family:var(--fuente-rotulo)!important;letter-spacing:.2em;text-transform:uppercase;text-align:center}
+.error{color:#ff8a8a;min-height:1.2em;margin:.2rem 0 0}
+
+/* ============ Máquina abierta ============ */
+.abierta{position:fixed;inset:0;z-index:10;display:none;background:radial-gradient(ellipse at center, #1c1236 0%, #07040f 75%);
+  padding:calc(env(safe-area-inset-top,0px) + 1rem) 1rem calc(env(safe-area-inset-bottom,0px) + 1rem);overflow:auto}
+.abierta.visible{display:flex;flex-direction:column;align-items:center}
+.ficha{width:min(640px,100%,calc((100dvh - 430px) * 1.15));min-width:min(300px,100%);transform-origin:top left;transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s}
+.abierta.jugando .ficha{width:min(900px,100%,calc((100dvh - 330px) * 1.25))}
+.ficha .marquesina{padding:14px;margin:0 10px}
+.ficha .marquesina span{font-size:clamp(1.3rem,4vw,2.1rem)}
+.ficha .cuerpo{padding:16px 16px 0}
+.pantalla-grande{position:relative;aspect-ratio:4/3;background:#000;border-radius:18px/14px;overflow:hidden;display:grid;place-items:center;text-align:center;padding:1rem;box-shadow:inset 0 0 60px rgba(53,242,255,.12)}
+.pantalla-grande::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(rgba(255,255,255,.04) 0 1px, transparent 1px 3px)}
+.pantalla-grande p{margin:.2rem 0;font-size:clamp(1.2rem,3.6vw,2rem)}
+.parpadeo{color:var(--neon-amarillo);animation:parpadeo 1s steps(1) infinite}
+@keyframes parpadeo{50%{opacity:0}}
+.pantalla-grande iframe,.pantalla-grande video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
+.puerta{position:relative;display:flex;justify-content:center;gap:2.2rem;padding:1.4rem 0 1rem;margin:14px -16px 0;background:linear-gradient(#2a2140,#1a1430);border-top:3px solid #000}
+.ranura{display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.ranura span{font-family:var(--fuente-rotulo);font-size:.7rem;color:#1a0f00;background:var(--neon-amarillo);padding:2px 6px;border-radius:3px}
+.ranura i{width:46px;height:66px;border-radius:5px;background:#0a0710;border:3px solid #5b5078;display:grid;place-items:center}
+.ranura i::after{content:"";width:6px;height:34px;background:#ff5a2a;box-shadow:0 0 8px #ff5a2a;transition:background .2s, box-shadow .2s}
+.ranura.destello i::after{background:#fff6b0;box-shadow:0 0 22px #ffe14d, 0 0 40px #ff5a2a}
+.devolucion{position:absolute;right:18px;bottom:12px;width:44px;height:30px;border-radius:0 0 8px 8px;background:#0a0710;border:3px solid #5b5078;border-top-width:6px}
+.devolucion::before{content:"Devolución";position:absolute;top:-24px;right:-6px;font-size:.85rem;color:var(--texto-suave);white-space:nowrap}
+.bandeja-zona{width:min(640px,100%);margin-top:1rem;background:var(--cuero);border:4px solid #000;border-radius:14px;padding:.7rem 1rem;box-shadow:0 8px 0 #000;color:var(--cuero-texto)}
+.bandeja-zona p{margin:0 0 .4rem;font-size:1.1rem}
+.bandeja{display:flex;flex-wrap:wrap;gap:.9rem;align-items:flex-end}
+.moneda-btn{position:relative;background:none;border:0;padding:4px;cursor:pointer;border-radius:50%}
+.moneda-btn:disabled{opacity:.3;cursor:not-allowed}
+.moneda-btn b{position:absolute;right:-6px;bottom:-4px;min-width:1.6rem;padding:0 .3rem;border-radius:1rem;border:2px solid #000;background:#fff;color:#000;font-weight:400;font-size:1rem;line-height:1.3}
+.acciones{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;margin-top:1.2rem}
+.info{max-width:40rem;margin:.9rem auto 0;min-height:1.4em;color:var(--texto-suave);text-align:center;font-size:1.15rem}
+.codigo-grande{font-family:var(--fuente-rotulo);font-size:2rem;color:var(--neon-amarillo);letter-spacing:.15em;text-shadow:0 0 12px rgba(255,225,77,.6)}
+.moneda-vuelo{position:fixed;left:0;top:0;z-index:50;pointer-events:none}
+
+/* Mando táctil del invitado */
+.mando{display:none;width:min(640px,100%);margin-top:1rem;justify-content:space-between;align-items:center;gap:1rem;touch-action:none}
+.abierta.invitado .mando{display:flex}
+.cruceta{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px)}
+.mando button{border:3px solid #000;background:#2f2550;border-radius:10px;box-shadow:0 4px 0 #000;cursor:pointer;font-family:var(--fuente-rotulo);font-size:.85rem;user-select:none;-webkit-user-select:none;touch-action:none}
+.mando button.pulsado{background:var(--neon-cian);color:#000;transform:translateY(2px);box-shadow:0 2px 0 #000}
+.cruceta [data-b="4"]{grid-area:1/2}.cruceta [data-b="6"]{grid-area:2/1}.cruceta [data-b="7"]{grid-area:2/3}.cruceta [data-b="5"]{grid-area:3/2}
+.accion-btns{display:grid;grid-template-columns:repeat(3,54px);gap:8px}
+.accion-btns button{height:54px;border-radius:50%}
+.accion-btns .start{grid-column:1/-1;height:40px;border-radius:20px}
+
+@media (prefers-reduced-motion: reduce){ .rotulo,.parpadeo,.precio .giro{animation:none} .ficha{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="escena" id="escena" aria-label="Pasillo del salón recreativo"><div class="mundo" id="mundo"></div></div>
+
+<div class="barra-sup">
+  <span id="pista">Anda con la rueda, las flechas o arrastrando.</span>
+  <button class="enlace" id="abrir-aviso">Aviso legal</button>
+</div>
+
+<div class="hud">
+  <div class="grupo">
+    <button class="boton secundario" id="avanzar">Avanzar</button>
+    <button class="boton secundario" id="retroceder">Retroceder</button>
+  </div>
+  <div class="grupo">
+    <button class="boton" id="btn-montar">Montar máquina</button>
+    <button class="boton secundario" id="btn-unirse">Unirse a dobles</button>
+    <button class="cartera-btn" id="cartera-btn" aria-expanded="false" aria-controls="bolsa"><span id="cartera-icono"></span><span id="cartera-total"></span></button>
+  </div>
+</div>
+
+<div class="bolsa" id="bolsa" hidden>
+  <h2>Tu monedero</h2>
+  <div id="bolsa-monedas"></div>
+  <div id="bolsa-acciones"></div>
+</div>
+
+<!-- Montar / editar máquina -->
+<dialog id="dlg-montar">
+  <form id="form-montar" method="dialog">
+    <h2 id="titulo-montar">Montar máquina</h2>
+    <div class="campo">
+      <label for="f-nombre">Nombre en la marquesina</label>
+      <input type="text" id="f-nombre" maxlength="28" required autocomplete="off">
+    </div>
+    <div class="campo">
+      <label for="f-sistema">Sistema</label>
+      <select id="f-sistema">
+        <option value="arcade">Arcade (FBNeo)</option>
+        <option value="mame2003_plus">Arcade (MAME 2003-Plus)</option>
+        <option value="nes">NES</option>
+        <option value="snes">Super Nintendo</option>
+        <option value="segaMD">Mega Drive</option>
+        <option value="segaMS">Master System</option>
+        <option value="gb">Game Boy / Color</option>
+        <option value="gba">Game Boy Advance</option>
+      </select>
+    </div>
+    <fieldset class="campo">
+      <legend>Color del mueble</legend>
+      <div class="colores" id="f-colores"></div>
+    </fieldset>
+    <div class="campo">
+      <label for="f-rom">ROM del juego</label>
+      <input type="file" id="f-rom">
+      <small id="f-rom-actual">En arcade, el .zip con su nombre original, sin renombrar.</small>
+    </div>
+    <div class="campo">
+      <label for="f-bios">BIOS (opcional)</label>
+      <input type="file" id="f-bios">
+      <small id="f-bios-actual">Solo si el juego la pide, como los de Neo Geo (neogeo.zip).</small>
+    </div>
+    <p class="error" id="f-error" aria-live="polite"></p>
+    <div class="pie-dialogo">
+      <button type="button" class="boton peligro" id="f-quitar" hidden>Quitar máquina</button>
+      <button type="button" class="boton secundario" id="f-cancelar">Cancelar</button>
+      <button type="submit" class="boton" id="f-guardar">Guardar máquina</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Unirse a dobles -->
+<dialog id="dlg-unirse">
+  <form id="form-unirse" method="dialog">
+    <h2>Unirse a dobles</h2>
+    <div class="campo">
+      <label for="u-codigo">Código que te ha pasado tu amigo</label>
+      <input type="text" id="u-codigo" class="codigo-input" maxlength="6" required autocomplete="off" inputmode="text">
+      <small>Verás su partida y jugarás como jugador 2. No necesitas tener el juego.</small>
+    </div>
+    <p class="error" id="u-error" aria-live="polite"></p>
+    <div class="pie-dialogo">
+      <button type="button" class="boton secundario" id="u-cancelar">Cancelar</button>
+      <button type="submit" class="boton">Entrar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Aviso legal -->
+<dialog id="dlg-aviso">
+  <h2>Aviso legal</h2>
+  <p>Esta web no aloja ni enlaza juegos. Cada usuario carga sus propios archivos, que se guardan solo en su navegador, y es responsable de tener derecho a usarlos.</p>
+  <p>La emulación funciona con EmulatorJS y los núcleos de libretro, software libre bajo licencia GPL-3.0. El código de esta web se publica bajo la misma licencia.</p>
+  <p>En las partidas a dobles la imagen viaja directamente entre los dos navegadores.</p>
+  <div class="pie-dialogo"><button class="boton" id="cerrar-aviso">Entendido</button></div>
+</dialog>
+
+<section class="abierta" id="abierta" role="dialog" aria-modal="true" aria-labelledby="titulo-abierta">
+  <div class="ficha" id="ficha">
+    <div class="marquesina"><span id="titulo-abierta"></span></div>
+    <div class="cuerpo">
+      <div class="bisel"><div class="pantalla-grande" id="pantalla"><div id="mensaje"></div></div></div>
+      <div class="puerta">
+        <div class="ranura" id="ranura25"><span>25 PTAS</span><i></i></div>
+        <div class="ranura" id="ranura100"><span>100 PTAS</span><i></i></div>
+        <div class="devolucion" id="devolucion"></div>
+      </div>
+    </div>
+  </div>
+  <div class="mando" id="mando" aria-label="Mando del jugador 2">
+    <div class="cruceta">
+      <button data-b="4" aria-label="Arriba">▲</button><button data-b="6" aria-label="Izquierda">◀</button>
+      <button data-b="7" aria-label="Derecha">▶</button><button data-b="5" aria-label="Abajo">▼</button>
+    </div>
+    <div class="accion-btns">
+      <button data-b="1">Y</button><button data-b="9">X</button><button data-b="11">R</button>
+      <button data-b="0">B</button><button data-b="8">A</button><button data-b="10">L</button>
+      <button data-b="3" class="start">Start</button>
+    </div>
+  </div>
+  <div class="bandeja-zona">
+    <p id="texto-bandeja">Toca una moneda para echarla</p>
+    <div class="bandeja" id="bandeja"></div>
+  </div>
+  <div class="acciones">
+    <button class="boton" id="jugar">Jugar · 5 duros</button>
+    <button class="boton secundario" id="invitar" hidden>Invitar a dobles</button>
+    <button class="boton secundario" id="editar">Editar máquina</button>
+    <button class="boton secundario" id="salir">Volver al pasillo</button>
+  </div>
+  <p class="info" id="info" aria-live="polite"></p>
+</section>
+
+<script>
+/* ================== Configuración ================== */
+const EJS_DATOS = 'https://cdn.emulatorjs.org/4.2.3/data/';   // versión fijada de EmulatorJS
+const PEERJS    = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+const PREFIJO_SALA = 'recreativos-galaxia-';
+const PRECIO = 25;
+const CREDITOS_POR = { 25:1, 100:4 };
+const COLORES = ['#35f2ff','#ff3fa4','#ffe14d','#7dff6a','#ff8a2a','#b98cff','#ff4a4a','#4affc8','#9fd4ff','#ffffff'];
+const DEMOS = ['barras','estrellas','carretera','bloques'];
+const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
+const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11 };
+
+/* ================== Utilidades ================== */
+const $ = id => document.getElementById(id);
+const reducirMov = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esperar = ms => new Promise(r => setTimeout(r, reducirMov ? 0 : ms));
+const escapar = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function cargarScript(src){
+  return new Promise((ok, mal) => {
+    if (document.querySelector(`script[src="${src}"]`)) return ok();
+    const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => mal(new Error('No se pudo cargar ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+/* ================== Base de datos local (IndexedDB) ================== */
+let db;
+function abrirDB(){
+  return new Promise((ok, mal) => {
+    const r = indexedDB.open('recreativos', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('maquinas', { keyPath:'id' });
+    r.onsuccess = () => { db = r.result; ok(); };
+    r.onerror = () => mal(r.error);
+  });
+}
+function tx(modo, fn){
+  return new Promise((ok, mal) => {
+    const t = db.transaction('maquinas', modo), s = t.objectStore('maquinas'), r = fn(s);
+    t.oncomplete = () => ok(r && r.result); t.onerror = () => mal(t.error);
+  });
+}
+const leerMaquinas = () => tx('readonly', s => s.getAll()).then(l => (l || []).sort((a,b) => a.creado - b.creado));
+const guardarMaquina = m => tx('readwrite', s => s.put(m));
+const borrarMaquina = id => tx('readwrite', s => s.delete(id));
+
+/* ================== Monedas ================== */
+const MONEDAS = {
+  5:   { nombre:"Duro",        tam:.78, c1:"#e8c35a", c2:"#9c7020", agujero:false },
+  25:  { nombre:"Cinco duros", tam:.9,  c1:"#f0cf6a", c2:"#a37622", agujero:true  },
+  100: { nombre:"Cien pelas",  tam:1,   c1:"#f6d77a", c2:"#b0822a", agujero:false },
+};
+let nSvg = 0;
+function monedaSVG(v, px){
+  const m = MONEDAS[v], s = Math.round(px * m.tam), id = 'm' + v + '_' + (++nSvg);
+  const texto = m.agujero
+    ? `<text x="50" y="34" font-size="20">${v}</text><text x="50" y="80" font-size="11">PTAS</text>`
+    : `<text x="50" y="${v===100?60:62}" font-size="${v===100?30:38}">${v}</text><text x="50" y="80" font-size="11">PTAS</text>`;
+  return `<svg viewBox="0 0 100 100" width="${s}" height="${s}" aria-hidden="true"><defs>
+    <radialGradient id="g${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff5cc"/><stop offset=".45" stop-color="${m.c1}"/><stop offset="1" stop-color="${m.c2}"/></radialGradient>
+    <mask id="k${id}"><rect width="100" height="100" fill="#fff"/>${m.agujero?'<circle cx="50" cy="52" r="11" fill="#000"/>':''}</mask></defs>
+    <g mask="url(#k${id})"><circle cx="50" cy="50" r="47" fill="url(#g${id})" stroke="#6e4b0d" stroke-width="3"/>
+    <circle cx="50" cy="50" r="39" fill="none" stroke="rgba(110,75,13,.55)" stroke-width="2" stroke-dasharray="2 3"/>
+    ${m.agujero?'<circle cx="50" cy="52" r="13" fill="none" stroke="#6e4b0d" stroke-width="3"/>':''}
+    <g fill="#6e4b0d" font-family="Bungee, Arial Black, sans-serif" text-anchor="middle">${texto}</g></g></svg>`;
+}
+
+/* ================== Estado (monedero y ajustes) ================== */
+const INICIAL = { cartera:{5:4, 25:3, 100:1}, creditos:{}, nombreSalon:'Recreativos Galaxia' };
+let estado;
+try { estado = Object.assign(structuredClone(INICIAL), JSON.parse(localStorage.getItem('recreativos') || '{}')); }
+catch { estado = structuredClone(INICIAL); }
+function guardar(){ try { localStorage.setItem('recreativos', JSON.stringify(estado)); } catch {} }
+const total = () => Object.entries(estado.cartera).reduce((a,[v,n]) => a + v*n, 0);
+
+/* ================== Sonido ================== */
+let audio;
+function tono(f, t0, dur, tipo='triangle', vol=.18){
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = tipo; o.frequency.value = f;
+  g.gain.setValueAtTime(vol, audio.currentTime + t0);
+  g.gain.exponentialRampToValueAtTime(.0001, audio.currentTime + t0 + dur);
+  o.connect(g).connect(audio.destination); o.start(audio.currentTime + t0); o.stop(audio.currentTime + t0 + dur + .02);
+}
+function sonido(tipo){
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
+  if (tipo === 'moneda'){ tono(2600,0,.25); tono(3300,0,.2); tono(1400,.14,.06); tono(1250,.24,.05); tono(1100,.31,.04); }
+  if (tipo === 'credito'){ tono(660,.35,.09,'square',.08); tono(990,.45,.14,'square',.08); }
+  if (tipo === 'rechazo'){ tono(260,0,.18,'square',.1); tono(1800,.3,.15); }
+}
+
+/* ================== Pasillo 3D ================== */
+const escena = $('escena'), mundo = $('mundo');
+const PERSP = 700, SUELO = 190, ALTO = 560, SEP = 240, Z0 = -60;
+let maquinas = [], puestos = [], camZ = 0, camObj = 0, maxCam = 0, vel = 0;
+
+function construir(){
+  const medio = Math.round(Math.min(300, innerWidth * .36));
+  const lista = [...maquinas, { libre:true, id:'libre', nombre:'Máquina libre', color:'#5b5078' }];
+  const porLado = Math.ceil(lista.length / 2);
+  const zFondo = Z0 - (porLado - 1) * SEP - 360;
+  const largo = 520 - zFondo, ancho = (medio + 160) * 2;
+  mundo.innerHTML = `
+    <div class="plano suelo"   style="width:${ancho}px;height:${largo}px;transform:translate3d(${-ancho/2}px,${SUELO}px,520px) rotateX(-90deg)"></div>
+    <div class="plano techo"   style="width:${ancho}px;height:${largo}px;transform:translate3d(${-ancho/2}px,${SUELO-ALTO}px,520px) rotateX(-90deg)"></div>
+    <div class="plano lateral" style="width:${largo}px;height:${ALTO}px;transform:translate3d(${-(medio+160)}px,${SUELO-ALTO}px,520px) rotateY(90deg)"></div>
+    <div class="plano lateral" style="width:${largo}px;height:${ALTO}px;transform:translate3d(${medio+160}px,${SUELO-ALTO}px,520px) rotateY(90deg)"></div>
+    <div class="plano fondo-sala" style="width:${ancho}px;height:${ALTO}px;transform:translate3d(${-ancho/2}px,${SUELO-ALTO}px,${zFondo}px)">
+      <button class="rotulo" id="rotulo" aria-label="Cambiar el nombre del salón">${escapar(estado.nombreSalon)}</button>
+      <div class="precio"><span class="giro">${monedaSVG(25,122)}</span>5 duros la partida</div>
+    </div>`;
+  $('rotulo').addEventListener('click', () => {
+    if (arrastrado) return;
+    const n = prompt('Nombre de tu salón', estado.nombreSalon);
+    if (n && n.trim()){ estado.nombreSalon = n.trim().slice(0, 30); guardar(); $('rotulo').textContent = estado.nombreSalon; }
+  });
+  puestos = lista.map((m, i) => {
+    const lado = i % 2 === 0 ? -1 : 1, fila = Math.floor(i / 2);
+    const el = document.createElement('div');
+    el.className = 'puesto';
+    el.innerHTML = `
+      <button class="maquina${m.libre ? ' libre' : ''}" style="--color:${m.color}" aria-label="${m.libre ? 'Máquina libre: montar una nueva' : escapar(m.nombre)}">
+        <div class="marquesina"><span>${escapar(m.nombre)}</span></div>
+        <div class="cuerpo">
+          <div class="bisel"><canvas width="64" height="48"></canvas></div>
+          <div class="panel"><span class="joystick"></span><span class="botones"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="monedero"><i></i><i></i></div>
+        </div>
+        <div class="base"></div>
+      </button>`;
+    mundo.appendChild(el);
+    const boton = el.querySelector('.maquina');
+    const p = { el, boton, m, x: lado * medio, z: Z0 - fila * SEP, rot: lado < 0 ? 62 : -62,
+                ctx: el.querySelector('canvas').getContext('2d'), semilla: i * 97, demo: m.libre ? 'libre' : DEMOS[i % DEMOS.length] };
+    boton.addEventListener('click', e => { if (arrastrado) { e.preventDefault(); return; } m.libre ? abrirMontar() : abrir(p); });
+    boton.addEventListener('focus', () => { camObj = limitar(-p.z - 330); });
+    return p;
+  });
+  const alto = puestos[0].el.offsetHeight;
+  puestos.forEach(p => { p.el.style.transform = `translate3d(${p.x - 95}px, ${SUELO - alto}px, ${p.z}px) rotateY(${p.rot}deg)`; });
+  maxCam = -zFondo - PERSP + 380;
+  camObj = limitar(camObj); camZ = limitar(camZ);
+  pintarCamara();
+  puestos.forEach(p => dibujar(p, 0));
+  $('pista').textContent = maquinas.length
+    ? 'Anda con la rueda, las flechas o arrastrando. Pulsa una máquina para jugar.'
+    : 'Tu salón está vacío. Pulsa la máquina libre para montar la primera.';
+}
+const limitar = z => Math.max(0, Math.min(maxCam, z));
+function pintarCamara(){
+  mundo.style.transform = `translate3d(0,0,${camZ}px)`;
+  puestos.forEach(p => {
+    const zv = p.z + camZ, dist = PERSP - zv, detras = zv > PERSP - 120;
+    p.el.style.visibility = detras ? 'hidden' : 'visible';
+    const luz = Math.max(.28, Math.min(1, 1.35 - dist / 2600));
+    p.boton.style.filter = `brightness(${luz.toFixed(2)}) drop-shadow(0 16px 12px rgba(0,0,0,.7))`;
+    p.visible = !detras;
+  });
+}
+
+/* ---------- Pantallas en modo demo ---------- */
+function dibujar(p, t){
+  const c = p.ctx, W = 64, H = 48, col = p.m.color, s = t/1000 + p.semilla;
+  c.fillStyle = '#000'; c.fillRect(0,0,W,H);
+  if (p.demo === 'libre'){
+    c.fillStyle = '#5b5078'; c.fillRect(29,14,6,20); c.fillRect(22,21,20,6);
+    if (((t/700)|0) % 2){ c.fillStyle = '#a79fd1'; c.fillRect(18,40,28,1); }
+    return;
+  }
+  if (p.demo === 'estrellas'){
+    for (let k=0;k<30;k++){ const x=(k*37+p.semilla)%W, y=((k*23)+s*(8+k%5*6))%H; c.fillStyle=k%4?'#fff':col; c.fillRect(x|0,y|0,1,1+(k%3===0)); }
+    const nx = 32 + Math.sin(s*1.3)*18; c.fillStyle = col; c.fillRect(nx-3|0,40,7,3); c.fillRect(nx-1|0,37,3,3);
+  } else if (p.demo === 'carretera'){
+    c.fillStyle = '#1a0f3a'; c.fillRect(0,0,W,20);
+    c.fillStyle = '#ff5a2a'; c.beginPath(); c.arc(32,20,9,Math.PI,0); c.fill();
+    for (let y=20;y<H;y++){
+      const f=(y-20)/(H-20), an=6+f*52, cx=32+Math.sin(s+f*2)*6*f;
+      c.fillStyle=((y+s*20)|0)%6<3?'#2b2b3a':'#34344a'; c.fillRect(cx-an/2|0,y,an|0,1);
+      if (((y+s*20)|0)%8<3){ c.fillStyle=col; c.fillRect(cx|0,y,1,1); }
+    }
+    c.fillStyle = col; c.fillRect(27,41,10,4);
+  } else if (p.demo === 'bloques'){
+    const cols=[col,'#ffe14d','#ff3fa4','#35f2ff'];
+    for (let y=0;y<6;y++) for (let x=0;x<8;x++) if (Math.sin(x*3.1+y*1.7+p.semilla) > .3-y*.12){ c.fillStyle=cols[(x+y)%4]; c.fillRect(8+x*6,42-y*6,5,5); }
+    c.fillStyle='#fff'; c.fillRect(26,(s*14)%36|0,11,5);
+  } else {
+    const v1=20+Math.sin(s)*8, v2=20+Math.cos(s*.8)*8, d=Math.sin(s*2)*6;
+    c.fillStyle='#ffe14d'; c.fillRect(3,3,v1|0,3); c.fillRect(61-(v2|0),3,v2|0,3);
+    c.fillStyle='#23184a'; c.fillRect(0,38,W,10);
+    c.fillStyle=col; c.fillRect(18+d|0,24,6,14); c.fillStyle='#ff3fa4'; c.fillRect(40-d|0,24,6,14);
+  }
+  if (((t/600)|0) % 2){ c.fillStyle='#fff'; c.fillRect(20,H-4,24,1); }
+}
+let ultimo = performance.now();
+function bucle(t){
+  const dt = Math.min(50, t - ultimo) / 16.7; ultimo = t;
+  if (vel) camObj = limitar(camObj + vel * 14 * dt);
+  const antes = camZ;
+  camZ = reducirMov ? camObj : camZ + (camObj - camZ) * Math.min(1, .14 * dt);
+  if (Math.abs(camZ - antes) > .05) pintarCamara();
+  if (!capa.classList.contains('visible') && !reducirMov) puestos.forEach(p => { if (p.visible) dibujar(p, t); });
+  if (modo === 'invitado') leerMandoFisico();
+  requestAnimationFrame(bucle);
+}
+
+/* ---------- Andar ---------- */
+const hayDialogo = () => capa.classList.contains('visible') || document.querySelector('dialog[open]');
+escena.addEventListener('wheel', e => { e.preventDefault(); camObj = limitar(camObj - e.deltaY * .9); }, { passive:false });
+addEventListener('keydown', e => {
+  if (hayDialogo()) return;
+  if (e.key === 'ArrowUp'){ e.preventDefault(); camObj = limitar(camObj + 120); }
+  if (e.key === 'ArrowDown'){ e.preventDefault(); camObj = limitar(camObj - 120); }
+});
+let arrastre = null, arrastrado = false;
+escena.addEventListener('pointerdown', e => { arrastre = { y:e.clientY, cam:camObj }; arrastrado = false; });
+addEventListener('pointermove', e => {
+  if (!arrastre) return;
+  const dy = e.clientY - arrastre.y;
+  if (Math.abs(dy) > 8) arrastrado = true;
+  if (arrastrado) camObj = limitar(arrastre.cam + dy * 2.2);
+});
+addEventListener('pointerup', () => { arrastre = null; setTimeout(() => arrastrado = false, 0); });
+function mantener(id, v){
+  const b = $(id);
+  b.addEventListener('pointerdown', e => { e.stopPropagation(); vel = v; });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, () => vel = 0));
+  b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') camObj = limitar(camObj + v * 160); });
+}
+mantener('avanzar', 1); mantener('retroceder', -1);
+
+/* ================== Monedero ================== */
+const bolsa = $('bolsa'), carteraBtn = $('cartera-btn');
+$('cartera-icono').innerHTML = monedaSVG(100, 42);
+carteraBtn.addEventListener('click', () => { bolsa.hidden = !bolsa.hidden; carteraBtn.setAttribute('aria-expanded', String(!bolsa.hidden)); pintarCartera(); });
+function pintarCartera(){
+  $('cartera-total').textContent = `${total()} pts`;
+  $('bolsa-monedas').innerHTML = [5,25,100].map(v => `<div class="fila-moneda">${monedaSVG(v,44)}<span>${MONEDAS[v].nombre}</span>×${estado.cartera[v]}</div>`).join('')
+    + `<div class="fila-moneda total"><span>Total</span>${total()} pesetas</div>`;
+  const acc = [];
+  if (estado.cartera[5] >= 5) acc.push(`<button class="boton" data-accion="duros">Cambiar 5 duros por una de 25</button>`);
+  if (estado.cartera[100] > 0) acc.push(`<button class="boton secundario" data-accion="cien">Cambiar 100 por cuatro de 25</button>`);
+  if (total() < PRECIO) acc.push(`<button class="boton" data-accion="paga">Pedir 100 pelas en casa</button>`);
+  $('bolsa-acciones').innerHTML = acc.join('');
+}
+$('bolsa-acciones').addEventListener('click', e => {
+  const a = e.target.dataset.accion; if (!a) return;
+  if (a === 'duros'){ estado.cartera[5] -= 5; estado.cartera[25]++; }
+  if (a === 'cien'){ estado.cartera[100]--; estado.cartera[25] += 4; }
+  if (a === 'paga'){ estado.cartera[100]++; }
+  sonido('moneda'); guardar(); pintarCartera(); pintarBandeja();
+});
+
+/* ================== Montar / editar máquina ================== */
+const dlgMontar = $('dlg-montar');
+let editando = null;
+$('f-colores').innerHTML = COLORES.map((c, i) =>
+  `<label style="background:${c}"><input type="radio" name="color" value="${c}" ${i===0?'checked':''} aria-label="Color ${i+1}"><i></i></label>`).join('');
+$('btn-montar').addEventListener('click', () => abrirMontar());
+function abrirMontar(m){
+  editando = m || null;
+  $('titulo-montar').textContent = m ? 'Editar máquina' : 'Montar máquina';
+  $('f-nombre').value = m ? m.nombre : '';
+  $('f-sistema').value = m ? m.sistema : 'arcade';
+  const col = m ? m.color : COLORES[maquinas.length % COLORES.length];
+  (document.querySelector(`#f-colores input[value="${col}"]`) || document.querySelector('#f-colores input')).checked = true;
+  $('f-rom').value = ''; $('f-bios').value = '';
+  $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
+  $('f-bios-actual').textContent = m && m.biosNombre ? `Ahora: ${m.biosNombre}.` : 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).';
+  $('f-quitar').hidden = !m; $('f-error').textContent = '';
+  dlgMontar.showModal(); $('f-nombre').focus();
+}
+$('f-cancelar').addEventListener('click', () => dlgMontar.close());
+$('form-montar').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nombre = $('f-nombre').value.trim(), rom = $('f-rom').files[0], bios = $('f-bios').files[0];
+  if (!nombre){ $('f-error').textContent = 'Ponle un nombre a la máquina.'; return; }
+  if (!rom && !editando){ $('f-error').textContent = 'Elige el archivo de la ROM.'; return; }
+  const m = Object.assign({}, editando || { id: crypto.randomUUID(), creado: Date.now() }, {
+    nombre, sistema: $('f-sistema').value, color: document.querySelector('#f-colores input:checked').value,
+  });
+  if (rom){ m.rom = rom; m.romNombre = rom.name; }
+  if (bios){ m.bios = bios; m.biosNombre = bios.name; }
+  $('f-guardar').disabled = true; $('f-error').textContent = 'Guardando…';
+  try {
+    await guardarMaquina(m);
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+    maquinas = await leerMaquinas();
+    dlgMontar.close(); construir();
+    if (editando && actual){ actual.m = m; actual = puestos.find(p => p.m.id === m.id); pintarFicha(); }
+    else { const p = puestos.find(p => p.m.id === m.id); if (p) camObj = limitar(-p.z - 330); }
+  } catch (err) {
+    $('f-error').textContent = 'No se pudo guardar. Puede que el navegador no tenga espacio libre.';
+  } finally { $('f-guardar').disabled = false; }
+});
+$('f-quitar').addEventListener('click', async () => {
+  if (!editando || !confirm(`¿Quitar "${editando.nombre}" del salón? Se borrará la ROM guardada.`)) return;
+  await borrarMaquina(editando.id);
+  delete estado.creditos[editando.id]; guardar();
+  maquinas = await leerMaquinas();
+  dlgMontar.close(); cerrar(true); construir();
+});
+
+/* ================== Máquina abierta ================== */
+const capa = $('abierta'), ficha = $('ficha'), info = $('info'), pantalla = $('pantalla');
+let actual = null, modo = null /* 'local' | 'invitado' */, jugando = false, animando = false, iframe = null;
+
+function abrir(p){
+  actual = p; modo = 'local'; jugando = false;
+  capa.classList.remove('invitado','jugando');
+  bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false');
+  pintarFicha(); pintarPantalla(); pintarBandeja();
+  info.textContent = `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
+  mostrarCapa(p.boton);
+  $('jugar').focus({ preventScroll:true });
+}
+function pintarFicha(){
+  const m = modo === 'invitado' ? invitado : actual.m;
+  $('titulo-abierta').textContent = m.nombre;
+  ficha.style.setProperty('--color', m.color);
+  $('jugar').hidden = modo === 'invitado' || jugando;
+  $('editar').hidden = modo === 'invitado' || jugando;
+  $('invitar').hidden = !(modo === 'local' && jugando);
+  $('salir').textContent = jugando ? 'Salir de la partida' : 'Volver al pasillo';
+  $('texto-bandeja').textContent = jugando ? 'Echa otra moneda para más créditos' : 'Toca una moneda para echarla';
+}
+function mostrarCapa(desde){
+  capa.classList.add('visible'); capa.scrollTop = 0;
+  if (reducirMov || !desde) return;
+  const r = desde.getBoundingClientRect(), f = ficha.getBoundingClientRect();
+  ficha.style.transition = 'none';
+  ficha.style.transform = `translate(${r.left - f.left}px, ${r.top - f.top}px) scale(${r.width / f.width})`;
+  ficha.style.opacity = '.4';
+  requestAnimationFrame(() => requestAnimationFrame(() => { ficha.style.transition = ''; ficha.style.transform = ''; ficha.style.opacity = ''; }));
+}
+function cerrar(forzar){
+  if (animando && !forzar) return;
+  if (jugando && !forzar && !confirm('¿Salir de la partida?')) return;
+  pararEmulador(); cerrarRed();
+  capa.classList.remove('visible','jugando','invitado');
+  jugando = false; const antes = actual; modo = null;
+  if (antes && antes.boton.isConnected) antes.boton.focus({ preventScroll:true });
+}
+const nombreSistema = s => $('f-sistema').querySelector(`option[value="${s}"]`)?.textContent || s;
+const creditos = () => estado.creditos[actual.m.id] || 0;
+
+function pintarPantalla(){
+  if (jugando) return;
+  const msg = modo === 'invitado'
+    ? `<p>Conectando con la partida…</p>`
+    : !creditos() ? `<p class="parpadeo">INSERTE MONEDA</p><p>5 duros la partida</p>`
+    : `<p>CRÉDITO ${creditos()}</p><p class="parpadeo">PULSA JUGAR</p>`;
+  pantalla.innerHTML = `<div id="mensaje">${msg}</div>`;
+}
+function pintarBandeja(){
+  $('bandeja').innerHTML = [5,25,100].map(v =>
+    `<button class="moneda-btn" data-v="${v}" ${estado.cartera[v] ? '' : 'disabled'} aria-label="Echar ${MONEDAS[v].nombre.toLowerCase()}, tienes ${estado.cartera[v]}">
+      ${monedaSVG(v, 64)}<b>${estado.cartera[v]}</b></button>`).join('');
+  pintarCartera();
+}
+$('bandeja').addEventListener('click', e => {
+  const b = e.target.closest('.moneda-btn'); if (!b || animando) return;
+  if (modo === 'invitado' && !conexion) return;
+  echar(Number(b.dataset.v), b);
+});
+
+/* ---------- Animación de la moneda ---------- */
+function centro(el){ const r = el.getBoundingClientRect(); return { x:r.left + r.width/2, y:r.top + r.height/2, r }; }
+function echar(v, desde){
+  if (!estado.cartera[v]) return Promise.resolve(false);
+  animando = true;
+  const acepta = v in CREDITOS_POR;
+  const ranura = $(v === 100 ? 'ranura100' : 'ranura25');
+  const o = centro(desde.querySelector('svg')), d = centro(ranura.querySelector('i')), dev = centro($('devolucion'));
+  const vuelo = document.createElement('div');
+  vuelo.className = 'moneda-vuelo'; vuelo.innerHTML = monedaSVG(v, 64);
+  vuelo.style.left = o.r.left + 'px'; vuelo.style.top = o.r.top + 'px';
+  document.body.appendChild(vuelo);
+  if (acepta){ estado.cartera[v]--; guardar(); pintarBandeja(); }
+  const dx = d.x - o.x, dy = d.y - o.y, rx = dev.x - o.x, ry = dev.y - o.y;
+  const k = (x, y, g, e, op = 1, offset) => ({ transform:`perspective(500px) translate(${x}px,${y}px) rotateY(${g}deg) scale(${e})`, opacity:op, ...(offset !== undefined && { offset }) });
+  const cuadros = acepta
+    ? [k(0,0,0,1), k(dx*.55,dy-130,0,1.15,1,.45), k(dx,dy-26,25,1,1,.7), k(dx,dy-8,88,.9,1,.85), k(dx,dy+20,88,.85,0,1)]
+    : [k(0,0,0,1), k(dx*.55,dy-130,0,1.1,1,.3), k(dx,dy-8,88,.9,1,.5), k(rx,ry,0,.8,1,.72), k(rx,ry-10,0,.8,1,.8), k(0,0,0,1,1,1)];
+  const dur = reducirMov ? 1 : (acepta ? 1200 : 1900);
+  return new Promise(fin => {
+    const anim = vuelo.animate(cuadros, { duration:dur, easing:'ease-in-out', fill:'forwards' });
+    if (!acepta) setTimeout(() => { sonido('rechazo'); info.textContent = 'Esta máquina no acepta duros. Cambia cinco en tu monedero por una de 25.'; }, dur * .5);
+    anim.onfinish = () => {
+      vuelo.remove(); animando = false;
+      if (acepta){
+        const n = CREDITOS_POR[v];
+        sonido('moneda'); sonido('credito');
+        ranura.classList.add('destello'); setTimeout(() => ranura.classList.remove('destello'), 500);
+        if (modo === 'invitado') enviar({ t:'moneda', n });
+        else if (jugando) meterFichas(0, n);
+        else { estado.creditos[actual.m.id] = creditos() + n; guardar(); pintarPantalla(); }
+      }
+      fin(acepta);
+    };
+  });
+}
+
+/* ---------- Jugar ---------- */
+$('jugar').addEventListener('click', jugar);
+$('editar').addEventListener('click', () => abrirMontar(actual.m));
+$('salir').addEventListener('click', () => cerrar());
+async function jugar(){
+  if (animando || jugando) return;
+  if (!creditos()){
+    const v = estado.cartera[25] ? 25 : estado.cartera[100] ? 100 : 0;
+    if (!v){
+      info.textContent = estado.cartera[5] >= 5 ? 'No te quedan monedas de 25. Cambia duros en tu monedero.' : 'Te has quedado sin pelas. Pide 100 en casa desde tu monedero.';
+      return;
+    }
+    if (!await echar(v, document.querySelector(`.moneda-btn[data-v="${v}"]`))) return;
+    await esperar(500);
+  }
+  const fichas = creditos();
+  estado.creditos[actual.m.id] = 0; guardar();
+  jugando = true; capa.classList.add('jugando'); pintarFicha();
+  iniciarEmulador(actual.m, fichas);
+}
+
+/* ================== Emulador (EmulatorJS en un iframe) ================== */
+let fichasPendientes = 0;
+function iniciarEmulador(m, fichas){
+  fichasPendientes = ES_ARCADE(m.sistema) ? fichas : 0;
+  window.__juego = { rom: m.rom, romNombre: m.romNombre, bios: m.bios || null, biosNombre: m.biosNombre || '', core: m.sistema, nombre: m.nombre, color: m.color };
+  pantalla.innerHTML = '';
+  iframe = document.createElement('iframe');
+  iframe.title = 'Juego: ' + m.nombre;
+  iframe.allow = 'autoplay; gamepad; fullscreen';
+  iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#juego{width:100%;height:100%}</style></head>
+  <body><div id="juego"></div><script>
+    const d = parent.__juego;
+    window.EJS_player = '#juego';
+    window.EJS_core = d.core;
+    window.EJS_gameName = d.nombre;
+    window.EJS_gameUrl = new File([d.rom], d.romNombre);
+    if (d.bios) window.EJS_biosUrl = new File([d.bios], d.biosNombre);
+    window.EJS_pathtodata = '${EJS_DATOS}';
+    window.EJS_startOnLoaded = true;
+    window.EJS_color = d.color;
+    window.EJS_language = 'es-ES';
+    window.EJS_onGameStart = () => parent.postMessage({ tipo:'ejs-inicio' }, '*');
+  <\/script><script src="${EJS_DATOS}loader.js"><\/script></body></html>`;
+  pantalla.appendChild(iframe);
+  info.textContent = 'Cargando la placa… Los controles del teclado y mando se configuran en el menú del emulador.';
+}
+addEventListener('message', e => {
+  if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'ejs-inicio') return;
+  info.textContent = ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
+  if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
+  iframe.focus();
+});
+function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
+function pulsar(jugador, boton, valor){ const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
+async function meterFichas(jugador, n){
+  if (!ES_ARCADE(actual.m.sistema)) return;
+  for (let i = 0; i < n; i++){ pulsar(jugador, BTN.SELECT, 1); await new Promise(r => setTimeout(r, 120)); pulsar(jugador, BTN.SELECT, 0); await new Promise(r => setTimeout(r, 180)); }
+  if (iframe) iframe.focus();
+}
+function pararEmulador(){
+  if (iframe){ try { iframe.contentWindow.EJS_emulator?.callEvent?.('exit'); } catch {} iframe.remove(); iframe = null; }
+  window.__juego = null;
+}
+
+/* ================== Dobles (PeerJS) ================== */
+let peer = null, conexion = null, invitado = null;
+const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const nuevoCodigo = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => ALFABETO[b % ALFABETO.length]).join('');
+function enviar(d){ if (conexion && conexion.open) conexion.send(d); }
+function cerrarRed(){
+  try { conexion && conexion.close(); } catch {}
+  try { peer && peer.destroy(); } catch {}
+  peer = null; conexion = null;
+  soltarTodo();
+}
+
+/* --- Anfitrión --- */
+$('invitar').addEventListener('click', async () => {
+  if (peer){ return; }
+  const canvas = (() => { try { return iframe.contentDocument.querySelector('canvas'); } catch { return null; } })();
+  if (!canvas){ info.textContent = 'Espera a que arranque el juego para invitar.'; return; }
+  info.textContent = 'Preparando la sala…';
+  try { await cargarScript(PEERJS); } catch { info.textContent = 'No se pudo cargar el sistema de dobles. Revisa la conexión.'; return; }
+  const codigo = nuevoCodigo();
+  peer = new Peer(PREFIJO_SALA + codigo);
+  peer.on('open', () => {
+    info.innerHTML = `Código de dobles: <span class="codigo-grande">${codigo}</span><br>Tu amigo lo mete en "Unirse a dobles" y juega como jugador 2.`;
+    $('invitar').disabled = true;
+  });
+  peer.on('connection', c => {
+    if (conexion){ c.on('open', () => { c.send({ t:'lleno' }); setTimeout(() => c.close(), 300); }); return; }
+    conexion = c;
+    c.on('open', () => {
+      c.send({ t:'hola', nombre: actual.m.nombre, color: actual.m.color, arcade: ES_ARCADE(actual.m.sistema) });
+      const stream = canvas.captureStream(60);
+      peer.call(c.peer, stream);
+      info.textContent = 'Tu amigo se ha unido. Él es el jugador 2.';
+      sonido('credito');
+    });
+    c.on('data', d => {
+      if (d.t === 'in') pulsar(1, d.b, d.v ? 1 : 0);
+      if (d.t === 'moneda') meterFichas(1, Math.min(4, d.n | 0));
+    });
+    c.on('close', () => { conexion = null; for (let b = 0; b < 12; b++) pulsar(1, b, 0); info.textContent = 'Tu amigo ha salido de la partida.'; });
+  });
+  peer.on('error', err => {
+    if (err.type === 'unavailable-id'){ peer.destroy(); peer = null; $('invitar').click(); return; }
+    info.textContent = 'Error en la sala de dobles: ' + (err.message || err.type);
+  });
+});
+
+/* --- Invitado --- */
+const dlgUnirse = $('dlg-unirse');
+$('btn-unirse').addEventListener('click', () => { $('u-codigo').value = ''; $('u-error').textContent = ''; dlgUnirse.showModal(); $('u-codigo').focus(); });
+$('u-cancelar').addEventListener('click', () => dlgUnirse.close());
+$('form-unirse').addEventListener('submit', async e => {
+  e.preventDefault();
+  const codigo = $('u-codigo').value.trim().toUpperCase();
+  if (codigo.length !== 6){ $('u-error').textContent = 'El código tiene 6 caracteres.'; return; }
+  $('u-error').textContent = 'Conectando…';
+  try { await cargarScript(PEERJS); } catch { $('u-error').textContent = 'No se pudo cargar el sistema de dobles. Revisa la conexión.'; return; }
+  entrarComoInvitado(codigo);
+});
+function entrarComoInvitado(codigo){
+  invitado = { nombre:'Dobles · ' + codigo, color:'#35f2ff' };
+  let unido = false;
+  peer = new Peer();
+  peer.on('open', () => {
+    conexion = peer.connect(PREFIJO_SALA + codigo, { reliable:true });
+    conexion.on('data', d => {
+      if (d.t === 'lleno'){ $('u-error').textContent = 'Esa partida ya tiene jugador 2.'; cerrarRed(); return; }
+      if (d.t === 'hola'){
+        unido = true; dlgUnirse.close();
+        invitado = { nombre: d.nombre, color: d.color, arcade: d.arcade };
+        modo = 'invitado'; jugando = true; actual = null;
+        capa.classList.add('invitado','jugando'); pintarFicha(); pintarBandeja();
+        if (!pantalla.querySelector('video')) pantalla.innerHTML = '<div id="mensaje"><p>Conectando con la partida…</p></div>';
+        info.textContent = d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
+        mostrarCapa(null);
+      }
+    });
+    conexion.on('close', () => { if (unido){ info.textContent = 'El anfitrión ha cerrado la partida.'; soltarTodo(); } });
+  });
+  peer.on('call', llamada => {
+    llamada.answer();
+    llamada.on('stream', s => {
+      pantalla.innerHTML = '';
+      const v = document.createElement('video');
+      v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = s;
+      pantalla.appendChild(v); v.play().catch(() => {});
+    });
+  });
+  peer.on('error', err => {
+    $('u-error').textContent = err.type === 'peer-unavailable' ? 'Ese código no existe o la partida ya terminó.' : 'No se pudo conectar: ' + (err.message || err.type);
+    cerrarRed();
+  });
+}
+
+/* --- Controles del invitado: táctil, teclado y mando --- */
+const pulsados = new Set();
+function fijar(b, v){
+  if (v === pulsados.has(b)) return;
+  v ? pulsados.add(b) : pulsados.delete(b);
+  document.querySelectorAll(`.mando [data-b="${b}"]`).forEach(x => x.classList.toggle('pulsado', v));
+  enviar({ t:'in', b, v: v ? 1 : 0 });
+}
+function soltarTodo(){ [...pulsados].forEach(b => fijar(b, false)); }
+$('mando').addEventListener('pointerdown', e => { const b = e.target.closest('[data-b]'); if (!b) return; e.preventDefault(); b.setPointerCapture(e.pointerId); fijar(+b.dataset.b, true); });
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => $('mando').addEventListener(ev, e => { const b = e.target.closest('[data-b]'); if (b) fijar(+b.dataset.b, false); }));
+const TECLAS = { ArrowUp:BTN.ARRIBA, ArrowDown:BTN.ABAJO, ArrowLeft:BTN.IZQ, ArrowRight:BTN.DER, z:BTN.B, x:BTN.A, a:BTN.Y, s:BTN.X, q:BTN.L, w:BTN.R, Enter:BTN.START, Shift:BTN.SELECT };
+addEventListener('keydown', e => { if (modo !== 'invitado' || document.querySelector('dialog[open]')) return; const b = TECLAS[e.key.length === 1 ? e.key.toLowerCase() : e.key]; if (b !== undefined){ e.preventDefault(); fijar(b, true); } });
+addEventListener('keyup', e => { if (modo !== 'invitado') return; const b = TECLAS[e.key.length === 1 ? e.key.toLowerCase() : e.key]; if (b !== undefined) fijar(b, false); });
+const PAD = { 0:BTN.B, 1:BTN.A, 2:BTN.Y, 3:BTN.X, 4:BTN.L, 5:BTN.R, 8:BTN.SELECT, 9:BTN.START, 12:BTN.ARRIBA, 13:BTN.ABAJO, 14:BTN.IZQ, 15:BTN.DER };
+const padPrevio = {};
+function leerMandoFisico(){
+  const pad = navigator.getGamepads && [...navigator.getGamepads()].find(Boolean);
+  if (!pad) return;
+  const estadoPad = {};
+  for (const [i, b] of Object.entries(PAD)) estadoPad[b] = !!pad.buttons[i]?.pressed;
+  const [ax, ay] = pad.axes;
+  if (ax < -.5) estadoPad[BTN.IZQ] = true; if (ax > .5) estadoPad[BTN.DER] = true;
+  if (ay < -.5) estadoPad[BTN.ARRIBA] = true; if (ay > .5) estadoPad[BTN.ABAJO] = true;
+  for (const [b, v] of Object.entries(estadoPad)) if (padPrevio[b] !== v){ padPrevio[b] = v; fijar(+b, v); }
+}
+
+/* ================== Aviso, teclado y arranque ================== */
+$('abrir-aviso').addEventListener('click', () => $('dlg-aviso').showModal());
+$('cerrar-aviso').addEventListener('click', () => $('dlg-aviso').close());
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+  if (capa.classList.contains('visible')) cerrar(); else { bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false'); }
+});
+let tRes; addEventListener('resize', () => { clearTimeout(tRes); tRes = setTimeout(construir, 200); });
+
+(async () => {
+  try { await abrirDB(); maquinas = await leerMaquinas(); }
+  catch { $('pista').textContent = 'Este navegador no permite guardar máquinas (¿modo privado?).'; }
+  construir(); pintarCartera(); requestAnimationFrame(bucle);
+})();
+</script>
+</body>
+</html>
