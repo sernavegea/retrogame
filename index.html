@@ -272,6 +272,9 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 .abierta.maximizada.invitado .mando > *{pointer-events:auto}
 .abierta.maximizada.invitado .mando button{background:rgba(47,37,80,.6);border-color:rgba(0,0,0,.6)}
 
+.abierta.jugando .pantalla-grande::after{display:none}
+body.en-partida .escena{visibility:hidden}
+
 @media (prefers-reduced-motion: reduce){ .rotulo,.parpadeo,.precio .giro{animation:none} .ficha{transition:none} }
 </style>
 </head>
@@ -830,6 +833,7 @@ function dibujar(p, t){
 let ultimo = performance.now();
 function bucle(t){
   const dt = Math.min(50, t - ultimo) / 16.7; ultimo = t;
+  if (document.body.classList.contains('en-partida')){ requestAnimationFrame(bucle); return; }
   if (vel) camObj = limitar(camObj + vel * 14 * dt);
   const antes = camZ;
   camZ = reducirMov ? camObj : camZ + (camObj - camZ) * Math.min(1, .14 * dt);
@@ -1151,9 +1155,11 @@ async function iniciarEmulador(m, fichas){
     window.EJS_startOnLoaded = true;
     window.EJS_color = d.color;
     window.EJS_language = 'es-ES';
+    if (d.core === 'psx') window.EJS_defaultOptions = { 'pcsx_rearmed_frameskip_type':'auto', 'pcsx_rearmed_frameskip_threshold':'33' };
     window.EJS_onGameStart = () => parent.postMessage({ tipo:'ejs-inicio' }, '*');
   <\/script><script src="${EJS_DATOS}loader.js"><\/script></body></html>`;
   pantalla.appendChild(iframe);
+  document.body.classList.add('en-partida');
   info.textContent = 'Cargando la placa… Los controles del teclado y mando se configuran en el menú del emulador.';
 }
 addEventListener('message', e => {
@@ -1171,6 +1177,7 @@ async function meterFichas(jugador, n){
   if (iframe) iframe.focus();
 }
 function pararEmulador(){
+  document.body.classList.remove('en-partida');
   if (iframe){ try { iframe.contentWindow.EJS_emulator?.callEvent?.('exit'); } catch {} iframe.remove(); iframe = null; }
   window.__juego = null;
 }
