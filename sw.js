@@ -1,7 +1,7 @@
 /* Service worker de MenteRetro.
    Guarda la web para que abra aunque no haya conexión.
    Las ROMs no pasan por aquí: están en el navegador de cada usuario (IndexedDB). */
-const VERSION = 'menteretro-v11';
+const VERSION = 'menteretro-v12';
 const BASICOS = ['./', './index.html', './que-es.html', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/apple-touch-icon.png', './iconos/favicon-32.png'];
 
 self.addEventListener('install', e => {

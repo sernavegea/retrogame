@@ -276,6 +276,10 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 body.en-partida .escena{visibility:hidden}
 
 
+.portada-fondo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;image-rendering:pixelated;pointer-events:none}
+#pantalla #mensaje{position:relative;z-index:1}
+.casilla{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;font-size:.9rem;cursor:pointer}
+.casilla[hidden]{display:none}
 /* Pedir pelas en casa: la madre y la zapatilla */
 .casa{position:fixed;inset:0;z-index:60;cursor:pointer;overflow:hidden;background:rgba(5,3,12,.55);animation:casa-entra .25s ease}
 @keyframes casa-entra{from{opacity:0}}
@@ -509,6 +513,7 @@ body.en-partida .escena{visibility:hidden}
       <label for="f-rom">ROM del juego</label>
       <input type="file" id="f-rom">
       <small id="f-rom-actual">En arcade, el .zip con su nombre original, sin renombrar.</small>
+      <label class="casilla" id="f-portada-fila" hidden><input type="checkbox" id="f-portada"> Sacar otra portada en la próxima partida</label>
     </div>
     <div class="campo">
       <label for="f-bios">BIOS (opcional)</label>
@@ -836,6 +841,7 @@ function construir(){
     const boton = el.querySelector('.maquina');
     const p = { el, boton, m, x: lado * medio, z: Z0 - fila * SEP, rot: lado < 0 ? 62 : -62,
                 ctx: el.querySelector('canvas').getContext('2d'), semilla: i * 97, demo: m.libre ? 'libre' : DEMOS[i % DEMOS.length] };
+    if (m.portada) cargarPortada(p);
     boton.addEventListener('click', e => { if (arrastrado) { e.preventDefault(); return; } m.libre ? abrirMontar() : abrir(p); });
     boton.addEventListener('focus', () => { camObj = limitar(-p.z - 330); });
     return p;
@@ -851,6 +857,11 @@ function construir(){
     : 'Tu salón está vacío. Pulsa la máquina libre para montar la primera.';
 }
 const limitar = z => Math.max(0, Math.min(maxCam, z));
+function cargarPortada(p){
+  const img = new Image();
+  img.onload = () => { p.img = img; dibujar(p, performance.now()); };
+  img.src = p.m.portada;
+}
 function pintarCamara(){
   mundo.style.transform = `translate3d(0,0,${camZ}px)`;
   puestos.forEach(p => {
@@ -877,6 +888,11 @@ function dibujar(p, t){
     c.fillText('RECORD', 32, 14);
     c.fillStyle = '#fff'; c.font = '11px VT323, monospace'; c.fillText(top.ini, 32, 28);
     c.fillStyle = col; c.fillText(abreviar(top.pts), 32, 40);
+    return;
+  }
+  if (p.img){                                   // la portada sacada del propio juego
+    c.imageSmoothingEnabled = false; c.drawImage(p.img, 0, 0, W, H);
+    if (((t/600)|0) % 2){ c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(14,H-8,36,7); c.fillStyle = '#fff'; c.fillRect(20,H-4,24,1); }
     return;
   }
   if (p.demo === 'estrellas'){
@@ -1027,6 +1043,7 @@ function abrirMontar(m){
   $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
   $('f-bios-actual').textContent = m && m.biosNombre ? `Ahora: ${m.biosNombre}.` : 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).';
   $('f-quitar').hidden = !m; $('f-error').textContent = ''; pintarPistas();
+  $('f-portada').checked = false; $('f-portada-fila').hidden = !(m && m.portada); nombreAuto = ''; sistemaAuto = false;
   dlgMontar.showModal(); $('f-nombre').focus();
 }
 $('f-cancelar').addEventListener('click', () => dlgMontar.close());
@@ -1040,6 +1057,27 @@ function pintarPistas(){
   $('f-rom-actual').textContent = r; $('f-bios-actual').textContent = b;
 }
 $('f-sistema').addEventListener('change', pintarPistas);
+const SISTEMA_POR_EXT = { nes:'nes', smc:'snes', sfc:'snes', fig:'snes', swc:'snes', md:'segaMD', gen:'segaMD', smd:'segaMD',
+  sms:'segaMS', gb:'gb', gbc:'gb', gba:'gba' };
+let nombreAuto = '', sistemaAuto = false;
+$('f-sistema').addEventListener('change', () => { sistemaAuto = false; });
+function nombreDesdeArchivo(f){
+  let n = f.replace(/\.[^.]+$/, '')                 // extensión
+           .replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '') // (USA), [!], (Rev 1)…
+           .replace(/[_.]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!n) return '';
+  if (!/\s/.test(n) && n.length <= 10) return n.toUpperCase();   // nombres cortos de arcade: sf2, mslug
+  n = n.replace(/(^|\s)\S/g, c => c.toUpperCase());
+  return n.slice(0, 30);
+}
+$('f-rom').addEventListener('change', () => {
+  const f = $('f-rom').files[0]; if (!f) return;
+  const ext = (f.name.split('.').pop() || '').toLowerCase();
+  if (!editando && SISTEMA_POR_EXT[ext]){ $('f-sistema').value = SISTEMA_POR_EXT[ext]; sistemaAuto = true; pintarPistas(); }
+  else if (!editando && sistemaAuto && (ext === 'zip' || ext === '7z')){ $('f-sistema').value = 'arcade'; sistemaAuto = false; pintarPistas(); }
+  const actualNombre = $('f-nombre').value.trim();
+  if (!actualNombre || actualNombre === nombreAuto){ nombreAuto = nombreDesdeArchivo(f.name); $('f-nombre').value = nombreAuto; }
+});
 
 $('form-montar').addEventListener('submit', async e => {
   e.preventDefault();
@@ -1049,7 +1087,8 @@ $('form-montar').addEventListener('submit', async e => {
   const m = Object.assign({}, editando || { id: crypto.randomUUID(), creado: Date.now() }, {
     nombre, sistema: $('f-sistema').value, color: document.querySelector('#f-colores input:checked').value,
   });
-  if (rom){ m.rom = rom; m.romNombre = rom.name; }
+  if (rom){ m.rom = rom; m.romNombre = rom.name; if (editando) delete m.portada; }
+  if ($('f-portada').checked) delete m.portada;
   if (bios){ m.bios = bios; m.biosNombre = bios.name; }
   $('f-guardar').disabled = true;
   $('f-error').textContent = rom && rom.size > 150 * 1048576 ? `Guardando ${Math.round(rom.size / 1048576)} MB, puede tardar un poco…` : 'Guardando…';
@@ -1155,7 +1194,8 @@ function pintarPantallaBase(){
     ? `<p>Conectando con la partida…</p>`
     : !creditos() ? `<p class="parpadeo">INSERTE MONEDA</p><p>5 duros la partida</p>`
     : `<p>CRÉDITO ${creditos()}</p><p class="parpadeo">PULSA JUGAR</p>`;
-  pantalla.innerHTML = `<div id="mensaje">${msg}</div>`;
+  const fondo = modo === 'local' && actual.m.portada ? `<img class="portada-fondo" src="${actual.m.portada}" alt="">` : '';
+  pantalla.innerHTML = `${fondo}<div id="mensaje">${msg}</div>`;
 }
 function pintarBandeja(){
   $('bandeja').innerHTML = [5,25,100].map(v =>
@@ -1278,8 +1318,21 @@ addEventListener('message', e => {
   info.textContent = ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
   if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
   stats(actual.m.id).partidas++; guardar(); inicioPartida = Date.now();
+  clearTimeout(tPortada);
+  if (!actual.m.portada){
+    const p = actual;
+    tPortada = setTimeout(async () => {
+      if (!jugando || actual !== p) return;
+      const foto = await capturar();
+      if (!foto || !jugando || actual !== p) return;
+      p.m.portada = foto;
+      try { await guardarMaquina(p.m); } catch {}
+      cargarPortada(p);
+    }, 12000);
+  }
   iframe.focus();
 });
+let tPortada = 0;
 function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
 function pulsar(jugador, boton, valor){ const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
 async function meterFichas(jugador, n){
@@ -1288,6 +1341,7 @@ async function meterFichas(jugador, n){
   if (iframe) iframe.focus();
 }
 function pararEmulador(){
+  clearTimeout(tPortada);
   document.body.classList.remove('en-partida');
   if (iframe){ try { iframe.contentWindow.EJS_emulator?.callEvent?.('exit'); } catch {} iframe.remove(); iframe = null; }
   window.__juego = null;
@@ -1564,6 +1618,7 @@ $('c-guardar').addEventListener('click', async () => {
   cabecera.puntos = (await todosPuntos()).filter(r => ids.has(r.maquina));
   for (const m of lista){
     const f = { id:m.id, creado:m.creado, nombre:m.nombre, sistema:m.sistema, color:m.color, romNombre:m.romNombre, romTam:m.rom.size };
+    if (m.portada) f.portada = m.portada;
     partes.push(m.rom);
     if (m.bios){ f.biosNombre = m.biosNombre; f.biosTam = m.bios.size; partes.push(m.bios); }
     cabecera.maquinas.push(f);
@@ -1591,6 +1646,7 @@ $('c-archivo').addEventListener('change', async e => {
     let pos = 17 + largo;
     const nuevas = cab.maquinas.map(m => {
       const maq = { id:m.id, creado:m.creado, nombre:m.nombre, sistema:m.sistema, color:m.color, romNombre:m.romNombre };
+      if (typeof m.portada === 'string' && m.portada.startsWith('data:image/jpeg')) maq.portada = m.portada;
       maq.rom = new File([f.slice(pos, pos + m.romTam)], m.romNombre); pos += m.romTam;
       if (m.biosNombre){ maq.bios = new File([f.slice(pos, pos + m.biosTam)], m.biosNombre); maq.biosNombre = m.biosNombre; pos += m.biosTam; }
       return maq;
