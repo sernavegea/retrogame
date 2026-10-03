@@ -281,6 +281,7 @@ body.en-partida .escena{visibility:hidden}
 #pantalla #mensaje{position:relative;z-index:1}
 .casilla{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;font-size:.9rem;cursor:pointer}
 .casilla[hidden]{display:none}
+.soltar{outline:3px dashed var(--neon-cian);outline-offset:-10px}
 .nota-varias{margin:-.3rem 0 .8rem;font-size:.9rem;color:var(--texto-suave)}
 .nota-varias[hidden]{display:none}
 .enlace{background:none;border:0;padding:0;color:var(--cian,#35f2ff);font:inherit;text-decoration:underline;cursor:pointer}
@@ -554,7 +555,8 @@ body.en-partida .escena{visibility:hidden}
 <dialog id="dlg-varias">
   <h2>Montar varias máquinas</h2>
   <p>Elige tus ROMs y se monta una máquina por cada juego. El nombre y el sistema salen del archivo, igual que al montarlas de una en una.</p>
-  <p style="color:var(--texto-suave);font-size:.9rem">Los .zip se montan como arcade. Si entre tus archivos está neogeo.zip, se usa como BIOS de las máquinas arcade y no se monta como juego. Los juegos que ya tengas en el salón se saltan.</p>
+  <p><strong>¿Tus juegos están repartidos en subcarpetas?</strong> Comprime la carpeta principal en un único .zip y elígelo: el salón busca las ROMs dentro de todas sus carpetas. En el móvil se hace desde la app de Archivos, manteniendo pulsada la carpeta y eligiendo Comprimir.</p>
+  <p style="color:var(--texto-suave);font-size:.9rem">Un .zip que solo lleva un juego de consola dentro se monta con su sistema. Los .zip de arcade se montan como arcade. Si está neogeo.zip, se usa como BIOS de las máquinas arcade. Los juegos que ya tengas en el salón se saltan. En el ordenador también puedes arrastrar la carpeta aquí.</p>
   <div class="pie-dialogo" style="justify-content:flex-start">
     <button class="boton" id="v-archivos">Elegir archivos</button>
     <button class="boton secundario" id="v-carpeta" hidden>Elegir una carpeta</button>
@@ -2061,8 +2063,70 @@ $('v-carpeta').addEventListener('click', () => $('v-in-carpeta').click());
 for (const id of ['v-in-archivos', 'v-in-carpeta'])
   $(id).addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) montarVarias(f); });
 
+/* Abre los .zip que son colecciones (ROMs dentro de carpetas) o un juego de consola comprimido.
+   Un .zip de arcade lleva dentro archivos sin extensión de ROM, y se deja tal cual. */
+let JSZipCargado = null;
+function cargarJSZip(){
+  return JSZipCargado || (JSZipCargado = new Promise((ok, mal) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    sc.onload = () => ok(window.JSZip); sc.onerror = () => { JSZipCargado = null; mal(new Error('jszip')); };
+    document.head.appendChild(sc);
+  }));
+}
+async function desplegarZips(archivos, nivel = 0){
+  const ext = n => (n.split('.').pop() || '').toLowerCase();
+  const zips = archivos.filter(f => ext(f.name) === 'zip' && !BIOS_ARCADE.includes(f.name.toLowerCase()));
+  if (!zips.length) return archivos;
+  let JSZip;
+  try { JSZip = await cargarJSZip(); } catch { return archivos; }   // sin conexión: se montan tal cual
+  const salida = archivos.filter(f => !zips.includes(f));
+  for (const [n, z] of zips.entries()){
+    vEstado.textContent = `Mirando dentro de ${z.name} (${n + 1} de ${zips.length})…`;
+    let zip;
+    try { zip = await JSZip.loadAsync(z); } catch { salida.push(z); continue; }
+    const dentro = Object.values(zip.files).filter(e => !e.dir && !e.name.split('/').pop().startsWith('.')
+      && !e.name.startsWith('__MACOSX') && EXT_VALIDAS.has(ext(e.name)));
+    if (!dentro.length){ salida.push(z); continue; }                   // es un juego de arcade
+    for (const e of dentro){
+      const nombre = e.name.split('/').pop();
+      const f = new File([await e.async('blob')], nombre); f._deColeccion = true; salida.push(f);
+    }
+  }
+  // zips dentro de la colección (un juego de consola comprimido en su carpeta): un nivel más
+  if (nivel < 2){
+    const nuevos = salida.filter(f => f._deColeccion && ext(f.name) === 'zip');
+    if (nuevos.length) return [...salida.filter(f => !nuevos.includes(f)), ...await desplegarZips(nuevos, nivel + 1)];
+  }
+  return salida;
+}
+async function leerEntrada(en, lista){
+  if (en.isFile) lista.push(await new Promise((ok, mal) => en.file(ok, mal)));
+  else if (en.isDirectory){
+    const lector = en.createReader();
+    for (;;){
+      const lote = await new Promise((ok, mal) => lector.readEntries(ok, mal));
+      if (!lote.length) break;
+      for (const h of lote) await leerEntrada(h, lista);
+    }
+  }
+}
+dlgVarias.addEventListener('dragover', e => { e.preventDefault(); dlgVarias.classList.add('soltar'); });
+dlgVarias.addEventListener('dragleave', () => dlgVarias.classList.remove('soltar'));
+dlgVarias.addEventListener('drop', async e => {
+  e.preventDefault(); dlgVarias.classList.remove('soltar');
+  if (montandoVarias) return;
+  const entradas = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  const lista = [];
+  if (entradas.length) for (const en of entradas) { try { await leerEntrada(en, lista); } catch {} }
+  else lista.push(...e.dataTransfer.files);
+  if (lista.length) montarVarias(lista);
+});
 async function montarVarias(archivos){
   const ext = f => (f.name.split('.').pop() || '').toLowerCase();
+  vProgreso.hidden = true; montandoVarias = true;
+  $('v-archivos').disabled = $('v-carpeta').disabled = $('v-cerrar').disabled = true;
+  archivos = await desplegarZips(archivos);
   const bios = archivos.find(f => BIOS_ARCADE.includes(f.name.toLowerCase()));
   const yaTengo = new Set(maquinas.map(m => (m.romNombre || '').toLowerCase()));
   const juegos = [], saltadas = { repetidas:0, otras:0 };
@@ -2074,6 +2138,7 @@ async function montarVarias(archivos){
   }
   if (!juegos.length){
     vEstado.textContent = saltadas.repetidas ? 'Todos esos juegos ya están en tu salón.' : 'No he encontrado ROMs que el salón sepa abrir.';
+    montandoVarias = false; $('v-archivos').disabled = $('v-carpeta').disabled = $('v-cerrar').disabled = false;
     return;
   }
   montandoVarias = true;
