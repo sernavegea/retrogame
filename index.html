@@ -280,6 +280,9 @@ body.en-partida .escena{visibility:hidden}
 #pantalla #mensaje{position:relative;z-index:1}
 .casilla{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;font-size:.9rem;cursor:pointer}
 .casilla[hidden]{display:none}
+.nota-varias{margin:-.3rem 0 .8rem;font-size:.9rem;color:var(--texto-suave)}
+.nota-varias[hidden]{display:none}
+.enlace{background:none;border:0;padding:0;color:var(--cian,#35f2ff);font:inherit;text-decoration:underline;cursor:pointer}
 /* Pedir pelas en casa: la madre y la zapatilla */
 .casa{position:fixed;inset:0;z-index:60;cursor:pointer;overflow:hidden;background:rgba(5,3,12,.55);animation:casa-entra .25s ease}
 @keyframes casa-entra{from{opacity:0}}
@@ -488,6 +491,7 @@ body.en-partida .escena{visibility:hidden}
 <dialog id="dlg-montar">
   <form id="form-montar" method="dialog">
     <h2 id="titulo-montar">Montar máquina</h2>
+    <p id="f-varias-fila" class="nota-varias">¿Tienes una carpeta llena de juegos? <button type="button" class="enlace" id="f-varias">Monta varias de golpe</button></p>
     <div class="campo">
       <label for="f-nombre">Nombre en la marquesina</label>
       <input type="text" id="f-nombre" maxlength="28" required autocomplete="off">
@@ -527,6 +531,22 @@ body.en-partida .escena{visibility:hidden}
       <button type="submit" class="boton" id="f-guardar">Guardar máquina</button>
     </div>
   </form>
+</dialog>
+
+<!-- Montar varias máquinas de golpe -->
+<dialog id="dlg-varias">
+  <h2>Montar varias máquinas</h2>
+  <p>Elige tus ROMs y se monta una máquina por cada juego. El nombre y el sistema salen del archivo, igual que al montarlas de una en una.</p>
+  <p style="color:var(--texto-suave);font-size:.9rem">Los .zip se montan como arcade. Si entre tus archivos está neogeo.zip, se usa como BIOS de las máquinas arcade y no se monta como juego. Los juegos que ya tengas en el salón se saltan.</p>
+  <div class="pie-dialogo" style="justify-content:flex-start">
+    <button class="boton" id="v-archivos">Elegir archivos</button>
+    <button class="boton secundario" id="v-carpeta" hidden>Elegir una carpeta</button>
+    <input type="file" id="v-in-archivos" multiple hidden>
+    <input type="file" id="v-in-carpeta" webkitdirectory multiple hidden>
+  </div>
+  <progress id="v-progreso" max="1" value="0" hidden style="width:100%"></progress>
+  <p class="error" id="v-estado" aria-live="polite" style="color:var(--texto-suave)"></p>
+  <div class="pie-dialogo"><button class="boton secundario" id="v-cerrar">Cerrar</button></div>
 </dialog>
 
 <!-- Unirse a dobles -->
@@ -980,6 +1000,7 @@ $('bolsa-acciones').addEventListener('click', e => {
 });
 
 
+
 /* ================== Pedir pelas en casa ================== */
 const FRASES_MADRE = [
   '¿Tú te crees que soy el Banco de España?',
@@ -1043,6 +1064,7 @@ function abrirMontar(m){
   $('f-rom-actual').textContent = m ? `Ahora: ${m.romNombre}. Elige otra solo si quieres cambiarla.` : 'En arcade, el .zip con su nombre original, sin renombrar.';
   $('f-bios-actual').textContent = m && m.biosNombre ? `Ahora: ${m.biosNombre}.` : 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).';
   $('f-quitar').hidden = !m; $('f-error').textContent = ''; pintarPistas();
+  $('f-varias-fila').hidden = !!m;
   $('f-portada').checked = false; $('f-portada-fila').hidden = !(m && m.portada); nombreAuto = ''; sistemaAuto = false;
   dlgMontar.showModal(); $('f-nombre').focus();
 }
@@ -1066,7 +1088,7 @@ function nombreDesdeArchivo(f){
            .replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '') // (USA), [!], (Rev 1)…
            .replace(/[_.]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!n) return '';
-  if (!/\s/.test(n) && n.length <= 10) return n.toUpperCase();   // nombres cortos de arcade: sf2, mslug
+  if (!/\s/.test(n) && n.length <= 10 && n === n.toLowerCase()) return n.toUpperCase();   // nombres cortos de arcade: sf2, mslug
   n = n.replace(/(^|\s)\S/g, c => c.toUpperCase());
   return n.slice(0, 30);
 }
@@ -1739,6 +1761,62 @@ let tRes; addEventListener('resize', () => { clearTimeout(tRes); tRes = setTimeo
   construir(); pintarCartera(); requestAnimationFrame(bucle);
   introListo();
 })();
+
+/* ================== Montar varias máquinas de golpe ================== */
+const dlgVarias = $('dlg-varias'), vEstado = $('v-estado'), vProgreso = $('v-progreso');
+const BIOS_ARCADE = ['neogeo.zip'];
+const EXT_VALIDAS = new Set([...Object.keys(SISTEMA_POR_EXT), 'zip', '7z']);
+let montandoVarias = false;
+if ('webkitdirectory' in document.createElement('input') && !esMovil) $('v-carpeta').hidden = false;
+$('f-varias').addEventListener('click', () => { dlgMontar.close(); vEstado.textContent = ''; vProgreso.hidden = true; dlgVarias.showModal(); });
+$('v-cerrar').addEventListener('click', () => { if (!montandoVarias) dlgVarias.close(); });
+dlgVarias.addEventListener('cancel', e => { if (montandoVarias) e.preventDefault(); });
+$('v-archivos').addEventListener('click', () => $('v-in-archivos').click());
+$('v-carpeta').addEventListener('click', () => $('v-in-carpeta').click());
+for (const id of ['v-in-archivos', 'v-in-carpeta'])
+  $(id).addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) montarVarias(f); });
+
+async function montarVarias(archivos){
+  const ext = f => (f.name.split('.').pop() || '').toLowerCase();
+  const bios = archivos.find(f => BIOS_ARCADE.includes(f.name.toLowerCase()));
+  const yaTengo = new Set(maquinas.map(m => (m.romNombre || '').toLowerCase()));
+  const juegos = [], saltadas = { repetidas:0, otras:0 };
+  for (const f of archivos){
+    if (BIOS_ARCADE.includes(f.name.toLowerCase())) continue;
+    if (!EXT_VALIDAS.has(ext(f))) { saltadas.otras++; continue; }
+    if (yaTengo.has(f.name.toLowerCase())) { saltadas.repetidas++; continue; }
+    yaTengo.add(f.name.toLowerCase()); juegos.push(f);
+  }
+  if (!juegos.length){
+    vEstado.textContent = saltadas.repetidas ? 'Todos esos juegos ya están en tu salón.' : 'No he encontrado ROMs que el salón sepa abrir.';
+    return;
+  }
+  montandoVarias = true;
+  $('v-archivos').disabled = $('v-carpeta').disabled = $('v-cerrar').disabled = true;
+  vProgreso.hidden = false; vProgreso.max = juegos.length; vProgreso.value = 0;
+  let hechas = 0, fallos = 0;
+  for (const f of juegos){
+    vEstado.textContent = `Montando ${hechas + 1} de ${juegos.length}: ${f.name}`;
+    const sistema = SISTEMA_POR_EXT[ext(f)] || 'arcade';
+    const m = { id: crypto.randomUUID(), creado: Date.now() + hechas, nombre: nombreDesdeArchivo(f.name) || f.name.slice(0, 30),
+                sistema, color: COLORES[(maquinas.length + hechas) % COLORES.length], rom: f, romNombre: f.name };
+    if (bios && ES_ARCADE(sistema)){ m.bios = bios; m.biosNombre = bios.name; }
+    try { await guardarMaquina(m); hechas++; }
+    catch { fallos++; if (fallos >= 3) break; }   // casi siempre es falta de espacio: no seguimos insistiendo
+    vProgreso.value = hechas + fallos;
+  }
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+  maquinas = await leerMaquinas(); construir();
+  const partes = [`Listo: ${hechas} ${hechas === 1 ? 'máquina nueva' : 'máquinas nuevas'} en el salón.`];
+  if (saltadas.repetidas) partes.push(`${saltadas.repetidas} ya estaban.`);
+  if (saltadas.otras) partes.push(`${saltadas.otras} ${saltadas.otras === 1 ? 'archivo no era' : 'archivos no eran'} una ROM que el salón sepa abrir.`);
+  if (fallos) partes.push('Algunas no cupieron: puede que el navegador se haya quedado sin espacio.');
+  if (hechas && juegos.some(f => ext(f) === 'zip')) partes.push('Revisa las de arcade: si alguna era de consola en .zip, cámbiale el sistema en Editar máquina.');
+  vEstado.textContent = partes.join(' ');
+  montandoVarias = false;
+  $('v-archivos').disabled = $('v-carpeta').disabled = $('v-cerrar').disabled = false;
+}
+
 </script>
 </body>
 </html>
