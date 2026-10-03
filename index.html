@@ -280,25 +280,32 @@ body.en-partida .escena{visibility:hidden}
 .casa{position:fixed;inset:0;z-index:60;cursor:pointer;overflow:hidden;background:rgba(5,3,12,.55);animation:casa-entra .25s ease}
 @keyframes casa-entra{from{opacity:0}}
 .casa.fuera{opacity:0;transition:opacity .35s ease}
-.casa .zapatilla{position:absolute;left:0;top:0;width:min(44vw,230px);filter:drop-shadow(0 10px 8px rgba(0,0,0,.5));
-  animation:zapatilla-vuela 1.05s cubic-bezier(.3,.1,.5,1) forwards;will-change:transform}
-@keyframes zapatilla-vuela{
-  0%  {transform:translate(110vw,70vh) rotate(0deg) scale(.8)}
-  50% {transform:translate(45vw,12vh) rotate(-540deg) scale(1.15)}
-  100%{transform:translate(-40vw,48vh) rotate(-1080deg) scale(.9)}}
+.casa .zapatilla{position:absolute;left:50%;top:44%;width:min(44vw,230px);margin:calc(min(44vw,230px) * -.225) 0 0 calc(min(44vw,230px) * -.5);
+  filter:drop-shadow(0 10px 8px rgba(0,0,0,.5));transform:scale(.05);opacity:0;
+  animation:zapatilla-viene 1.7s cubic-bezier(.55,0,.9,.6) forwards;will-change:transform}
+@keyframes zapatilla-viene{
+  0%  {opacity:0;transform:translate(0,-6vh) scale(.05) rotate(0deg)}
+  10% {opacity:1}
+  80% {opacity:1;transform:translate(0,0) scale(1.9) rotate(-900deg)}
+  88% {opacity:1;transform:translate(0,2vh) scale(3.4) rotate(-960deg)}
+  100%{opacity:0;transform:translate(0,4vh) scale(4.2) rotate(-975deg)}}
+.casa .golpe{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;animation:golpe .35s 1.45s ease-out}
+@keyframes golpe{0%{opacity:.85}100%{opacity:0}}
+.casa.temblor{animation:temblor .4s 1.45s}
+@keyframes temblor{0%,100%{transform:none}20%{transform:translate(-10px,6px)}40%{transform:translate(9px,-7px)}60%{transform:translate(-7px,-4px)}80%{transform:translate(5px,5px)}}
 .casa .zas{position:absolute;left:50%;top:22%;transform:translateX(-50%) rotate(-8deg);font-family:var(--fuente-rotulo);
-  font-size:clamp(1.8rem,9vw,3.6rem);color:#ffe14a;text-shadow:3px 3px 0 #c2185b,0 0 18px #ff2d95;opacity:0;animation:zas .5s .45s ease-out forwards}
+  font-size:clamp(1.8rem,9vw,3.6rem);color:#ffe14a;text-shadow:3px 3px 0 #c2185b,0 0 18px #ff2d95;opacity:0;animation:zas .5s 1.45s ease-out forwards}
 @keyframes zas{0%{opacity:0;transform:translateX(-50%) rotate(-8deg) scale(.3)}60%{opacity:1;transform:translateX(-50%) rotate(-8deg) scale(1.25)}100%{opacity:1;transform:translateX(-50%) rotate(-8deg) scale(1)}}
 .casa .bocadillo{position:absolute;left:50%;top:40%;transform:translateX(-50%);width:min(86vw,420px);background:#fffaf0;color:#2a1608;
   border:3px solid #2a1608;border-radius:22px;padding:1rem 1.2rem;font-size:clamp(1rem,4.4vw,1.25rem);font-weight:700;line-height:1.35;text-align:center;
-  box-shadow:6px 6px 0 rgba(0,0,0,.45);opacity:0;animation:bocadillo .4s 1s cubic-bezier(.2,1.6,.4,1) forwards}
+  box-shadow:6px 6px 0 rgba(0,0,0,.45);opacity:0;animation:bocadillo .4s 1.95s cubic-bezier(.2,1.6,.4,1) forwards}
 .casa .bocadillo::after{content:"";position:absolute;right:18%;bottom:-20px;border:12px solid transparent;border-top:18px solid #2a1608}
 .casa .bocadillo small{display:block;margin-top:.5rem;font-size:.75em;font-weight:400;opacity:.7}
 @keyframes bocadillo{from{opacity:0;transform:translateX(-50%) scale(.6)}to{opacity:1;transform:translateX(-50%) scale(1)}}
-.casa .cien{position:absolute;left:50%;top:68%;transform:translateX(-50%);opacity:0;animation:cien-cae .7s 1.5s cubic-bezier(.3,1.5,.5,1) forwards}
+.casa .cien{position:absolute;left:50%;top:68%;transform:translateX(-50%);opacity:0;animation:cien-cae .7s 2.45s cubic-bezier(.3,1.5,.5,1) forwards}
 @keyframes cien-cae{from{opacity:0;transform:translate(-50%,-60vh) rotate(-200deg)}to{opacity:1;transform:translate(-50%,0) rotate(0)}}
 @media (prefers-reduced-motion: reduce){
-  .casa .zapatilla{display:none} .casa .zas,.casa .bocadillo,.casa .cien{animation-duration:.01s;animation-delay:0s}
+  .casa .zapatilla,.casa .golpe{display:none} .casa.temblor{animation:none} .casa .zas,.casa .bocadillo,.casa .cien{animation-duration:.01s;animation-delay:0s}
 }
 
 @media (prefers-reduced-motion: reduce){ .rotulo,.parpadeo,.precio .giro{animation:none} .ficha{transition:none} }
@@ -781,8 +788,8 @@ function sonido(tipo){
   if (tipo === 'moneda'){ tono(2600,0,.25); tono(3300,0,.2); tono(1400,.14,.06); tono(1250,.24,.05); tono(1100,.31,.04); }
   if (tipo === 'credito'){ tono(660,.35,.09,'square',.08); tono(990,.45,.14,'square',.08); }
   if (tipo === 'zapatilla'){   // silbido de la zapatilla girando y el golpe
-    for (let i = 0; i < 6; i++) tono(900 - i*90, i*.14, .12, 'sine', .07);
-    tono(110, .5, .18, 'square', .16); tono(70, .52, .22, 'sawtooth', .1);
+    for (let i = 0; i < 10; i++) tono(380 + i*60, i*.14, .12, 'sine', .04 + i*.008);   // se acerca
+    tono(110, 1.45, .2, 'square', .2); tono(65, 1.47, .3, 'sawtooth', .14);           // ¡zas!
   }
   if (tipo === 'rechazo'){ tono(260,0,.18,'square',.1); tono(1800,.3,.15); }
 }
@@ -984,17 +991,17 @@ function pedirEnCasa(){
   let n; do { n = Math.floor(Math.random() * FRASES_MADRE.length); } while (n === ultimaFrase && FRASES_MADRE.length > 1);
   ultimaFrase = n;
   const capa = document.createElement('div');
-  capa.className = 'casa'; capa.setAttribute('role', 'status');
-  capa.innerHTML = `${ZAPATILLA_SVG}<div class="zas">¡ZAS!</div>
+  capa.className = 'casa temblor'; capa.setAttribute('role', 'status');
+  capa.innerHTML = `${ZAPATILLA_SVG}<div class="golpe"></div><div class="zas">¡ZAS!</div>
     <div class="bocadillo">${FRASES_MADRE[n]}<small>Mamá te da 100 pesetas</small></div>
     <div class="cien">${monedaSVG(100, 96)}</div>`;
   document.body.appendChild(capa);
   sonido('zapatilla');
-  setTimeout(() => sonido('moneda'), reducirMov ? 0 : 1900);
+  setTimeout(() => sonido('moneda'), reducirMov ? 0 : 2900);
   let cerrada = false;
   const cerrar = () => { if (cerrada) return; cerrada = true; capa.classList.add('fuera'); setTimeout(() => capa.remove(), 400); };
   capa.addEventListener('click', cerrar);
-  setTimeout(cerrar, 4200);
+  setTimeout(cerrar, reducirMov ? 3500 : 6000);
 }
 
 /* Quita las máquinas de juegos libres que montaban versiones anteriores */
