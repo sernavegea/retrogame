@@ -283,6 +283,13 @@ body.en-partida .escena{visibility:hidden}
 .nota-varias{margin:-.3rem 0 .8rem;font-size:.9rem;color:var(--texto-suave)}
 .nota-varias[hidden]{display:none}
 .enlace{background:none;border:0;padding:0;color:var(--cian,#35f2ff);font:inherit;text-decoration:underline;cursor:pointer}
+.lista-maquinas{list-style:none;margin:0;padding:0;max-height:60vh;overflow-y:auto;display:grid;gap:.5rem}
+.lista-maquinas button{display:flex;align-items:center;gap:.8rem;width:100%;padding:.5rem;background:#1a1330;border:2px solid #000;border-radius:10px;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.lista-maquinas button:hover,.lista-maquinas button:focus-visible{border-color:var(--color)}
+.lista-maquinas .mini{flex:none;width:64px;height:48px;border-radius:6px;background:var(--color);object-fit:cover;image-rendering:pixelated;border:2px solid #000}
+.lista-maquinas b{display:block;line-height:1.2}
+.lista-maquinas small{color:var(--texto-suave)}
+.lista-maquinas .vacia{padding:1rem;text-align:center;color:var(--texto-suave)}
 /* Pedir pelas en casa: la madre y la zapatilla */
 .casa{position:fixed;inset:0;z-index:60;cursor:pointer;overflow:hidden;background:rgba(5,3,12,.55);animation:casa-entra .25s ease}
 @keyframes casa-entra{from{opacity:0}}
@@ -473,6 +480,7 @@ body.en-partida .escena{visibility:hidden}
   <div class="grupo">
     <button class="boton secundario" id="avanzar">Avanzar</button>
     <button class="boton secundario" id="retroceder">Retroceder</button>
+    <button class="boton secundario" id="btn-lista" hidden>Todas</button>
   </div>
   <div class="grupo">
     <button class="boton" id="btn-montar">Montar máquina</button>
@@ -531,6 +539,14 @@ body.en-partida .escena{visibility:hidden}
       <button type="submit" class="boton" id="f-guardar">Guardar máquina</button>
     </div>
   </form>
+</dialog>
+
+<!-- Lista de todas las máquinas -->
+<dialog id="dlg-lista">
+  <h2>Todas las máquinas</h2>
+  <input type="search" id="l-buscar" placeholder="Buscar juego…" aria-label="Buscar juego" style="width:100%;margin-bottom:.8rem">
+  <ul class="lista-maquinas" id="l-lista"></ul>
+  <div class="pie-dialogo"><button class="boton secundario" id="l-cerrar">Cerrar</button></div>
 </dialog>
 
 <!-- Montar varias máquinas de golpe -->
@@ -820,14 +836,18 @@ function sonido(tipo){
 
 /* ================== Pasillo 3D ================== */
 const escena = $('escena'), mundo = $('mundo');
-const PERSP = 700, SUELO = 190, ALTO = 560, SEP = 240, Z0 = -60;
+const PERSP = 700, SUELO = 190, ALTO = 560, Z0 = -60;
+let SEP = 240, GIRO = 62;
 let maquinas = [], puestos = [], camZ = 0, camObj = 0, maxCam = 0, vel = 0;
 
 function construir(){
-  const medio = Math.round(Math.min(300, innerWidth * .36));
+  // En pantallas estrechas el pasillo se ensancha, las máquinas se separan más y miran más de frente
+  const estrecho = innerWidth < 640;
+  SEP = estrecho ? 420 : 240; GIRO = estrecho ? 34 : 62;
+  const medio = estrecho ? Math.round(Math.max(180, innerWidth * .56)) : Math.round(Math.min(300, innerWidth * .36));
   const lista = [...maquinas, { libre:true, id:'libre', nombre:'Máquina libre', color:'#5b5078' }];
   const porLado = Math.ceil(lista.length / 2);
-  const zFondo = Z0 - (porLado - 1) * SEP - 360;
+  const zFondo = Z0 - (porLado - 1) * SEP - 360 - (innerWidth < 640 ? SEP / 2 : 0);
   const largo = 520 - zFondo, ancho = (medio + 160) * 2;
   mundo.innerHTML = `
     <div class="plano suelo"   style="width:${ancho}px;height:${largo}px;transform:translate3d(${-ancho/2}px,${SUELO}px,520px) rotateX(-90deg)"></div>
@@ -859,7 +879,7 @@ function construir(){
       </button>`;
     mundo.appendChild(el);
     const boton = el.querySelector('.maquina');
-    const p = { el, boton, m, x: lado * medio, z: Z0 - fila * SEP, rot: lado < 0 ? 62 : -62,
+    const p = { el, boton, m, x: lado * medio, z: Z0 - fila * SEP - (estrecho && lado > 0 ? SEP / 2 : 0), rot: lado < 0 ? GIRO : -GIRO,
                 ctx: el.querySelector('canvas').getContext('2d'), semilla: i * 97, demo: m.libre ? 'libre' : DEMOS[i % DEMOS.length] };
     if (m.portada) cargarPortada(p);
     boton.addEventListener('click', e => { if (arrastrado) { e.preventDefault(); return; } m.libre ? abrirMontar() : abrir(p); });
@@ -872,6 +892,7 @@ function construir(){
   camObj = limitar(camObj); camZ = limitar(camZ);
   pintarCamara();
   puestos.forEach(p => dibujar(p, 0));
+  $('btn-lista').hidden = maquinas.length < 4;
   $('pista').textContent = maquinas.length
     ? 'Anda con la rueda, las flechas o arrastrando. Pulsa una máquina para jugar.'
     : 'Tu salón está vacío. Pulsa la máquina libre para montar la primera.';
@@ -1817,6 +1838,28 @@ async function montarVarias(archivos){
   $('v-archivos').disabled = $('v-carpeta').disabled = $('v-cerrar').disabled = false;
 }
 
+
+/* ================== Lista de todas las máquinas ================== */
+const dlgLista = $('dlg-lista');
+function pintarLista(){
+  const q = $('l-buscar').value.trim().toLowerCase();
+  const lista = puestos.filter(p => !p.m.libre && (!q || p.m.nombre.toLowerCase().includes(q)))
+                       .sort((a, b) => a.m.nombre.localeCompare(b.m.nombre, 'es'));
+  $('l-lista').innerHTML = lista.length ? lista.map(p => `<li><button data-id="${p.m.id}" style="--color:${p.m.color}">
+      ${p.m.portada ? `<img class="mini" src="${p.m.portada}" alt="">` : '<span class="mini"></span>'}
+      <span><b>${escapar(p.m.nombre)}</b><small>${escapar(nombreSistema(p.m.sistema))}</small></span></button></li>`).join('')
+    : '<li class="vacia">Ningún juego con ese nombre.</li>';
+}
+$('btn-lista').addEventListener('click', () => { $('l-buscar').value = ''; pintarLista(); dlgLista.showModal(); });
+$('l-buscar').addEventListener('input', pintarLista);
+$('l-cerrar').addEventListener('click', () => dlgLista.close());
+$('l-lista').addEventListener('click', e => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  const p = puestos.find(x => x.m.id === b.dataset.id); if (!p) return;
+  dlgLista.close();
+  camObj = camZ = limitar(-p.z - 330); pintarCamara();
+  abrir(p);
+});
 </script>
 </body>
 </html>
