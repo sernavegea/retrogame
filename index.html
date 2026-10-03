@@ -499,7 +499,6 @@ body.en-partida .escena{visibility:hidden}
         <option value="segaMS">Master System</option>
         <option value="gb">Game Boy / Color</option>
         <option value="gba">Game Boy Advance</option>
-        <option value="psx">PlayStation</option>
       </select>
     </div>
     <fieldset class="campo">
@@ -1006,7 +1005,7 @@ function pedirEnCasa(){
 
 /* Quita las máquinas de juegos libres que montaban versiones anteriores */
 async function quitarLibresAntiguas(){
-  const viejas = maquinas.filter(m => m.catalogo);
+  const viejas = maquinas.filter(m => m.catalogo || m.sistema === 'psx');   // homebrew antiguos y PlayStation, ya retirada
   for (const m of viejas){ await borrarMaquina(m.id); delete estado.creditos[m.id]; }
   if (viejas.length){ guardar(); maquinas = await leerMaquinas(); }
 }
@@ -1034,8 +1033,6 @@ $('f-cancelar').addEventListener('click', () => dlgMontar.close());
 const PISTAS = {
   arcade:        ['En arcade, el .zip con su nombre original, sin renombrar.', 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).'],
   mame2003_plus: ['En arcade, el .zip con su nombre original, sin renombrar.', 'Solo si el juego la pide, como los de Neo Geo (neogeo.zip).'],
-  psx:           ['Un .chd o .pbp, o un .zip con el .cue y sus .bin. Para juegos de varios discos, un .zip con todos los discos y un archivo .m3u que los liste.',
-                  'Opcional, pero mejora la compatibilidad: la BIOS de tu consola (por ejemplo scph5501.bin).'],
 };
 function pintarPistas(){
   if (editando) return;
@@ -1269,7 +1266,6 @@ async function iniciarEmulador(m, fichas){
     window.EJS_startOnLoaded = true;
     window.EJS_color = d.color;
     window.EJS_language = 'es-ES';
-    if (d.core === 'psx') window.EJS_defaultOptions = { 'pcsx_rearmed_frameskip_type':'auto', 'pcsx_rearmed_frameskip_threshold':'33' };
     window.EJS_onGameStart = () => parent.postMessage({ tipo:'ejs-inicio' }, '*');
   <\/script><script src="${EJS_DATOS}loader.js"><\/script></body></html>`;
   pantalla.appendChild(iframe);
