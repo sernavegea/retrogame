@@ -98,7 +98,7 @@ button,input,select{font:inherit;color:inherit}
 .cuerpo::before,.cuerpo::after{content:"";position:absolute;top:0;bottom:0;width:6px;background:var(--color);opacity:.85}
 .cuerpo::before{left:0}.cuerpo::after{right:0}
 .bisel{background:#050308;border-radius:10px;padding:10px;box-shadow:inset 0 0 0 3px #1c1628, inset 0 0 20px #000}
-.bisel canvas{display:block;width:100%;aspect-ratio:4/3;border-radius:12px/10px;image-rendering:pixelated;background:#000;box-shadow:0 0 16px rgba(53,242,255,.25)}
+.bisel canvas,.bisel .pant{display:block;width:100%;height:auto;aspect-ratio:4/3;border-radius:12px/10px;image-rendering:pixelated;background:#000;box-shadow:0 0 16px rgba(53,242,255,.25)}
 .panel{position:relative;height:46px;margin:12px -12px 0;background:linear-gradient(#3b3158,#1e1830);border-top:3px solid #000;border-bottom:3px solid #000}
 .joystick{position:absolute;left:24px;top:14px;width:10px;height:22px;background:#111;border-radius:3px}
 .joystick::before{content:"";position:absolute;left:-7px;top:-12px;width:24px;height:24px;border-radius:50%;background:#e8203c;box-shadow:inset -3px -4px 0 rgba(0,0,0,.35)}
@@ -872,7 +872,7 @@ function construir(){
       <button class="maquina${m.libre ? ' libre' : ''}" style="--color:${m.color}" aria-label="${m.libre ? 'Máquina libre: montar una nueva' : escapar(m.nombre)}">
         <div class="marquesina"><span>${escapar(m.nombre)}</span></div>
         <div class="cuerpo">
-          <div class="bisel"><canvas width="64" height="48"></canvas></div>
+          <div class="bisel"><img class="pant" width="64" height="48" alt=""></div>
           <div class="panel"><span class="joystick"></span><span class="botones"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
           <div class="monedero"><i></i><i></i></div>
         </div>
@@ -881,7 +881,7 @@ function construir(){
     mundo.appendChild(el);
     const boton = el.querySelector('.maquina');
     const p = { el, boton, m, x: lado * medio, z: Z0 - fila * SEP - (estrecho && lado > 0 ? SEP / 2 : 0), rot: lado < 0 ? GIRO : -GIRO,
-                ctx: el.querySelector('canvas').getContext('2d'), semilla: i * 97, demo: m.libre ? 'libre' : DEMOS[i % DEMOS.length] };
+                pant: el.querySelector('.pant'), ctx: lienzoCtx, semilla: i * 97, demo: m.libre ? 'libre' : DEMOS[i % DEMOS.length] };
     if (m.portada) cargarPortada(p);
     boton.addEventListener('click', e => { if (arrastrado) { e.preventDefault(); return; } m.libre ? abrirMontar() : abrir(p); });
     boton.addEventListener('focus', () => { camObj = limitar(-p.z - 330); });
@@ -920,7 +920,12 @@ function pintarCamara(){
 }
 
 /* ---------- Pantallas en modo demo ---------- */
-function dibujar(p, t){
+// Las pantallas del pasillo son imágenes fijas: se dibujan una vez en un lienzo compartido y se copian.
+// Así no hay decenas de lienzos vivos ocupando memoria gráfica en el móvil.
+const lienzo = document.createElement('canvas'); lienzo.width = 64; lienzo.height = 48;
+const lienzoCtx = lienzo.getContext('2d');
+function dibujar(p, t){ dibujarEn(p, t); p.pant.src = lienzo.toDataURL(); }
+function dibujarEn(p, t){
   const c = p.ctx, W = 64, H = 48, col = p.m.color, s = t/1000 + p.semilla;
   c.fillStyle = '#000'; c.fillRect(0,0,W,H);
   if (p.demo === 'libre'){
@@ -929,7 +934,7 @@ function dibujar(p, t){
     return;
   }
   const top = topPorMaquina[p.m.id];
-  if (top && !reducirMov && ((t/1000 + p.semilla) % 10) > 7){
+  if (false && top){
     c.fillStyle = '#ffe14d'; c.font = '9px VT323, monospace'; c.textAlign = 'center';
     c.fillText('RECORD', 32, 14);
     c.fillStyle = '#fff'; c.font = '11px VT323, monospace'; c.fillText(top.ini, 32, 28);
@@ -938,7 +943,6 @@ function dibujar(p, t){
   }
   if (p.img){                                   // la portada sacada del propio juego
     c.imageSmoothingEnabled = false; c.drawImage(p.img, 0, 0, W, H);
-    if (((t/600)|0) % 2){ c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(14,H-8,36,7); c.fillStyle = '#fff'; c.fillRect(20,H-4,24,1); }
     return;
   }
   if (p.demo === 'estrellas'){
@@ -975,9 +979,7 @@ function bucle(t){
   camZ = reducirMov ? camObj : camZ + (camObj - camZ) * Math.min(1, .14 * dt);
   if (Math.abs(camZ - antes) > .05) pintarCamara();
   // Las pantallas de demo van a 20 imágenes por segundo y solo en las máquinas cercanas
-  if (!capa.classList.contains('visible') && !reducirMov && t - ultimoDibujo > 50){
-    ultimoDibujo = t; puestos.forEach(p => { if (p.visible && p.cerca) dibujar(p, t); });
-  }
+
   if (modo === 'invitado') leerMandoFisico();
   requestAnimationFrame(bucle);
 }
