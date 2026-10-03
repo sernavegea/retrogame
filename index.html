@@ -675,24 +675,61 @@ let topPorMaquina = {};   // maquina -> mejor récord, para las pantallas del pa
 async function refrescarTops(){ topPorMaquina = {}; for (const r of await todosPuntos()) if (r.lista && r.lista[0]) topPorMaquina[r.maquina] = r.lista[0]; }
 
 /* ================== Monedas ================== */
+const ORO   = { luz:"#fff2c0", brillo:"#fff1bd", campo:"#f7dc8c", sombra:"#5d3f08", trazo:"#6e4b0d", canto:"#6a470b", borde:"#4d3406", fondo:"#7d560f" };
+const PLATA = { luz:"#ffffff", brillo:"#ffffff", campo:"#eef1f4", sombra:"#4c535c", trazo:"#5d646d", canto:"#59606a", borde:"#3b4148", fondo:"#6f7782" };
 const MONEDAS = {
-  5:   { nombre:"Duro",        tam:.78, c1:"#e8c35a", c2:"#9c7020", agujero:false },
-  25:  { nombre:"Cinco duros", tam:.9,  c1:"#f0cf6a", c2:"#a37622", agujero:true  },
-  100: { nombre:"Cien pelas",  tam:1,   c1:"#f6d77a", c2:"#b0822a", agujero:false },
+  5:   { nombre:"Duro",        tam:.76, c1:"#d7dce2", c2:"#8f98a3", metal:PLATA, agujero:false },
+  25:  { nombre:"Cinco duros", tam:.8,  c1:"#edcd6e", c2:"#a87a22", metal:ORO,   agujero:true  },
+  100: { nombre:"Cien pelas",  tam:1,   c1:"#f2d67c", c2:"#ae8126", metal:ORO,   agujero:false },
 };
 let nSvg = 0;
 function monedaSVG(v, px){
-  const m = MONEDAS[v], s = Math.round(px * m.tam), id = 'm' + v + '_' + (++nSvg);
-  const texto = m.agujero
-    ? `<text x="50" y="34" font-size="20">${v}</text><text x="50" y="80" font-size="11">PTAS</text>`
-    : `<text x="50" y="${v===100?60:62}" font-size="${v===100?30:38}">${v}</text><text x="50" y="80" font-size="11">PTAS</text>`;
+  const m = MONEDAS[v], k = m.metal, s = Math.round(px * m.tam), id = 'm' + v + '_' + (++nSvg);
+  // canto estriado
+  let estrias = '';
+  for (let a = 0; a < 360; a += 6){
+    const r = a * Math.PI / 180, x1 = 50 + 46.2*Math.cos(r), y1 = 50 + 46.2*Math.sin(r), x2 = 50 + 49*Math.cos(r), y2 = 50 + 49*Math.sin(r);
+    estrias += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }
+  // texto en relieve: brillo abajo a la derecha, sombra arriba a la izquierda, cuerpo del color del metal
+  const relieve = (x, y, t, tam, extra='') =>
+    `<text x="${x+.7}" y="${y+.8}" font-size="${tam}" fill="${k.brillo}" opacity=".75" ${extra}>${t}</text>
+     <text x="${x-.5}" y="${y-.6}" font-size="${tam}" fill="${k.sombra}" opacity=".8" ${extra}>${t}</text>
+     <text x="${x}" y="${y}" font-size="${tam}" fill="url(#c${id})" ${extra}>${t}</text>`;
+  const ramita = lado => {
+    const sx = lado < 0 ? -1 : 1;
+    let h = '';
+    for (let k = 0; k < 4; k++){
+      const ang = 200 - k*14, r = ang * Math.PI / 180, x = 50 + sx*31*Math.cos(r)*-1, y = 50 - 31*Math.sin(r)*-1;
+      h += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="3.4" ry="1.5" transform="rotate(${(sx*(ang-110)).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    return h;
+  };
+  const campo = m.agujero
+    ? relieve(50, 32, v, 17) + relieve(50, 79, 'PTAS', 10, 'letter-spacing="1"')
+    : relieve(50, v === 100 ? 58 : 60, v, v === 100 ? 30 : 34) + relieve(50, 79, 'PTAS', 10, 'letter-spacing="1"')
+      + `<g fill="${k.trazo}" opacity=".55">${ramita(-1)}${ramita(1)}</g>`;
+  const estrellas = [[24,30],[76,30]].map(([x,y]) => `<path d="M${x} ${y-3}l.9 2.1 2.2.2-1.7 1.4.6 2.2-2-1.2-2 1.2.6-2.2-1.7-1.4 2.2-.2z"/>`).join('');
   return `<svg viewBox="0 0 100 100" width="${s}" height="${s}" aria-hidden="true"><defs>
-    <radialGradient id="g${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff5cc"/><stop offset=".45" stop-color="${m.c1}"/><stop offset="1" stop-color="${m.c2}"/></radialGradient>
-    <mask id="k${id}"><rect width="100" height="100" fill="#fff"/>${m.agujero?'<circle cx="50" cy="52" r="11" fill="#000"/>':''}</mask></defs>
-    <g mask="url(#k${id})"><circle cx="50" cy="50" r="47" fill="url(#g${id})" stroke="#6e4b0d" stroke-width="3"/>
-    <circle cx="50" cy="50" r="39" fill="none" stroke="rgba(110,75,13,.55)" stroke-width="2" stroke-dasharray="2 3"/>
-    ${m.agujero?'<circle cx="50" cy="52" r="13" fill="none" stroke="#6e4b0d" stroke-width="3"/>':''}
-    <g fill="#6e4b0d" font-family="Bungee, Arial Black, sans-serif" text-anchor="middle">${texto}</g></g></svg>`;
+    <linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${k.luz}"/><stop offset=".22" stop-color="${m.c1}"/><stop offset=".5" stop-color="${m.c2}"/>
+      <stop offset=".68" stop-color="${m.c1}"/><stop offset="1" stop-color="${k.fondo}"/></linearGradient>
+    <radialGradient id="c${id}" cx="40%" cy="35%" r="80%"><stop offset="0" stop-color="${k.campo}"/><stop offset="1" stop-color="${m.c2}"/></radialGradient>
+    <radialGradient id="b${id}" cx="35%" cy="28%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <mask id="k${id}"><rect width="100" height="100" fill="#fff"/>${m.agujero?'<circle cx="50" cy="52" r="10.5" fill="#000"/>':''}</mask></defs>
+    <g mask="url(#k${id})">
+      <circle cx="50" cy="50" r="49" fill="url(#g${id})"/>
+      <g stroke="${k.canto}" stroke-width="1.1" opacity=".55">${estrias}</g>
+      <circle cx="50" cy="50" r="45.5" fill="none" stroke="${k.sombra}" stroke-width="1.2" opacity=".7"/>
+      <circle cx="50" cy="50" r="44" fill="url(#c${id})"/>
+      <circle cx="50" cy="50" r="44" fill="none" stroke="${k.brillo}" stroke-width=".9" opacity=".6"/>
+      <circle cx="50" cy="50" r="38.5" fill="none" stroke="${k.trazo}" stroke-width=".8" stroke-dasharray="1 2.2" opacity=".6"/>
+      ${m.agujero?`<circle cx="50" cy="52" r="13" fill="none" stroke="${k.sombra}" stroke-width="2.2" opacity=".8"/><circle cx="50.6" cy="52.7" r="13" fill="none" stroke="${k.brillo}" stroke-width=".8" opacity=".6"/>`:''}
+      <g fill="${k.trazo}" opacity=".6">${estrellas}</g>
+      <g font-family="Georgia, 'Times New Roman', serif" font-weight="700" text-anchor="middle">${campo}</g>
+      <circle cx="50" cy="50" r="49" fill="url(#b${id})"/>
+      <circle cx="50" cy="50" r="48.6" fill="none" stroke="${k.borde}" stroke-width="1.4"/>
+    </g></svg>`;
 }
 
 /* ================== Estado (monedero y ajustes) ================== */
@@ -1160,6 +1197,7 @@ async function iniciarEmulador(m, fichas){
   <\/script><script src="${EJS_DATOS}loader.js"><\/script></body></html>`;
   pantalla.appendChild(iframe);
   document.body.classList.add('en-partida');
+  if (actual) actual.duroCobrado = false;
   info.textContent = 'Cargando la placa… Los controles del teclado y mando se configuran en el menú del emulador.';
 }
 addEventListener('message', e => {
@@ -1395,10 +1433,19 @@ $('form-puntos').addEventListener('submit', async e => {
   await guardarPuntos(actual.m.id, lista);
   listaAbierta = lista; await refrescarTops();
   dlgPuntos.close();
+  let premio = '';
+  if (!actual.duroCobrado){
+    actual.duroCobrado = true;
+    const n = pos === 1 ? 2 : 1;
+    estado.cartera[5] += n; guardar(); pintarCartera(); pintarBandeja();
+    premio = n === 2 ? '¡Récord de la máquina! Te llevas 2 duros de premio.' : 'Te llevas un duro por apuntar tu puntuación.';
+    if (estado.cartera[5] >= 5) premio += ' Ya puedes cambiar 5 duros por una de 25 en tu monedero.';
+    sonido('moneda');
+  }
   if (pos === 1) sonido('credito');
   const m = actual.m;
   if (alSalir) cerrar(true); else { pausar(false); if (iframe) iframe.focus(); }
-  mostrarRecords(m, pos ? nuevo : null, pos ? '' : `No has entrado en los ${MAX_RECORDS} mejores esta vez.`);
+  mostrarRecords(m, pos ? nuevo : null, [premio, pos ? '' : `No has entrado en los ${MAX_RECORDS} mejores esta vez.`].filter(Boolean).join(' '));
 });
 
 async function mostrarRecords(m, resaltar, aviso){
