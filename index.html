@@ -897,53 +897,90 @@ function ajustarLienzo(){
 }
 
 /* ---------- Textura de cada máquina (se dibuja una vez) ---------- */
-const ESC_TEX = 1.6;
+// La textura lleva un margen alrededor para el halo de neón de la marquesina.
+const ESC_TEX = Math.min(2.6, 1.3 * Math.max(1.5, devicePixelRatio || 1)), MARGEN = 18;
+const TEX_W = ANCHO_M + MARGEN * 2, TEX_H = ALTO_M + MARGEN;
 function textura(p){
   const c = p.tex || document.createElement('canvas');
-  c.width = Math.round(ANCHO_M * ESC_TEX); c.height = Math.round(ALTO_M * ESC_TEX);
+  c.width = Math.round(TEX_W * ESC_TEX); c.height = Math.round(TEX_H * ESC_TEX);
   const g = c.getContext('2d'), col = p.m.libre ? '#5b5078' : p.m.color;
-  g.setTransform(ESC_TEX, 0, 0, ESC_TEX, 0, 0); g.clearRect(0, 0, ANCHO_M, ALTO_M);
-  // marquesina
-  g.fillStyle = '#000'; g.fillRect(6, 0, 178, 58);
-  g.fillStyle = col; g.fillRect(10, 8, 170, 46);
-  const br = g.createLinearGradient(0, 8, 0, 54); br.addColorStop(0, 'rgba(255,255,255,.35)'); br.addColorStop(.5, 'rgba(255,255,255,0)'); br.addColorStop(1, 'rgba(0,0,0,.15)');
-  g.fillStyle = br; g.fillRect(10, 8, 170, 46);
+  g.setTransform(ESC_TEX, 0, 0, ESC_TEX, MARGEN * ESC_TEX, MARGEN * ESC_TEX);
+  g.clearRect(-MARGEN, -MARGEN, TEX_W, TEX_H);
+  // halo de la marquesina
+  if (!p.m.libre){
+    g.save(); g.shadowColor = col; g.shadowBlur = 22; g.fillStyle = col;
+    g.fillRect(8, 2, 174, 54); g.fillRect(8, 2, 174, 54); g.restore();
+  }
+  // marquesina con caja negra, cristal iluminado y reflejo
+  redondo(g, 4, 0, 182, 60, [8, 8, 0, 0], '#000');
+  const lz = g.createLinearGradient(0, 7, 0, 55);
+  lz.addColorStop(0, aclarar(col, .45)); lz.addColorStop(.45, col); lz.addColorStop(1, oscurecer(col, .25));
+  g.fillStyle = lz; g.fillRect(9, 7, 172, 48);
+  const cen = g.createRadialGradient(95, 31, 4, 95, 31, 95);
+  cen.addColorStop(0, 'rgba(255,255,255,.35)'); cen.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = cen; g.fillRect(9, 7, 172, 48);
   textoMarquesina(g, p.m.nombre);
-  // mueble
+  g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.moveTo(9, 7); g.lineTo(80, 7); g.lineTo(55, 55); g.lineTo(9, 55); g.fill();
+  // cuerpo del mueble con moldura de color (T-molding) y laterales sombreados
   g.fillStyle = '#000'; g.fillRect(0, 58, 190, 276);
   const cu = g.createLinearGradient(4, 0, 186, 0);
-  cu.addColorStop(0, '#140e20'); cu.addColorStop(.18, '#2a2140'); cu.addColorStop(.82, '#2a2140'); cu.addColorStop(1, '#140e20');
+  cu.addColorStop(0, '#120c1e'); cu.addColorStop(.12, '#2c2344'); cu.addColorStop(.5, '#342a50'); cu.addColorStop(.88, '#2c2344'); cu.addColorStop(1, '#120c1e');
   g.fillStyle = cu; g.fillRect(4, 58, 182, 272);
-  g.globalAlpha = .85; g.fillStyle = col; g.fillRect(4, 58, 6, 272); g.fillRect(180, 58, 6, 272); g.globalAlpha = 1;
-  // pantalla
-  redondo(g, 16, 70, 158, 123, 10, '#050308');
-  redondo(g, 19, 73, 152, 117, 9, '#1c1628');
-  redondo(g, 22, 76, 146, 111, 8, '#050308');
-  dibujarEn(p, 0);
-  g.imageSmoothingEnabled = false; g.drawImage(lienzo, 26, 80, 138, 103); g.imageSmoothingEnabled = true;
-  g.fillStyle = 'rgba(53,242,255,.06)'; g.fillRect(26, 80, 138, 103);
-  // panel de mandos
-  g.fillStyle = '#000'; g.fillRect(4, 205, 182, 52);
-  const pa = g.createLinearGradient(0, 208, 0, 254); pa.addColorStop(0, '#3b3158'); pa.addColorStop(1, '#1e1830');
-  g.fillStyle = pa; g.fillRect(4, 208, 182, 46);
-  g.fillStyle = '#111'; g.fillRect(28, 222, 10, 22);
-  bola(g, 33, 222, 12, '#e8203c');
-  for (let k = 0; k < 6; k++) bola(g, 128 + (k % 3) * 20, 222 + Math.floor(k / 3) * 18, 7, col);
-  // monedero
-  g.fillStyle = '#ffe14d'; g.fillRect(70, 261, 50, 12);
-  g.fillStyle = '#1a0f00'; g.font = '8px ' + FUENTE_ROT; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText(p.m.libre ? 'LIBRE' : '25 PTAS', 95, 267.5);
-  for (const x of [70, 104]){
-    g.fillStyle = '#4b4166'; g.fillRect(x, 280, 26, 36); g.fillStyle = '#0a0710'; g.fillRect(x + 2, 282, 22, 32);
-    g.shadowColor = '#ff5a2a'; g.shadowBlur = 6; g.fillStyle = '#ff5a2a'; g.fillRect(x + 11, 291, 4, 14); g.shadowBlur = 0;
+  for (const x of [4, 179]){
+    const tm = g.createLinearGradient(x, 0, x + 7, 0);
+    tm.addColorStop(0, oscurecer(col, .35)); tm.addColorStop(.5, aclarar(col, .3)); tm.addColorStop(1, oscurecer(col, .35));
+    g.fillStyle = tm; g.fillRect(x, 58, 7, 272);
   }
-  // base
-  g.fillStyle = '#000'; g.fillRect(0, 330, 190, 26); g.fillStyle = '#07050b'; g.fillRect(4, 330, 182, 22);
+  // pantalla: marco, cristal curvo, líneas de barrido y reflejo
+  redondo(g, 15, 68, 160, 128, 12, '#07050c');
+  const bi = g.createLinearGradient(0, 68, 0, 196); bi.addColorStop(0, '#2a2240'); bi.addColorStop(1, '#0b0814');
+  redondo(g, 18, 71, 154, 122, 10, bi);
+  redondo(g, 23, 76, 144, 112, 9, '#000');
+  dibujarEn(p, 0);
+  g.save(); g.beginPath(); g.roundRect ? g.roundRect(26, 79, 138, 106, 8) : g.rect(26, 79, 138, 106); g.clip();
+  g.imageSmoothingEnabled = false; g.drawImage(lienzo, 26, 79, 138, 106); g.imageSmoothingEnabled = true;
+  g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 79; y < 185; y += 2) g.fillRect(26, y, 138, 1);
+  const vi = g.createRadialGradient(95, 132, 30, 95, 132, 100);
+  vi.addColorStop(0, 'rgba(0,0,0,0)'); vi.addColorStop(1, 'rgba(0,0,0,.55)');
+  g.fillStyle = vi; g.fillRect(26, 79, 138, 106);
+  const re = g.createLinearGradient(26, 79, 90, 150); re.addColorStop(0, 'rgba(255,255,255,.18)'); re.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = re; g.beginPath(); g.moveTo(26, 79); g.lineTo(110, 79); g.lineTo(26, 150); g.fill();
+  g.restore();
+  // panel de mandos inclinado
+  g.fillStyle = '#000'; g.fillRect(2, 203, 186, 56);
+  const pa = g.createLinearGradient(0, 206, 0, 256); pa.addColorStop(0, '#4a3e6e'); pa.addColorStop(.25, '#382e58'); pa.addColorStop(1, '#1a1428');
+  g.fillStyle = pa; g.fillRect(4, 206, 182, 50);
+  g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(4, 206, 182, 2);
+  g.fillStyle = '#0d0a14'; g.beginPath(); g.ellipse(34, 245, 13, 4, 0, 0, Math.PI * 2); g.fill();
+  const pal = g.createLinearGradient(30, 0, 38, 0); pal.addColorStop(0, '#555'); pal.addColorStop(.5, '#ddd'); pal.addColorStop(1, '#444');
+  g.fillStyle = pal; g.fillRect(31, 224, 6, 21);
+  bola(g, 34, 221, 11, '#e8203c');
+  for (let k = 0; k < 6; k++) bola(g, 122 + (k % 3) * 22 + Math.floor(k / 3) * 4, 222 + Math.floor(k / 3) * 18, 7, k === 0 ? '#ffe14d' : col);
+  bola(g, 76, 215, 5, '#f5f5f5');
+  // zona de monedas y altavoz
+  g.fillStyle = '#ffe14d'; redondo(g, 68, 264, 54, 13, 2, '#ffe14d');
+  g.fillStyle = '#1a0f00'; g.font = '8.5px ' + FUENTE_ROT; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(p.m.libre ? 'LIBRE' : '25 PTAS', 95, 271);
+  for (const x of [68, 100]){
+    const me = g.createLinearGradient(x, 0, x + 22, 0); me.addColorStop(0, '#5c5478'); me.addColorStop(.5, '#a9a2c4'); me.addColorStop(1, '#4b4366');
+    redondo(g, x, 282, 22, 34, 3, me);
+    redondo(g, x + 3, 285, 16, 28, 2, '#0a0710');
+    g.save(); g.shadowColor = '#ff5a2a'; g.shadowBlur = 8; g.fillStyle = '#ff7a3a'; g.fillRect(x + 9, 290, 4, 15); g.restore();
+  }
+  g.fillStyle = '#0c0914'; for (let k = 0; k < 4; k++) g.fillRect(28, 290 + k * 7, 22, 3);
+  for (let k = 0; k < 4; k++) g.fillRect(140, 290 + k * 7, 22, 3);
+  // zócalo
+  g.fillStyle = '#000'; g.fillRect(-2, 330, 194, 26);
+  const zo = g.createLinearGradient(0, 332, 0, 354); zo.addColorStop(0, '#1a1426'); zo.addColorStop(1, '#050308');
+  g.fillStyle = zo; g.fillRect(2, 332, 186, 20);
   return c;
 }
+function aclarar(hex, f){ const [r, gg, b] = rgbDe(hex); return `rgb(${r + (255 - r) * f | 0},${gg + (255 - gg) * f | 0},${b + (255 - b) * f | 0})`; }
+function oscurecer(hex, f){ const [r, gg, b] = rgbDe(hex); return `rgb(${r * (1 - f) | 0},${gg * (1 - f) | 0},${b * (1 - f) | 0})`; }
+function rgbDe(hex){ const h = String(hex).replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 const FUENTE_ROT = "Bungee, 'Arial Black', Impact, sans-serif";
 function textoMarquesina(g, t){
-  g.fillStyle = '#12062a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#12062a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(255,255,255,.55)'; g.shadowOffsetY = 1; g.shadowBlur = 0;
   const palabras = String(t).toUpperCase().split(/\s+/);
   for (let tam = 17; tam >= 8; tam--){
     g.font = `${tam}px ${FUENTE_ROT}`;
@@ -958,6 +995,7 @@ function textoMarquesina(g, t){
   }
   g.font = `8px ${FUENTE_ROT}`; g.fillText(String(t).toUpperCase().slice(0, 30), 95, 31);
 }
+const _tm = textoMarquesina; textoMarquesina = (g, t) => { g.save(); _tm(g, t); g.restore(); };
 function redondo(g, x, y, w, h, r, color){ g.fillStyle = color; g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); g.fill(); }
 function bola(g, x, y, r, color){
   g.fillStyle = color; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
@@ -1041,32 +1079,61 @@ function pintarFondo(X, techo){
   cajaRotulo = { x: cx - ancho / 2, y: cy - tam / 2, w: ancho, h: tam };
 }
 function pintarMaquina(p){
-  // las dos aristas verticales del frontal, giradas hacia el centro del pasillo
-  const g = p.rot * Math.PI / 180, dx = Math.cos(g) * ANCHO_M / 2, dz = Math.sin(g) * ANCHO_M / 2;
-  const izq = p.lado < 0 ? [p.x - dx, p.z + dz] : [p.x - dx, p.z - dz];
-  const der = p.lado < 0 ? [p.x + dx, p.z - dz] : [p.x + dx, p.z + dz];
-  const zMax = zCerca();
-  let ta = 0, tb = 1;                                   // recortar lo que quede detrás de la cámara
+  // eje horizontal del frontal, girado hacia el centro del pasillo
+  const g = p.rot * Math.PI / 180, ux = Math.cos(g), uz = p.lado < 0 ? -Math.sin(g) : Math.sin(g);
+  const en = h => [p.x + ux * h, p.z + uz * h];               // punto del frontal a h unidades del centro
+  const nx = -uz * -p.lado * 0 + (p.lado < 0 ? Math.sin(g) : -Math.sin(g)), nz = Math.cos(g);   // normal (mira al pasillo)
+  const zMax = zCerca(), arriba = SUELO - ALTO_M, luz = luzA(p.z);
+  const sombra = `rgba(5,3,12,${(1 - luz).toFixed(2)})`;
+  const H = ANCHO_M / 2, F = 64;                               // media anchura y fondo del mueble
+  // sombra en el suelo
+  const s0 = en(-H - 10), s1 = en(H + 10);
+  if (s0[1] < zMax && s1[1] < zMax){
+    gp.globalAlpha = .55 * luz;
+    poligono([proy(s0[0], SUELO, s0[1]), proy(s1[0], SUELO, s1[1]), proy(s1[0] - nx * F, SUELO, s1[1] - nz * F), proy(s0[0] - nx * F, SUELO, s0[1] - nz * F)], '#000');
+    gp.globalAlpha = 1;
+  }
+  // lateral del mueble que mira a la cámara
+  const camZw = PERSP - camZ;
+  for (const lado of [-1, 1]){
+    const e = en(lado * H), dirx = ux * lado, dirz = uz * lado;
+    if (dirx * (0 - e[0]) + dirz * (camZw - e[1]) <= 0) continue;   // no se ve
+    const b = [e[0] - nx * F, e[1] - nz * F];
+    if (e[1] > zMax || b[1] > zMax) continue;
+    const pts = [proy(e[0], arriba + 4, e[1]), proy(b[0], arriba + 14, b[1]), proy(b[0], SUELO, b[1]), proy(e[0], SUELO, e[1])];
+    const gl = gp.createLinearGradient(pts[0][0], 0, pts[1][0], 0);
+    gl.addColorStop(0, '#2a2140'); gl.addColorStop(1, '#0e0a18');
+    poligono(pts, gl);
+    gp.strokeStyle = p.m.libre ? '#5b5078' : p.m.color; gp.lineWidth = Math.max(1, 5 * pts[0][2]);
+    gp.beginPath(); gp.moveTo(pts[0][0], pts[0][1]); gp.lineTo(pts[3][0], pts[3][1]); gp.stroke();
+    if (luz < .99) poligono(pts, sombra);
+  }
+  // frontal, en franjas verticales para que la perspectiva sea correcta
+  const HT = H + MARGEN, izq = en(-HT), der = en(HT), tex = p.tex, top = arriba - MARGEN;
+  let ta = 0, tb = 1;
   const za = izq[1], zb = der[1];
   if (za > zMax && zb > zMax) return;
   if (za > zMax) ta = (za - zMax) / (za - zb);
   if (zb > zMax) tb = (za - zMax) / (za - zb);
-  const tex = p.tex, N = 22, arriba = SUELO - ALTO_M;
   const punto = t => [izq[0] + (der[0] - izq[0]) * t, izq[1] + (der[1] - izq[1]) * t];
+  const N = 26;
   for (let k = 0; k < N; k++){
     const t0 = ta + (tb - ta) * k / N, t1 = ta + (tb - ta) * (k + 1) / N;
     const w0 = punto(t0), w1 = punto(t1);
-    const a0 = proy(w0[0], arriba, w0[1]), b0 = proy(w0[0], SUELO, w0[1]);
-    const a1 = proy(w1[0], arriba, w1[1]), b1 = proy(w1[0], SUELO, w1[1]);
+    const a0 = proy(w0[0], top, w0[1]), b0 = proy(w0[0], SUELO, w0[1]);
+    const a1 = proy(w1[0], top, w1[1]), b1 = proy(w1[0], SUELO, w1[1]);
     const x0 = a0[0], x1 = a1[0], y0 = (a0[1] + a1[1]) / 2, y1 = (b0[1] + b1[1]) / 2;
-    const sx = t0 * tex.width, sw = Math.max(1, (t1 - t0) * tex.width);
-    gp.drawImage(tex, sx, 0, sw, tex.height, Math.min(x0, x1) - .4, y0, Math.abs(x1 - x0) + .8, y1 - y0);
+    gp.drawImage(tex, t0 * tex.width, 0, Math.max(1, (t1 - t0) * tex.width), tex.height, Math.min(x0, x1) - .4, y0, Math.abs(x1 - x0) + .8, y1 - y0);
   }
-  const A = proy(...[punto(ta)[0], arriba, punto(ta)[1]]), B = proy(punto(tb)[0], arriba, punto(tb)[1]);
-  const C = proy(punto(tb)[0], SUELO, punto(tb)[1]), D = proy(punto(ta)[0], SUELO, punto(ta)[1]);
-  p.quad = [A, B, C, D];
-  const luz = luzA(p.z);
-  if (luz < .99) poligono(p.quad, `rgba(5,3,12,${(1 - luz).toFixed(2)})`);
+  // contorno real del mueble (sin el halo) para tocarla y para oscurecerla con la distancia
+  const cl = t => Math.min(Math.max(t, ta), tb);
+  const ia = cl(MARGEN / (HT * 2)), ib = cl(1 - MARGEN / (HT * 2));
+  const A = punto(ia), B = punto(ib);
+  p.quad = [proy(A[0], arriba, A[1]), proy(B[0], arriba, B[1]), proy(B[0], SUELO, B[1]), proy(A[0], SUELO, A[1])];
+  if (luz < .99){
+    const T = punto(ta), U = punto(tb);
+    poligono([proy(T[0], top, T[1]), proy(U[0], top, U[1]), proy(U[0], SUELO, U[1]), proy(T[0], SUELO, T[1])], sombra);
+  }
 }
 function dentro(pt, q){
   let c = false;
