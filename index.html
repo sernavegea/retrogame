@@ -292,6 +292,9 @@ body.en-partida .escena{visibility:hidden}
 .lista-maquinas b{display:block;line-height:1.2}
 .lista-maquinas small{color:var(--texto-suave)}
 .lista-maquinas .vacia{padding:1rem;text-align:center;color:var(--texto-suave)}
+.aviso-arranque{position:absolute;inset:0;z-index:5;display:grid;place-content:center;gap:.6rem;padding:1.2rem;text-align:center;background:rgba(5,3,12,.92)}
+.aviso-arranque .suave{color:var(--texto-suave);font-size:.9rem;margin:0}
+.aviso-arranque div{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
 /* Pedir pelas en casa: la madre y la zapatilla */
 .casa{position:fixed;inset:0;z-index:60;cursor:pointer;overflow:hidden;background:rgba(5,3,12,.55);animation:casa-entra .25s ease}
 @keyframes casa-entra{from{opacity:0}}
@@ -1609,11 +1612,15 @@ async function iniciarEmulador(m, fichas){
   <\/script><script src="${EJS_DATOS}loader.js"><\/script></body></html>`;
   pantalla.appendChild(iframe);
   document.body.classList.add('en-partida');
+  // Si el juego no arranca en un tiempo razonable, se ofrece reintentar sin cerrar la app
+  arrancado = false; clearTimeout(tArranque);
+  tArranque = setTimeout(() => { if (jugando && !arrancado && iframe) avisoArranque(m, fichas); }, 20000);
   if (actual) actual.duroCobrado = false;
   info.textContent = 'Cargando la placa… Los controles del teclado y mando se configuran en el menú del emulador.';
 }
 addEventListener('message', e => {
   if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'ejs-inicio') return;
+  arrancado = true; clearTimeout(tArranque); pantalla.querySelector('.aviso-arranque')?.remove();
   info.textContent = ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
   if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
   stats(actual.m.id).partidas++; guardar(); inicioPartida = Date.now();
@@ -1631,7 +1638,42 @@ addEventListener('message', e => {
   }
   iframe.focus();
 });
-let tPortada = 0;
+let tPortada = 0, tArranque = 0, arrancado = false;
+function avisoArranque(m, fichas){
+  if (pantalla.querySelector('.aviso-arranque')) return;
+  const a = document.createElement('div');
+  a.className = 'aviso-arranque';
+  a.innerHTML = `<p>La máquina no termina de arrancar.</p>
+    <p class="suave">Suele pasar si se ha cortado la conexión o el móvil anda justo de memoria.</p>
+    <div><button class="boton" data-r="si">Reintentar</button> <button class="boton secundario" data-r="no">Salir</button></div>`;
+  a.addEventListener('click', ev => {
+    const r = ev.target.dataset.r; if (!r) return;
+    if (r === 'si'){ pararEmulador(); jugando = true; iniciarEmulador(m, fichas); }
+    else { $('salir').click(); }
+  });
+  pantalla.appendChild(a);
+}
+/* Libera de verdad lo que deja el emulador: si no, tras varias partidas el navegador
+   se queda sin contextos gráficos o de sonido y la siguiente máquina sale en negro. */
+function liberarEmulador(f){
+  let w; try { w = f.contentWindow; } catch { return; }
+  if (!w) return;
+  try { w.EJS_emulator?.callEvent?.('exit'); } catch {}
+  try {
+    for (const c of w.document.querySelectorAll('canvas')){
+      for (const tipo of ['webgl2', 'webgl']){
+        const g = c.getContext(tipo); if (g){ g.getExtension('WEBGL_lose_context')?.loseContext(); break; }
+      }
+      c.width = c.height = 1;
+    }
+  } catch {}
+  try {
+    const M = w.EJS_emulator?.Module;
+    M?.AL?.contexts && Object.values(M.AL.contexts).forEach(x => { try { x.audioCtx?.close(); } catch {} });
+    M?.SDL2?.audioContext?.close?.();
+    M?.pauseMainLoop?.();
+  } catch {}
+}
 function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
 function pulsar(jugador, boton, valor){ const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
 async function meterFichas(jugador, n){
@@ -1642,7 +1684,8 @@ async function meterFichas(jugador, n){
 function pararEmulador(){
   clearTimeout(tPortada);
   document.body.classList.remove('en-partida');
-  if (iframe){ try { iframe.contentWindow.EJS_emulator?.callEvent?.('exit'); } catch {} iframe.remove(); iframe = null; }
+  clearTimeout(tArranque); pantalla.querySelector('.aviso-arranque')?.remove();
+  if (iframe){ liberarEmulador(iframe); try { iframe.src = 'about:blank'; } catch {} iframe.remove(); iframe = null; }
   window.__juego = null;
 }
 
