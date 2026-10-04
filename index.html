@@ -258,6 +258,14 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
   padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:none}
 .abierta.maximizada .pantalla-grande::after{display:none}
+@media (orientation: portrait){
+  .abierta.maximizada .pantalla-grande{padding-top:calc(env(safe-area-inset-top,0px) + 54px)}
+}
+/* En horizontal la barra de la partida se va a la esquina, encima de la cruceta, fuera del juego */
+@media (orientation: landscape) and (pointer: coarse){
+  body .abierta.maximizada .barra-juego{left:calc(env(safe-area-inset-left,0px) + .4rem);transform:none;
+    display:grid;grid-template-columns:repeat(2,auto);max-width:160px}
+}
 .abierta.maximizada .pantalla-grande iframe,.abierta.maximizada .pantalla-grande video{position:relative;inset:auto}
 .abierta.maximizada .barra-juego{
   display:flex;gap:.4rem;position:fixed;z-index:22;left:50%;transform:translateX(-50%);
@@ -1596,7 +1604,19 @@ async function iniciarEmulador(m, fichas){
   iframe.title = 'Juego: ' + m.nombre;
   iframe.allow = 'autoplay; gamepad; fullscreen';
   iframe.setAttribute('allowfullscreen', '');
-  iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#juego{width:100%;height:100%}</style></head>
+  iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#juego{width:100%;height:100%}
+  /* Móvil en vertical: el juego arriba y el mando táctil debajo, sin taparse */
+  @media (orientation: portrait) and (pointer: coarse) and (min-height: 560px){
+    .ejs_canvas_parent{height:calc(100% - 330px) !important}
+  }
+  /* Móvil en horizontal: el juego en el centro, entre las dos columnas de botones,
+     y por encima de Start/Select, para que los dedos no tapen la imagen */
+  @media (orientation: landscape) and (pointer: coarse) and (min-width: 600px){
+    .ejs_canvas_parent{width:calc(100% - 330px) !important;height:calc(100% - 95px) !important;margin:0 auto}
+  }
+  /* Botones algo transparentes para que se vea lo que hay debajo */
+  .ejs_virtualGamepad_button,.ejs_dpad_main{opacity:.75}
+  </style></head>
   <body><div id="juego"></div><script>
     const d = parent.__juego;
     window.EJS_player = '#juego';
