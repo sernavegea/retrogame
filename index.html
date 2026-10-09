@@ -715,6 +715,12 @@ const COLORES = ['#35f2ff','#ff3fa4','#ffe14d','#7dff6a','#ff8a2a','#b98cff','#f
 const DEMOS = ['barras','estrellas','carretera','bloques'];
 
 const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
+/* Máquinas de la casa: juegos propios, cada uno en su carpeta, que no pasan por el emulador.
+   Están siempre al principio del pasillo, no se guardan en el navegador y no se pueden editar ni quitar. */
+const DE_LA_CASA = [
+  { id:'casa-asfalto-rojo', casa:true, sistema:'casa', nombre:'Asfalto Rojo', color:'#ff2d55', web:'asfalto-rojo/index.html', portada:'asfalto-rojo/portada.jpg', romNombre:'',
+    controles:'Flechas o WASD para moverte, J golpe, K salto y L especial.' }
+];
 const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11, L2:12, R2:13 };
 
 /* ================== Utilidades ================== */
@@ -864,7 +870,7 @@ function construir(){
   const estrecho = innerWidth < 640;
   SEP = estrecho ? 420 : 240; GIRO = estrecho ? 34 : 62;
   medio = estrecho ? Math.round(Math.max(180, innerWidth * .56)) : Math.round(Math.min(300, innerWidth * .36));
-  const lista = [...maquinas, { libre:true, id:'libre', nombre:'Máquina libre', color:'#5b5078' }];
+  const lista = [...DE_LA_CASA, ...maquinas, { libre:true, id:'libre', nombre:'Máquina libre', color:'#5b5078' }];
   const porLado = Math.ceil(lista.length / 2);
   zFondo = Z0 - (porLado - 1) * SEP - 360 - (estrecho ? SEP / 2 : 0);
   // confeti de la moqueta, siempre igual para el mismo pasillo
@@ -893,7 +899,7 @@ function construir(){
   $('btn-lista').hidden = maquinas.length < 4;
   $('pista').textContent = maquinas.length
     ? 'Anda con la rueda, las flechas o arrastrando. Pulsa una máquina para jugar.'
-    : 'Tu salón está vacío. Pulsa la máquina libre para montar la primera.';
+    : 'Prueba la máquina de la casa o pulsa la máquina libre para montar la tuya.';
 }
 const limitar = z => Math.max(0, Math.min(maxCam, z));
 function cargarPortada(p){
@@ -1431,7 +1437,7 @@ async function abrir(p){
   capa.classList.remove('invitado','jugando');
   bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false');
   pintarFicha(); pintarPantalla(); pintarBandeja();
-  info.textContent = `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
+  info.textContent = p.m.casa ? `Juego de la casa, no necesita ROM. ${p.m.controles}` : `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
   mostrarCapa(cajaDe(p));
   $('jugar').focus({ preventScroll:true });
 }
@@ -1440,8 +1446,8 @@ function pintarFicha(){
   $('titulo-abierta').textContent = m.nombre;
   ficha.style.setProperty('--color', m.color);
   $('jugar').hidden = modo === 'invitado' || jugando;
-  $('editar').hidden = modo === 'invitado' || jugando;
-  $('invitar').hidden = !(modo === 'local' && jugando);
+  $('editar').hidden = modo === 'invitado' || jugando || !!m.casa;
+  $('invitar').hidden = !(modo === 'local' && jugando) || !!m.casa;   // los juegos de la casa son de un jugador
   $('apuntar').hidden = !(modo === 'local' && jugando);
   $('maximizar').hidden = !jugando;
   $('bj-apuntar').hidden = modo !== 'local';
@@ -1468,7 +1474,7 @@ function cerrar(forzar){
   jugando = false; const antes = actual; modo = null;
   if (antes && antes.boton.isConnected) antes.boton.focus({ preventScroll:true });
 }
-const nombreSistema = s => $('f-sistema').querySelector(`option[value="${s}"]`)?.textContent || s;
+const nombreSistema = s => s === 'casa' ? 'Juego de la casa' : $('f-sistema').querySelector(`option[value="${s}"]`)?.textContent || s;
 const creditos = () => estado.creditos[actual.m.id] || 0;
 const stats = id => (estado.stats[id] = estado.stats[id] || { partidas:0, segundos:0, pesetas:0 });
 let inicioPartida = 0;
@@ -1584,7 +1590,26 @@ async function jugar(){
 
 /* ================== Emulador (EmulatorJS en un iframe) ================== */
 let fichasPendientes = 0;
+/* Juegos de la casa: su propia página dentro del iframe. La página avisa con el mismo mensaje
+   'ejs-inicio' cuando arranca, recibe las monedas con __ar.moneda() y da los puntos con __ar.puntos(). */
+function iniciarCasa(m, fichas){
+  fichasPendientes = 0;
+  pantalla.innerHTML = '';
+  iframe = document.createElement('iframe');
+  iframe.title = 'Juego: ' + m.nombre;
+  iframe.allow = 'autoplay; gamepad; fullscreen';
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.src = `${m.web}?salon=1&cred=${Math.max(1, fichas)}`;
+  pantalla.appendChild(iframe);
+  document.body.classList.add('en-partida');
+  arrancado = false; clearTimeout(tArranque);
+  tArranque = setTimeout(() => { if (jugando && !arrancado && iframe) avisoArranque(m, fichas); }, 20000);
+  if (actual) actual.duroCobrado = false;
+  info.textContent = 'Cargando el juego…';
+}
+const casa = () => { try { return actual && actual.m.casa && iframe ? iframe.contentWindow.__ar : null; } catch { return null; } };
 async function iniciarEmulador(m, fichas){
+  if (m.casa) return iniciarCasa(m, fichas);
   fichasPendientes = ES_ARCADE(m.sistema) ? fichas : 0;
   let rom = m.rom;
   if (!rom && m.url){
@@ -1641,7 +1666,8 @@ async function iniciarEmulador(m, fichas){
 addEventListener('message', e => {
   if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'ejs-inicio') return;
   arrancado = true; clearTimeout(tArranque); pantalla.querySelector('.aviso-arranque')?.remove();
-  info.textContent = ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
+  info.textContent = actual.m.casa ? `Partida en marcha. ${actual.m.controles} Cada moneda de más es un crédito para continuar.`
+    : ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
   if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
   stats(actual.m.id).partidas++; guardar(); inicioPartida = Date.now();
   clearTimeout(tPortada);
@@ -1657,6 +1683,12 @@ addEventListener('message', e => {
     }, 12000);
   }
   iframe.focus();
+});
+addEventListener('message', e => {
+  if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'casa-fin' || !actual) return;
+  const pts = Number(e.data.puntos || 0).toLocaleString('es-ES');
+  info.textContent = e.data.gano ? `¡Juego terminado con ${pts} puntos! Sal de la partida para apuntarlos, o echa otra moneda para empezar de nuevo.`
+    : `Fin de la partida con ${pts} puntos. Echa otra moneda para continuar, o sal de la partida para apuntarlos.`;
 });
 let tPortada = 0, tArranque = 0, arrancado = false;
 function avisoArranque(m, fichas){
@@ -1697,6 +1729,7 @@ function liberarEmulador(f){
 function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
 function pulsar(jugador, boton, valor){ const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
 async function meterFichas(jugador, n){
+  if (casa()){ try { casa().moneda(n); } catch {} if (iframe) iframe.focus(); return; }
   if (!ES_ARCADE(actual.m.sistema)) return;
   for (let i = 0; i < n; i++){ pulsar(jugador, BTN.SELECT, 1); await new Promise(r => setTimeout(r, 120)); pulsar(jugador, BTN.SELECT, 0); await new Promise(r => setTimeout(r, 180)); }
   if (iframe) iframe.focus();
@@ -1870,8 +1903,19 @@ $('bj-moneda').addEventListener('click', () => {
 /* ================== Puntuaciones ================== */
 const dlgPuntos = $('dlg-puntos'), celdas = [0,1,2].map(i => $('p-i' + i));
 let alSalir = false, fotoActual = null;
-function pausar(si){ const e = emu(); try { si ? e && e.pause && e.pause() : e && e.play && e.play(); } catch {} }
+function pausar(si){ if (casa()){ try { casa().pausa(si); } catch {} return; } const e = emu(); try { si ? e && e.pause && e.pause() : e && e.play && e.play(); } catch {} }
+async function capturarCasa(){
+  let url = null; try { url = casa().foto(); } catch {}
+  if (!url) return null;
+  const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = url; });
+  if (!img) return null;
+  const ancho = 320, alto = Math.round(ancho * img.height / img.width);
+  const c = document.createElement('canvas'); c.width = ancho; c.height = alto;
+  c.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+  return c.toDataURL('image/jpeg', .8);
+}
 async function capturar(){
+  if (casa()) return capturarCasa();
   const e = emu();
   if (!e || !e.screenshot) return null;
   const blob = await Promise.race([new Promise(r => e.screenshot(b => r(b))), new Promise(r => setTimeout(() => r(null), 2500))]);
@@ -1894,6 +1938,7 @@ async function pedirPuntuacion(saliendo){
   const ini = (estado.iniciales || '').padEnd(3, ' ');
   celdas.forEach((c, i) => c.value = ini[i].trim());
   $('p-puntos').value = ''; $('p-error').textContent = '';
+  if (casa()){ let pts = 0; try { pts = casa().puntos() | 0; } catch {} if (pts) $('p-puntos').value = pts.toLocaleString('es-ES'); }   // los juegos de la casa dan sus puntos
   dlgPuntos.showModal();
   (estado.iniciales ? $('p-puntos') : celdas[0]).focus();
 }
