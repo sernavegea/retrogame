@@ -7,7 +7,7 @@ Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con s
 
 QUE TRAE
   3 niveles con jefe (El barrio, El poligono, El desguace), cada uno mas duro que el anterior.
-  4 luchadores: Nico desde el principio; Vera, Toro y el Chatarrero se desbloquean al superar los niveles 1, 2 y 3.
+  4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
   Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon
   (en el movil, el boton "Dobles" de la barra de arriba). En pantalla tactil solo se maneja el 1P.
@@ -17,11 +17,13 @@ CONTROLES
   Un jugador:   WASD o flechas, J golpe, K salto, L especial. P pausa, M musica.
   Dos jugadores: 1P con WASD y J K L; 2P con flechas y las teclas , . -  (o 1 2 3 del teclado numerico).
   El 2P puede entrar en plena partida pulsando dos veces la tecla , o con un segundo mando.
+  Mando (PS5, Xbox...): stick o cruceta, cuadrado golpe, equis salto, circulo o triangulo especial, Options pausa.
+  En los menus: izquierda/derecha luchador, arriba/abajo nivel, triangulo 1 o 2 jugadores, equis empezar.
   Embestida: especial mientras te mueves a un lado.   Mazazo: manten pulsado golpe y suelta.
 
 ARCHIVOS
   index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
-  models.js     cuerpos 3D, animaciones y texturas. Incluye la textura de Nico con la cara de la foto de referencia.
+  models.js     cuerpos 3D, animaciones y texturas. Incluye las texturas de los cuatro luchadores con las caras de las fotos de referencia.
   lib/          three.js r128 y sus cargadores de modelos.
   portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
 

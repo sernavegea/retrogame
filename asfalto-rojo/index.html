@@ -745,6 +745,9 @@ const STYLES = {
   brute: { skin: 0xb9825e, top: 0xc8701c, pants: 0x2c3140, boots: 0x1a1a1a, hair: 0x111111, glove: 0x3a3a44, accent: 0x1a1a1a, head: 'bald', sleeve: 1, s: 1.22, bulk: 1.38 },
   boss:  { skin: 0xd9a482, top: 0x1b1b24, pants: 0x1b1b24, boots: 0x050506, hair: 0xd8d8de, glove: 0x8a0f1d, accent: 0xff2d55, head: 'shades', sleeve: 2, coat: true, s: 1.42, bulk: 1.3 },
 };
+STYLES.vera = Object.assign({}, STYLES.punk, { skin: 0xc98f6b, top: 0xba62c4, pants: 0x18181c, hair: 0x18161a, head: 'bald', s: 1, bulk: .92 });
+STYLES.chaval = Object.assign({}, STYLES.hero, { top: 0xece9e2, pants: 0x263260, boots: 0xc42832, hair: 0x33291f, head: 'bald', glove: 0xe8b48c, s: .86, bulk: .88 });
+STYLES.tinta = Object.assign({}, STYLES.hero, { top: 0x16161a, pants: 0x84866f, boots: 0x141418, hair: 0xd9cfae, head: 'bald', glove: 0xd9a482, s: 1, bulk: .96 });
 STYLES.capo1 = Object.assign({}, STYLES.punk, { s: 1.1, bulk: 1, hair: 0xb96bff, top: 0x3a1d4a, pants: 0x18181e });
 STYLES.capo2 = Object.assign({}, STYLES.brute, { s: 1.42, bulk: 1.5, top: 0x8a1f1f, pants: 0x3a4230 });
 const THUG_TOPS = [0x6a45b0, 0x2f6fa8, 0x8a3a2a, 0x3f7a4a, 0x7a6a2a];
@@ -859,20 +862,40 @@ const LOOKS = {
   boss:  { body: 'male', tone: [.96, .9, .88], gait: 'Walk', hair: 'buzzed', beard: true, hairColor: [1.55, 1.55, 1.65], shades: true, bulk: 1.06, tintZones: [1, 7, 9, 18],
     z: Object.assign(paint([24, 24, 32], [2, 3, 4, 5, 6, 16, 10, 11, 15]), paint([172, 18, 42], [1, 7, 9, 18]), paint([8, 8, 10], [12, 13, 14]), paint([150, 16, 34], [8, 17])) },
 };
+// The other three playable fighters also come from reference photos: each has a skin texture carrying that face, and wears what the photo shows.
+Object.assign(LOOKS, {
+  vera:   { body: 'female', skin: 'vera', tone: [1, 1, 1], gait: 'Jog', hair: 'buzzed', hairColor: [.11, .1, .1], noBrows: true, bun: true, hairFit: [-.03, .012, 1.05], tintZones: [2],
+    z: Object.assign(paint([186, 98, 196], [2]), paint([24, 24, 28], [9, 10]), { 14: [30, 30, 36], 18: [16, 16, 18] }) },
+  chaval: { body: 'male', skin: 'chaval', tone: [1, 1, 1], gait: 'Jog', hair: 'buzzed', hairColor: [.2, .16, .14], noBrows: true, bulk: .9, tintZones: [1, 2, 3, 4, 16], loose: [1, 2, 3, 4, 16, 9, 10, 15],
+    z: Object.assign(paint([236, 233, 226], [1, 2, 3, 4, 16]), paint([38, 50, 96], [9, 10, 15]), { 12: [232, 232, 236], 14: [196, 40, 50] }) },
+  tinta:  { body: 'male', skin: 'tinta', tone: [1, 1, 1], gait: 'Jog', hair: 'buzzed', hairColor: [.17, .14, .12], noBrows: true, bulk: .96, curls: [1.3, 1.14, .86], tintZones: [1, 2, 3, 4, 16], loose: [1, 2, 3, 4, 16, 9, 10, 15],
+    z: Object.assign(paint([22, 22, 26], [1, 2, 3, 4, 16]), paint([132, 134, 116], [9, 10, 15]), { 12: [18, 18, 20], 14: [20, 20, 24], 18: [52, 160, 86] }),
+    camo: { zones: [9, 10, 15], cols: [[150, 152, 136], [98, 104, 86], [58, 62, 54]] }, ink: { zones: [5, 6, 7, 11], col: [40, 46, 56] } },
+});
 // level bosses reuse the punk and brute bodies with their own colours
 LOOKS.capo1 = Object.assign({}, LOOKS.punk, { hairColor: [1.7, .5, 2.3], hairGlow: 0x3a0c5a, tintZones: null,
   z: Object.assign(paint([44, 22, 58], [2, 3, 4, 5, 6]), paint([20, 20, 26], [10, 11, 15, 8]), paint([10, 10, 14], [12, 13, 14]), paint([230, 190, 60], [9, 7, 18])) });
 LOOKS.capo2 = Object.assign({}, LOOKS.brute, { tone: [.74, .62, .56], bulk: 1.24, tintZones: null,
   z: Object.assign(paint([150, 24, 26], [2, 16]), paint([60, 68, 46], [10, 11, 15]), paint([16, 16, 18], [12, 13, 14, 9]), paint([28, 28, 32], [8, 17, 7, 18])) });
 
+const SKINS = ['hero', 'vera', 'chaval', 'tinta'];   // skin textures that carry a face taken from a reference photo
+// Loose clothes (a T-shirt, baggy shorts) should not show the muscles underneath: their zones get a flattened copy of the body's normal map.
+function normalTexture(bodyKey, look){
+  const L = LOOKS[look], B = ASSET.body[bodyKey]; if (!L.loose || !B.normPx) return B.normal;
+  const key = 'n|' + bodyKey + '|' + look; if (ASSET.tex[key]) return ASSET.tex[key];
+  const S = B.S, src = B.normPx.data, zn = B.zones, set = new Set(L.loose), [c, x] = cv(S, S), im = x.createImageData(S, S), d = im.data;
+  for (let i = 0, o = 0; i < zn.length; i++, o += 4) { const k = set.has(zn[i]) ? .82 : 0; d[o] = src[o] + (128 - src[o]) * k; d[o + 1] = src[o + 1] + (128 - src[o + 1]) * k; d[o + 2] = src[o + 2] + (255 - src[o + 2]) * k; d[o + 3] = 255; }
+  x.putImageData(im, 0, 0); const t = new T.CanvasTexture(c); t.flipY = false; t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = maxAniso;
+  return ASSET.tex[key] = t;
+}
 function loadAssets(){
   if (!T.GLTFLoader || !T.SkeletonUtils) return Promise.reject(new Error('sin cargador de modelos'));
   const pack = window.AR_MODELS || {};
   const img = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('imagen ' + src)); i.src = pack[src] || MODEL_DIR + src; });
   const glb = src => (pack[src] ? Promise.resolve(pack[src]) : fetch(MODEL_DIR + src).then(r => { if (!r.ok) throw new Error(src + ' ' + r.status); return r.text(); })).then(txt => new Promise((res, rej) => new T.GLTFLoader().parse(txt, '', res, rej)));
   return Promise.all([glb('male.json'), glb('female.json'), glb('anims1.json'), glb('anims2.json'), glb('hair-buzzed.json'), glb('hair-beard.json'), glb('hair-long.json'),
-    img('male-skin.jpg'), img('male-normal.jpg'), img('male-mask.png'), img('female-skin.jpg'), img('female-normal.jpg'), img('female-mask.png'), img('hair.jpg'), img('eye.jpg'), img('hero-skin.jpg').catch(() => null)])
-  .then(([male, female, a1, a2, hBuzz, hBeard, hLong, mSkin, mNorm, mMask, fSkin, fNorm, fMask, hairImg, eyeImg, heroSkin]) => {
+    img('male-skin.jpg'), img('male-normal.jpg'), img('male-mask.png'), img('female-skin.jpg'), img('female-normal.jpg'), img('female-mask.png'), img('hair.jpg'), img('eye.jpg'), Promise.all(SKINS.map(k => img(k + '-skin.jpg').catch(() => null)))])
+  .then(([male, female, a1, a2, hBuzz, hBeard, hLong, mSkin, mNorm, mMask, fSkin, fNorm, fMask, hairImg, eyeImg, faceSkins]) => {
     const S = coarse ? 512 : 1024;
     const mkTex = (image, color) => { const t = new T.Texture(image); t.flipY = false; t.wrapS = t.wrapT = T.RepeatWrapping; if (color) t.encoding = T.sRGBEncoding; t.anisotropy = maxAniso; t.needsUpdate = true; return t; };
     const pixels = (image, smooth) => { const [, x] = cv(S, S); x.imageSmoothingEnabled = smooth; x.drawImage(image, 0, 0, S, S); return x.getImageData(0, 0, S, S); };
@@ -896,21 +919,29 @@ function loadAssets(){
       const k = scene.getObjectByName('pelvis').position.z / refPelvis, set = {};
       for (const n in clips) { const c = clips[n].clone(); for (const tr of c.tracks) if (tr.name === 'pelvis.position') for (let i = 0; i < tr.values.length; i++) tr.values[i] *= k; set[n] = c; }
       const hi = bodyMesh.skeleton.bones.findIndex(b => b.name === 'Head');
-      ASSET.body[key] = { scene, bodyName, clips: set, skin: pixels(skin, true), zones: zonesOf(mask), S, headInv: bodyMesh.skeleton.boneInverses[hi].clone(), headY: key === 'male' ? 0 : -.045,
+      ASSET.body[key] = { scene, bodyName, clips: set, skin: pixels(skin, true), normPx: pixels(norm, true), zones: zonesOf(mask), S, headInv: bodyMesh.skeleton.boneInverses[hi].clone(), headY: key === 'male' ? 0 : -.045,
         normal: mkTex(norm, false), eyeMat: new T.MeshStandardMaterial({ map: eyeTex, roughness: .3, skinning: true }) };
     };
     prep('male', male, mSkin, mNorm, mMask); prep('female', female, fSkin, fNorm, fMask);
-    ASSET.skins = heroSkin ? { hero: pixels(heroSkin, true) } : {};
+    ASSET.skins = {}; SKINS.forEach((k, i) => { if (faceSkins[i]) ASSET.skins[k] = pixels(faceSkins[i], true); });
     ASSET.ok = true;
   });
 }
+// value noise in texture space, for camouflage cloth and tattooed skin
+const hash2 = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); };
+function vnoise(x, y){ const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1); return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy; }
 function skinTexture(bodyKey, look, tint){
   const key = bodyKey + '|' + look + '|' + (tint || 0); if (ASSET.tex[key]) return ASSET.tex[key];
   const B = ASSET.body[bodyKey], L = LOOKS[look], S = B.S, src = (L.skin && ASSET.skins[L.skin] || B.skin).data, zn = B.zones, [c, x] = cv(S, S), im = x.createImageData(S, S), d = im.data;
   const z = Object.assign({}, L.z); if (tint && L.tintZones) Object.assign(z, paint(rgb(tint), L.tintZones));
-  for (let i = 0, o = 0; i < zn.length; i++, o += 4) { const col = z[zn[i]];
-    if (col) { const lum = (src[o] * .3 + src[o + 1] * .59 + src[o + 2] * .11) / 150, sh = .68 + .32 * Math.min(1.3, Math.max(.4, lum)); d[o] = col[0] * sh; d[o + 1] = col[1] * sh; d[o + 2] = col[2] * sh; }
-    else { d[o] = src[o] * L.tone[0]; d[o + 1] = src[o + 1] * L.tone[1]; d[o + 2] = src[o + 2] * L.tone[2]; }
+  const camo = L.camo ? new Set(L.camo.zones) : null, ink = L.ink ? new Set(L.ink.zones) : null, loose = L.loose ? new Set(L.loose) : null;
+  for (let i = 0, o = 0; i < zn.length; i++, o += 4) { let col = z[zn[i]];
+    if (col && camo && camo.has(zn[i])) { const u = (i % S) / S, v = (i / S | 0) / S, n = vnoise(u * 34, v * 34) * .65 + vnoise(u * 80 + 7, v * 80 + 3) * .35; col = L.camo.cols[n < .42 ? 0 : n < .58 ? 1 : 2]; }
+    if (col) { const lum = (src[o] * .3 + src[o + 1] * .59 + src[o + 2] * .11) / 150, sh = loose && loose.has(zn[i]) ? .88 + .12 * Math.min(1.3, Math.max(.4, lum)) : .68 + .32 * Math.min(1.3, Math.max(.4, lum)); d[o] = col[0] * sh; d[o + 1] = col[1] * sh; d[o + 2] = col[2] * sh; }
+    else { d[o] = src[o] * L.tone[0]; d[o + 1] = src[o + 1] * L.tone[1]; d[o + 2] = src[o + 2] * L.tone[2];
+      if (ink && ink.has(zn[i])) { const u = (i % S) / S, v = (i / S | 0) / S, n = vnoise(u * 46, v * 46), m = vnoise(u * 120 + 5, v * 120 + 9), line = Math.abs(vnoise(u * 70 + 11, v * 70 + 2) - .5) < .045;
+        const a = line ? .82 : n > .5 ? .34 + .44 * m : n > .4 ? .1 : 0; if (a) { const c = L.ink.col; d[o] += (c[0] - d[o]) * a; d[o + 1] += (c[1] - d[o + 1]) * a; d[o + 2] += (c[2] - d[o + 2]) * a; } } }
     d[o + 3] = 255; }
   x.putImageData(im, 0, 0); const t = new T.CanvasTexture(c); t.flipY = false; t.wrapS = t.wrapT = T.RepeatWrapping; t.encoding = T.sRGBEncoding; t.anisotropy = maxAniso;
   return ASSET.tex[key] = t;
@@ -919,7 +950,7 @@ function makeModelFighter(kind, tint){
   const st = STYLES[kind], L = LOOKS[kind], B = ASSET.body[L.body], mats = [];
   const root = new T.Group(), rig = new T.Group(), body = new T.Group(); root.add(rig); rig.add(body); rig.rotation.y = FACE;
   const model = T.SkeletonUtils.clone(B.scene); body.add(model);
-  const bodyMat = new T.MeshStandardMaterial({ map: skinTexture(L.body, kind, tint), normalMap: B.normal, roughness: .64, metalness: 0, skinning: true }); bodyMat.normalScale.set(1, -1);
+  const bodyMat = new T.MeshStandardMaterial({ map: skinTexture(L.body, kind, tint), normalMap: normalTexture(L.body, kind), roughness: .64, metalness: 0, skinning: true }); bodyMat.normalScale.set(1, -1);
   const hc = new T.Color(L.hairColor[0], L.hairColor[1], L.hairColor[2]);
   const browMat = new T.MeshStandardMaterial({ map: ASSET.hairTex, color: hc.clone().multiplyScalar(.6), roughness: .7, skinning: true });
   const eyeMat = B.eyeMat.clone(); mats.push(bodyMat, browMat, eyeMat);
@@ -928,9 +959,15 @@ function makeModelFighter(kind, tint){
     if (o.isSkinnedMesh) { o.frustumCulled = false; o.castShadow = true; o.material = o.name === B.bodyName ? bodyMat : /eyes/i.test(o.name) ? eyeMat : browMat; if (o.material === browMat && L.noBrows) o.visible = false; } });
   const onHead = (geo, mat, dy) => { const m = new T.Mesh(geo, mat); m.castShadow = true; m.matrixAutoUpdate = false; m.matrix.copy(B.headInv); if (dy) m.matrix.multiply(new T.Matrix4().makeTranslation(0, dy, 0)); bones.Head.add(m); return m; };
   const hairMat = new T.MeshStandardMaterial({ map: ASSET.hairTex, color: hc, roughness: .62 }); if (L.hairGlow) hairMat.emissive.set(L.hairGlow); mats.push(hairMat);
-  if (L.hair) onHead(ASSET.hair[L.hair], hairMat, 0);
-  if (L.beard) onHead(ASSET.hair.beard, hairMat, 0);
   const hy = 1.72 + B.headY;
+  if (L.hair) { const hm = onHead(ASSET.hair[L.hair], hairMat, 0), hf = L.hairFit; if (hf) hm.matrix.multiply(new T.Matrix4().makeTranslation(0, hy, 0)).multiply(new T.Matrix4().makeScale(hf[2], hf[2], hf[2])).multiply(new T.Matrix4().makeTranslation(0, hf[0] - hy, hf[1])); }
+  if (L.beard) onHead(ASSET.hair.beard, hairMat, 0);
+  const piece = (key, make, mat) => onHead(G(key, make), mat, 0);
+  if (L.bun) piece('mbun' + L.body, () => { const g = new T.SphereGeometry(.05, 12, 9); g.scale(1, .86, 1); g.translate(0, hy + .125, -.035); return g; }, hairMat);
+  if (L.tuft || L.curls) { const c = L.tuft || L.curls, tm = new T.MeshStandardMaterial({ map: ASSET.hairTex, color: new T.Color(c[0], c[1], c[2]), roughness: .7 }); mats.push(tm);
+    const n = L.curls ? 30 : 14, r = L.curls ? .024 : .03;
+    for (let i = 0; i < n; i++) { const a = i * 2.39996, q = Math.sqrt((i + .5) / n), x = Math.cos(a) * q * .066, zz = Math.sin(a) * q * .078 + .014, y = hy + (L.curls ? .094 : .082) - q * q * .052;
+      piece((L.curls ? 'mcurl' : 'mtuft') + i, () => { const g = new T.SphereGeometry(r, 7, 5); g.scale(1, L.curls ? .85 : .42, 1); g.translate(x, y, zz); return g; }, tm); } }
   if (L.band) { const bm = new T.MeshStandardMaterial({ color: L.band, roughness: .5, emissive: 0x3a0010 }); mats.push(bm);
     onHead(G('mband', () => { const g = new T.TorusGeometry(.09, .013, 6, 20); g.rotateX(Math.PI / 2); g.scale(.9, 1.6, 1.13); g.rotateX(-.2); g.translate(0, hy + .034, -.012); return g; }), bm, 0); }
   if (L.shades) { const sm = new T.MeshStandardMaterial({ color: 0x0a0a0e, roughness: .2, metalness: .6, emissive: 0x8a0018 }); mats.push(sm);
@@ -1018,11 +1055,11 @@ const EDEF = {
    ============================================================ */
 const CHARS = {
   hero:  { name: 'Nico', look: 'hero', hp: 100, spd: 1, dmg: 1, rate: 1, s: 1, need: 0, tag: 'Equilibrado' },
-  punk:  { name: 'Vera', look: 'punk', hp: 80, spd: 1.2, dmg: .88, rate: 1.18, s: 1, need: 1, tag: 'Rápida' },
-  brute: { name: 'Toro', look: 'brute', hp: 140, spd: .82, dmg: 1.35, rate: .88, s: 1.1, need: 2, tag: 'Demoledor' },
-  boss:  { name: 'Chatarrero', look: 'boss', hp: 120, spd: .95, dmg: 1.2, rate: 1, s: 1.14, need: 3, tag: 'El jefe' },
+  chaval: { name: 'Chispa', look: 'chaval', hp: 82, spd: 1.22, dmg: .86, rate: 1.2, s: .86, need: 0, tag: 'Rápido' },
+  vera:   { name: 'Vera', look: 'vera', hp: 96, spd: 1.1, dmg: 1.06, rate: 1.08, s: .97, need: 1, tag: 'Atleta' },
+  tinta:  { name: 'Tinta', look: 'tinta', hp: 128, spd: .9, dmg: 1.3, rate: .9, s: 1.02, need: 2, tag: 'Pegada dura' },
 };
-const CHAR_ORDER = ['hero', 'punk', 'brute', 'boss'], CHAR_COL = { hero: '#7a6a34', punk: '#8a2146', brute: '#b0621a', boss: '#641628' };
+const CHAR_ORDER = ['hero', 'chaval', 'vera', 'tinta'], CHAR_COL = { hero: '#7a6a34', chaval: '#2c4f8a', vera: '#7a2f86', tinta: '#4a5240' };
 const MOVES = [
   { need: 1, name: 'Embestida', how: 'Especial mientras te mueves a un lado. Arrolla a todos en línea y gasta poca barra.' },
   { need: 2, name: 'Mazazo', how: 'Mantén pulsado Golpe y suelta. Tumba incluso a los que aguantan golpes.' },
@@ -1050,7 +1087,7 @@ let mode = 'title', players = [], enemies = [], crates = [], pickups = [], debri
 let camX = 6.5, camMax = 16, halfW = 8, shake = 0, hitStop = 0, slowT = 0;
 let levelIx = 0, LV = LEVELS[0], zi = 0, zone = null, wave = 0, waveDelay = 0, winT = 0;
 let score = 0, combo = 0, comboT = 0, bestCombo = 0, playT = 0, boss = null, joinAsk = -9;
-let progress = 0, picks = ['hero', 'hero'], wantTwo = false, twoP = false, startLevel = 0, portraits = {};
+let progress = 0, picks = ['hero', 'chaval'], wantTwo = false, twoP = false, startLevel = 0, portraits = {};
 try { progress = MU.clamp(parseInt(localStorage.getItem('ar-progress'), 10) || 0, 0, LEVELS.length); } catch (_) {}
 const saveProgress = () => { try { localStorage.setItem('ar-progress', String(progress)); } catch (_) {} };
 const unlockedChar = k => CHARS[k] && CHARS[k].need <= progress;
@@ -1392,13 +1429,14 @@ function renderSelect(){
       <button type="button" class="pick" data-k="${k}" data-p="0" aria-pressed="${s1}"${lock ? ' disabled' : ''}>
         <span class="face" style="--c:${CHAR_COL[k]}">${portraits[k] ? `<img src="${portraits[k]}" alt="">` : `<span>${c.name[0]}</span>`}</span>
         <b>${c.name}</b><small>${lock ? 'Supera el nivel ' + c.need : c.tag}</small>
-        <span class="st"><span>Vida</span>${bar(c.hp / 140)}<span>Fuerza</span>${bar(c.dmg / 1.35)}<span>Rapidez</span>${bar(c.spd / 1.2)}</span>
+        <span class="st"><span>Vida</span>${bar(c.hp / 130)}<span>Fuerza</span>${bar(c.dmg / 1.3)}<span>Rapidez</span>${bar(c.spd / 1.22)}</span>
       </button>${s1 ? '<em class="tagp t1">1P</em>' : ''}${s2 ? '<em class="tagp t2">2P</em>' : ''}
       ${wantTwo && !lock ? `<button type="button" class="pick2" data-k="${k}" data-p="1" aria-pressed="${s2}">Elegir 2P</button>` : ''}</div>`; }).join('');
   $('#selMode1').setAttribute('aria-pressed', !wantTwo); $('#selMode2').setAttribute('aria-pressed', wantTwo);
   $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>Nivel ${i + 1}</button>`).join('');
-  $('#selHint').textContent = wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD y J K L. 2P: flechas y las teclas , . - (o 1 2 3 del teclado numérico). También con dos mandos.')
-    : SALON ? 'Dobles a distancia: empieza la partida y pulsa «Dobles» (o «Invitar a dobles», debajo de la máquina). Tu amigo entra con el código.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.';
+  const padHint = padN ? 'Mando: ◀ ▶ luchador · ▲ ▼ nivel · △ 1 o 2 jugadores · ✕ empezar.' + (wantTwo && padN < 2 ? ' Con un solo mando, el mando lo lleva el 2P.' : '') : '';
+  $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD y J K L. 2P: flechas y las teclas , . - (o 1 2 3 del teclado numérico). También con dos mandos.')
+    : SALON ? 'Dobles a distancia: empieza la partida y pulsa «Dobles» (o «Invitar a dobles», debajo de la máquina). Tu amigo entra con el código.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.');
 }
 function openSelect(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'select'; backdrop(); renderSelect(); ui.select.hidden = false; $('#btnFight').focus({ preventScroll: true }); }
 function startGame(){
@@ -1415,7 +1453,8 @@ function loadLevel(ix, fresh){
 }
 function joinP2(){
   if (players.length > 1 || mode !== 'play') return; twoP = true;
-  const p = makePlayer(1, unlockedChar(picks[1]) ? picks[1] : 'hero'), m = players[0]; players.push(p);
+  let k = unlockedChar(picks[1]) ? picks[1] : 'hero'; if (k === players[0].char) k = CHAR_ORDER.find(c => c !== k && unlockedChar(c)) || k;   // whoever drops in gets a fighter of their own
+  const p = makePlayer(1, k), m = players[0]; players.push(p);
   Object.assign(p, { x: m.x - 1, y: 0, z: MU.clamp(m.z - 1.2, ZMIN, ZMAX), vx: 0, vy: 0, state: 'getup', t: 0, inv: 2, facing: 1, spin: 0 });
   for (const k in cache) delete cache[k]; banner('¡Entra el 2P!', p.ch.name); sfx('pick');
 }
@@ -1495,7 +1534,21 @@ function entrada(j, b, v){
   if (who === 1 && players.length < 2) { if (on && (k || b === 3)) pressFor(1, k || 'atk', true); return; }
   if (!k) return; if (on) pressFor(who, k, true); else inputs[who].release(k);
 }
-const padPrev = {};
+const padPrev = {}; let padN = 0;
+function padMenu(slot, ex, ey, hit){
+  const go = hit[0] || hit[9], click = id => { const el = $('#' + id); if (el && !el.hidden && !el.disabled) el.click(); };
+  if (mode === 'title') { if (go && !SALON) click('btnPlay'); }
+  else if (mode === 'select') {
+    if (slot === 1 && !wantTwo) { if (ex || ey || go || hit[1] || hit[2] || hit[3]) $('#selMode2').click(); return; }   // a second pad asks for a second player
+    if (ex) { const ok = CHAR_ORDER.filter(unlockedChar), at = ok.indexOf(picks[slot]); picks[slot] = ok[(at + ex + ok.length) % ok.length]; sfx('pick'); renderSelect(); }
+    const lv = ey || (hit[5] ? 1 : hit[4] ? -1 : 0); if (lv) { const to = MU.clamp(startLevel + lv, 0, Math.min(progress, LEVELS.length - 1)); if (to !== startLevel) { startLevel = to; sfx('pick'); renderSelect(); } }
+    if (hit[3]) click(wantTwo ? 'selMode1' : 'selMode2');
+    if (hit[1] && !SALON) toTitle(); else if (go) startGame(); }
+  else if (mode === 'clear') { if (go) nextLevel(); }
+  else if (mode === 'over') { if (go) click('btnAgain'); else if (hit[3]) click('btnChange'); }
+  else if (mode === 'pause') { if (hit[9]) setPause(false); else if (hit[1]) click('btnQuit'); }
+  else if (mode === 'play') { if (hit[9]) setPause(true); }
+}
 function pollInputs(){
   const ax = [[0, 0], [0, 0]]; let pads = [];
   try { pads = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter(Boolean); } catch (_) {}
@@ -1503,7 +1556,11 @@ function pollInputs(){
     let gx = Math.abs(g.axes[0]) > .25 ? g.axes[0] : 0, gy = Math.abs(g.axes[1]) > .25 ? g.axes[1] : 0;
     if (b(14)) gx = -1; if (b(15)) gx = 1; if (b(12)) gy = -1; if (b(13)) gy = 1; ax[who][0] += gx; ax[who][1] += gy;
     for (const [bi, k] of [[2, 'atk'], [0, 'jump'], [1, 'spc'], [3, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
-    const st = b(9); if (st && !pv.st) { if (mode === 'title') { if (!SALON && !$('#btnPlay').disabled) openSelect(); } else if (mode === 'select') startGame(); else if (mode === 'clear') nextLevel(); else if (mode === 'play' || mode === 'pause') setPause(mode === 'play'); } pv.st = st; });
+    // menus with the pad: one new press or one new push of the stick is one step
+    const dx = gx < -.5 ? -1 : gx > .5 ? 1 : 0, dy = gy < -.5 ? -1 : gy > .5 ? 1 : 0, ex = dx !== pv.dx ? dx : 0, ey = dy !== pv.dy ? dy : 0, hit = {}; pv.dx = dx; pv.dy = dy;
+    for (const n of [0, 1, 2, 3, 4, 5, 9]) { const d = b(n); hit[n] = d && !pv['m' + n]; pv['m' + n] = d; }
+    padMenu((mode === 'select' ? wantTwo : twoP) && pads.length < 2 ? 1 : Math.min(i, 1), ex, ey, hit); });
+  if (pads.length !== padN) { padN = pads.length; if (mode === 'select') renderSelect(); }
   const K = keys, solo = !twoP, r = remote[1], n = (I, x, y) => { const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; } I.x = x; I.y = y; };
   n(inputs[0], (K.KeyD || (solo && K.ArrowRight) ? 1 : 0) - (K.KeyA || (solo && K.ArrowLeft) ? 1 : 0) + stick.x + ax[0][0], (K.KeyS || (solo && K.ArrowDown) ? 1 : 0) - (K.KeyW || (solo && K.ArrowUp) ? 1 : 0) + stick.y + ax[0][1]);
   if (solo) n(inputs[1], 0, 0);
@@ -1639,18 +1696,20 @@ function drawMirror(){
 }
 
 /* ---------- portraits for the fighter select screen, rendered once from the real models ---------- */
-function makePortraits(){
-  const W = 240, H = 300, rt = new T.WebGLRenderTarget(W, H, { encoding: T.sRGBEncoding }), ps = new T.Scene(), pc = new T.PerspectiveCamera(26, W / H, .1, 20);
+function renderPortraits(W, H, zoom, front){
+  const out = {}, rt = new T.WebGLRenderTarget(W, H, { encoding: T.sRGBEncoding }), ps = new T.Scene(), pc = new T.PerspectiveCamera(26, W / H, .1, 20);
   const px = new Uint8Array(W * H * 4), [c, x] = cv(W, H), im = x.createImageData(W, H);
   ps.environment = scene.environment; ps.add(new T.HemisphereLight(0xcfd6ff, 0x30203a, .95));
   const d = new T.DirectionalLight(0xffffff, 1.15); d.position.set(2, 3, 4); ps.add(d); const r = new T.DirectionalLight(0xff3a6a, 1.3); r.position.set(-3, 2, -3); ps.add(r);
-  for (const k of CHAR_ORDER) { const ch = CHARS[k], f = makeFighter(ch.look); ps.add(f.root); f.st = Object.assign({}, f.st, { s: ch.s }); f.isPlayer = true; f.spin = -FACE + .5; animate(f, 1);
-    const hy = 1.62 * f.st.s * MSCALE; pc.position.set(.3, hy + .06, 2.5); pc.lookAt(.03, hy - .2, 0);
+  for (const k of CHAR_ORDER) { const ch = CHARS[k], f = makeFighter(ch.look); ps.add(f.root); f.st = Object.assign({}, f.st, { s: ch.s }); f.isPlayer = true; f.spin = -FACE + (front ? 0 : .5); animate(f, 1);
+    const hy = 1.62 * f.st.s * MSCALE; pc.position.set(.3 / zoom, hy + .06, 2.5 / zoom); pc.lookAt(.03, hy - .2 / zoom, 0);
+    if (front) { pc.position.set(0, hy - .28, .95); pc.lookAt(0, hy - .03, 0); }
     renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(ps, pc); renderer.readRenderTargetPixels(rt, 0, 0, W, H, px);
     for (let y = 0; y < H; y++) im.data.set(px.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4);
-    x.putImageData(im, 0, 0); portraits[k] = c.toDataURL('image/png'); disposeFighter(f); }
-  renderer.setRenderTarget(null); rt.dispose();
+    x.putImageData(im, 0, 0); out[k] = c.toDataURL('image/png'); disposeFighter(f); }
+  renderer.setRenderTarget(null); rt.dispose(); return out;
 }
+function makePortraits(){ portraits = renderPortraits(240, 300, 1); }
 
 /* ---------- boot ---------- */
 function boot(){
@@ -1667,7 +1726,7 @@ function boot(){
 // Hooks for the arcade page that hosts the game (coins, pause, score, screenshot, guest input) and for automated tests
 window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ return players[0]; }, get players(){ return players; }, get enemies(){ return enemies; },
   get s(){ const p = players[0]; return { mode, level: levelIx, camX, zi, score, lives: p && p.lives, hp: p && Math.round(p.hp), n: enemies.length, px: p && p.x, boss: !!boss, np: players.length, progress, post: post.ok && post.on }; },
-  moneda, entrada, espejo, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
+  moneda, entrada, espejo, retratos: renderPortraits, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
   start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame(); },
   sim(sec, fn){ for (let i = 0, n = sec * 60; i < n && mode === 'play'; i++) { if (fn) fn(i, inputs[0], players[0], enemies, inputs[1], players[1]); if (hitStop > 0) hitStop = 0; step(1 / 60); updateCamera(1 / 60);
     for (const I of inputs) if (!I.keep) for (const k in I.held) I.held[k] = false; } },
