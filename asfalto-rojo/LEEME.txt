@@ -9,7 +9,8 @@ QUE TRAE
   3 niveles con jefe (El barrio, El poligono, El desguace), cada uno mas duro que el anterior.
   4 luchadores: Nico desde el principio; Vera, Toro y el Chatarrero se desbloquean al superar los niveles 1, 2 y 3.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
-  Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon.
+  Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon
+  (en el movil, el boton "Dobles" de la barra de arriba). En pantalla tactil solo se maneja el 1P.
   El progreso se guarda en el navegador de cada jugador.
 
 CONTROLES

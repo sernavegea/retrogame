@@ -274,8 +274,27 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
 .barra-juego button{font-family:var(--fuente-rotulo);font-size:.72rem;padding:.45rem .6rem;border-radius:8px;border:2px solid #000;cursor:pointer;
   background:rgba(58,45,107,.9);color:var(--texto);display:flex;align-items:center;gap:.3rem}
 .barra-juego button:focus-visible{outline:3px solid var(--neon-cian);outline-offset:2px}
+.barra-juego button[hidden]{display:none}
 .barra-juego .moneda-mini{background:rgba(90,50,23,.95);color:var(--cuero-texto)}
 .barra-juego .moneda-mini svg{width:20px;height:20px}
+.barra-juego #bj-invitar{background:rgba(20,70,90,.92);color:var(--neon-cian)}
+.barra-juego #bj-invitar.con-codigo{color:var(--neon-amarillo);letter-spacing:.08em}
+.bj-aviso{display:none}
+.abierta.maximizada .bj-aviso:not(:empty){display:block;position:fixed;z-index:22;left:50%;transform:translateX(-50%);margin:0;
+  top:calc(env(safe-area-inset-top,0px) + 58px);max-width:min(92vw,460px);padding:.45rem .8rem;border-radius:12px;text-align:center;
+  background:rgba(5,3,12,.82);border:2px solid var(--neon-cian);font-size:.9rem;pointer-events:none}
+.abierta.maximizada .bj-aviso b{font-family:var(--fuente-rotulo);font-size:1.5rem;color:var(--neon-amarillo);letter-spacing:.14em;display:block}
+@media (orientation: landscape) and (pointer: coarse){
+  .abierta.maximizada .bj-aviso:not(:empty){top:calc(env(safe-area-inset-top,0px) + .4rem)}
+  /* Los juegos de la casa llevan sus marcadores en las esquinas: la barra va en una fila arriba y el juego empieza debajo */
+  body .abierta.maximizada.casa .barra-juego{left:50%;transform:translateX(-50%);display:flex;max-width:none}
+  .abierta.maximizada.casa .pantalla-grande{padding-top:calc(env(safe-area-inset-top,0px) + 46px)}
+  .abierta.maximizada.casa .bj-aviso:not(:empty){top:calc(env(safe-area-inset-top,0px) + 50px)}
+}
+/* Mando del invitado en los juegos de la casa: solo los tres botones que usan */
+.abierta.casa .accion-btns [data-b="9"],.abierta.casa .accion-btns [data-b="11"],.abierta.casa .accion-btns [data-b="10"],
+.abierta.casa .accion-btns [data-b="12"],.abierta.casa .accion-btns [data-b="2"],.abierta.casa .accion-btns [data-b="13"]{display:none}
+.abierta.casa .accion-btns button{font-size:.66rem}
 .abierta.maximizada.invitado .mando{position:fixed;left:0;right:0;z-index:21;margin:0;width:auto;
   bottom:calc(env(safe-area-inset-bottom,0px) + .6rem);padding:0 calc(env(safe-area-inset-left,0px) + .8rem) 0 calc(env(safe-area-inset-right,0px) + .8rem);pointer-events:none}
 .abierta.maximizada.invitado .mando > *{pointer-events:auto}
@@ -673,9 +692,11 @@ body.en-partida .escena{visibility:hidden}
   <div class="barra-juego" id="barra-juego" aria-label="Controles de la partida">
     <button class="moneda-mini" id="bj-moneda" aria-label="Echar una moneda de 25"><span id="bj-moneda-icono"></span><span id="bj-moneda-n"></span></button>
     <button id="bj-apuntar">Récord</button>
+    <button id="bj-invitar" hidden>Dobles</button>
     <button id="bj-reducir">Reducir</button>
     <button id="bj-salir">Salir</button>
   </div>
+  <p class="bj-aviso" id="bj-aviso" aria-live="polite"></p>
   <div class="mando" id="mando" aria-label="Mando del jugador 2">
     <div class="cruceta">
       <button data-b="4" aria-label="Arriba">▲</button><button data-b="6" aria-label="Izquierda">◀</button>
@@ -1434,7 +1455,7 @@ let actual = null, modo = null /* 'local' | 'invitado' */, jugando = false, anim
 async function abrir(p){
   actual = p; modo = 'local'; jugando = false;
   listaAbierta = await leerPuntos(p.m.id);
-  capa.classList.remove('invitado','jugando');
+  capa.classList.remove('invitado','jugando','casa');
   bolsa.hidden = true; carteraBtn.setAttribute('aria-expanded','false');
   pintarFicha(); pintarPantalla(); pintarBandeja();
   info.textContent = p.m.casa ? `Juego de la casa, no necesita ROM. ${p.m.controles}` : `${nombreSistema(p.m.sistema)}. ROM: ${p.m.romNombre}`;
@@ -1448,6 +1469,7 @@ function pintarFicha(){
   $('jugar').hidden = modo === 'invitado' || jugando;
   $('editar').hidden = modo === 'invitado' || jugando || !!m.casa;
   $('invitar').hidden = !(modo === 'local' && jugando) || (!!m.casa && !m.dobles);
+  $('bj-invitar').hidden = $('invitar').hidden;
   $('apuntar').hidden = !(modo === 'local' && jugando);
   $('maximizar').hidden = !jugando;
   $('bj-apuntar').hidden = modo !== 'local';
@@ -1470,7 +1492,7 @@ function cerrar(forzar){
   if (jugando && !forzar && !confirm('¿Salir de la partida?')) return;
   sumarTiempo(); clearInterval(turnoPantalla); reducir();
   pararEmulador(); cerrarRed();
-  capa.classList.remove('visible','jugando','invitado');
+  capa.classList.remove('visible','jugando','invitado','casa'); rotulosMando(false);
   jugando = false; const antes = actual; modo = null;
   if (antes && antes.boton.isConnected) antes.boton.focus({ preventScroll:true });
 }
@@ -1594,6 +1616,7 @@ let fichasPendientes = 0;
    'ejs-inicio' cuando arranca, recibe las monedas con __ar.moneda() y da los puntos con __ar.puntos(). */
 function iniciarCasa(m, fichas){
   fichasPendientes = 0;
+  capa.classList.add('casa');
   pantalla.innerHTML = '';
   iframe = document.createElement('iframe');
   iframe.title = 'Juego: ' + m.nombre;
@@ -1752,20 +1775,40 @@ function cerrarRed(){
   try { peer && peer.destroy(); } catch {}
   peer = null; conexion = null;
   soltarTodo();
+  $('invitar').disabled = false;
+  const b = $('bj-invitar'); b.textContent = 'Dobles'; b.classList.remove('con-codigo');
+  avisoDobles(''); ultimoAviso = '';
+}
+/* Aviso flotante para la pantalla completa, donde no se ve el texto de debajo de la máquina */
+let tAviso = 0, ultimoAviso = '';
+function avisoDobles(html, ms){
+  clearTimeout(tAviso); $('bj-aviso').innerHTML = html || '';
+  if (html && ms) tAviso = setTimeout(() => { $('bj-aviso').innerHTML = ''; }, ms);
+}
+const ROTULOS_CASA = { 1:'Golpe', 0:'Salto', 8:'Esp.' };
+function rotulosMando(casa){
+  document.querySelectorAll('.accion-btns [data-b]').forEach(x => {
+    if (x.dataset.orig === undefined) x.dataset.orig = x.textContent;
+    x.textContent = casa && ROTULOS_CASA[x.dataset.b] ? ROTULOS_CASA[x.dataset.b] : x.dataset.orig;
+  });
 }
 
 /* --- Anfitrión --- */
 $('invitar').addEventListener('click', async () => {
   if (peer){ return; }
-  const canvas = (() => { try { return iframe.contentDocument.querySelector('canvas'); } catch { return null; } })();
-  if (!canvas){ info.textContent = 'Espera a que arranque el juego para invitar.'; return; }
-  info.textContent = 'Preparando la sala…';
-  try { await cargarScript(PEERJS); } catch { info.textContent = 'No se pudo cargar el sistema de dobles. Revisa la conexión.'; return; }
+  // los juegos de la casa dan un lienzo aparte con sus marcadores dibujados, que es lo que ve el invitado
+  const canvas = (() => { try { const c = casa(); return c && c.espejo ? c.espejo() : iframe.contentDocument.querySelector('canvas'); } catch { return null; } })();
+  if (!canvas){ info.textContent = 'Espera a que arranque el juego para invitar.'; avisoDobles(info.textContent, 4000); return; }
+  info.textContent = 'Preparando la sala…'; avisoDobles(info.textContent);
+  try { await cargarScript(PEERJS); } catch { info.textContent = 'No se pudo cargar el sistema de dobles. Revisa la conexión.'; avisoDobles(info.textContent, 6000); return; }
   const codigo = nuevoCodigo();
   peer = new Peer(PREFIJO_SALA + codigo);
   peer.on('open', () => {
     info.innerHTML = `Código de dobles: <span class="codigo-grande">${codigo}</span><br>Tu amigo lo mete en "Unirse a dobles" y juega como jugador 2.`;
     $('invitar').disabled = true;
+    const b = $('bj-invitar'); b.textContent = codigo; b.classList.add('con-codigo'); b.setAttribute('aria-label', 'Código de dobles ' + codigo);
+    ultimoAviso = `Código de dobles<b>${codigo}</b>Tu amigo abre el salón, pulsa «Unirse a dobles» y lo escribe.`;
+    avisoDobles(ultimoAviso, 15000);
   });
   peer.on('connection', c => {
     if (conexion){ c.on('open', () => { c.send({ t:'lleno' }); setTimeout(() => c.close(), 300); }); return; }
@@ -1774,18 +1817,19 @@ $('invitar').addEventListener('click', async () => {
       c.send({ t:'hola', nombre: actual.m.nombre, color: actual.m.color, arcade: ES_ARCADE(actual.m.sistema), casa: !!actual.m.casa });
       const stream = canvas.captureStream(60);
       peer.call(c.peer, stream);
-      info.textContent = 'Tu amigo se ha unido. Él es el jugador 2.';
+      info.textContent = actual.m.casa ? 'Tu amigo se ha unido. Entra como jugador 2 en cuanto pulse Start.' : 'Tu amigo se ha unido. Él es el jugador 2.';
+      avisoDobles(info.textContent, 5000);
       sonido('credito');
     });
     c.on('data', d => {
       if (d.t === 'in') pulsar(1, d.b, d.v ? 1 : 0);
       if (d.t === 'moneda') meterFichas(1, Math.min(4, d.n | 0));
     });
-    c.on('close', () => { conexion = null; for (let b = 0; b < 12; b++) pulsar(1, b, 0); info.textContent = 'Tu amigo ha salido de la partida.'; });
+    c.on('close', () => { conexion = null; for (let b = 0; b < 12; b++) pulsar(1, b, 0); info.textContent = 'Tu amigo ha salido de la partida.'; avisoDobles(info.textContent, 5000); });
   });
   peer.on('error', err => {
     if (err.type === 'unavailable-id'){ peer.destroy(); peer = null; $('invitar').click(); return; }
-    info.textContent = 'Error en la sala de dobles: ' + (err.message || err.type);
+    info.textContent = 'Error en la sala de dobles: ' + (err.message || err.type); avisoDobles(info.textContent, 6000);
   });
 });
 
@@ -1813,9 +1857,9 @@ function entrarComoInvitado(codigo){
         unido = true; dlgUnirse.close();
         invitado = { nombre: d.nombre, color: d.color, arcade: d.arcade };
         modo = 'invitado'; jugando = true; actual = null;
-        capa.classList.add('invitado','jugando'); pintarFicha(); pintarBandeja();
+        capa.classList.add('invitado','jugando'); capa.classList.toggle('casa', !!d.casa); rotulosMando(!!d.casa); pintarFicha(); pintarBandeja();
         if (!pantalla.querySelector('video')) pantalla.innerHTML = '<div id="mensaje"><p>Conectando con la partida…</p></div>';
-        info.textContent = d.casa ? 'Eres el jugador 2. Pulsa Start para entrar: Y golpea, B salta y A es el especial.'
+        info.textContent = d.casa ? 'Eres el jugador 2. Pulsa Start para entrar. Con teclado: flechas, A golpea, Z salta, X es el especial y Enter es Start.'
           : d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
         mostrarCapa(null);
         if (esMovil) maximizar();
@@ -1890,6 +1934,7 @@ $('maximizar').addEventListener('click', maximizar);
 $('bj-reducir').addEventListener('click', reducir);
 $('bj-salir').addEventListener('click', () => $('salir').click());
 $('bj-apuntar').addEventListener('click', () => $('apuntar').click());
+$('bj-invitar').addEventListener('click', () => { if (peer) avisoDobles(ultimoAviso, 6000); else $('invitar').click(); });
 $('bj-moneda').addEventListener('click', () => {
   if (animando) return;
   const v = estado.cartera[25] ? 25 : estado.cartera[100] ? 100 : 0;

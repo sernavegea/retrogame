@@ -80,6 +80,10 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 .overlay.mid{justify-content:center;text-align:center;background:rgba(11,10,20,.78)}
 .card{width:min(100%,430px);margin-block:auto;margin-left:clamp(0px,5vw,72px);display:flex;flex-direction:column;gap:14px;min-width:0}
 .mid .card{margin-left:0;align-items:center}
+.salon #title{justify-content:center;text-align:center;background:rgba(11,10,20,.72)}
+.salon #title .card{margin-left:0;align-items:center}
+.salon #title .cta{align-self:center}
+.salon #title .eyebrow,.salon #title .lede,.salon #title .keys,.salon #title .opts,.salon #title .credit{display:none}
 .keys .t,.touch .keys .k{display:none}
 .touch .keys .t{display:inline}
 .eyebrow{margin:0;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.22em;font-size:14px;color:var(--cool)}
@@ -145,6 +149,28 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
 .unlocks span{font-weight:500;line-height:1.25}
 .mid .keys{text-align:left;width:min(100%,460px)}
 @media (max-width:640px){.roster{grid-template-columns:repeat(2,minmax(0,1fr))}.face{aspect-ratio:5/4}.p2{left:16px;top:70px;width:min(44vw,300px)}}
+/* short screens (an arcade cabinet's monitor, a phone on its side): everything on one screen, no scrolling to find the start button */
+@media (max-height:600px){
+  .overlay.mid{padding-block:10px}
+  .card.wide{gap:8px}
+  .roster{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .face{aspect-ratio:auto;height:min(30vh,150px)}
+  .face span{font-size:44px}
+  .st{display:none}
+  .fighter b{font-size:14px;padding:4px 6px 0}
+  .fighter small{font-size:12px;padding:0 6px}
+  .pick{padding-bottom:6px}
+  .pick2{margin:0 6px 6px;padding:2px;font-size:12px}
+  .seg button{padding:4px 10px;font-size:14px}
+  .rowsel > span{font-size:13px}
+  h2{font-size:clamp(26px,9vh,44px)}
+  .stats{gap:18px;margin:0}
+  .stats b{font-size:24px}
+  .unlocks{gap:5px}
+  .unlocks li{padding:4px 10px;font-size:15px}
+  .mid .cta{font-size:19px;padding:7px 20px 5px}
+  #selHint{font-size:13px}
+}
 #err{position:absolute;inset:0;z-index:6;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px 16px;text-align:center;font-size:20px}
 
 /* ---------- touch pad ---------- */
@@ -1128,7 +1154,7 @@ function hud(){
   if (boss) { setT('bn', ui.bossName, boss.nombre || ''); setW('bh', ui.bossHp, boss.hp / boss.maxHp * 100); setW('bl', ui.bossLag, boss.hp / boss.maxHp * 100); }
 }
 let bannerT = 0;
-function banner(main, sub){ ui.banner.innerHTML = ''; if (sub) { const s = document.createElement('small'); s.textContent = sub; ui.banner.appendChild(s); } ui.banner.appendChild(document.createTextNode(main)); ui.banner.hidden = true; void ui.banner.offsetWidth; ui.banner.hidden = false; bannerT = 2.2; }
+function banner(main, sub){ ui.banner._m = main; ui.banner._s = sub || ''; ui.banner.innerHTML = ''; if (sub) { const s = document.createElement('small'); s.textContent = sub; ui.banner.appendChild(s); } ui.banner.appendChild(document.createTextNode(main)); ui.banner.hidden = true; void ui.banner.offsetWidth; ui.banner.hidden = false; bannerT = 2.2; }
 
 /* ---------- crates, pickups ---------- */
 const crateMat = (() => { const [c, x] = cv(128, 128); x.fillStyle = '#8a6236'; x.fillRect(0, 0, 128, 128);
@@ -1371,8 +1397,8 @@ function renderSelect(){
       ${wantTwo && !lock ? `<button type="button" class="pick2" data-k="${k}" data-p="1" aria-pressed="${s2}">Elegir 2P</button>` : ''}</div>`; }).join('');
   $('#selMode1').setAttribute('aria-pressed', !wantTwo); $('#selMode2').setAttribute('aria-pressed', wantTwo);
   $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>Nivel ${i + 1}</button>`).join('');
-  $('#selHint').textContent = wantTwo ? '1P: WASD y J K L. 2P: flechas y las teclas , . - (o 1 2 3 del teclado numérico). También con dos mandos.'
-    : SALON ? 'Para jugar a dobles a distancia usa «Invitar a dobles» en la máquina cuando empiece la partida.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.';
+  $('#selHint').textContent = wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD y J K L. 2P: flechas y las teclas , . - (o 1 2 3 del teclado numérico). También con dos mandos.')
+    : SALON ? 'Dobles a distancia: empieza la partida y pulsa «Dobles» (o «Invitar a dobles», debajo de la máquina). Tu amigo entra con el código.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.';
 }
 function openSelect(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'select'; backdrop(); renderSelect(); ui.select.hidden = false; $('#btnFight').focus({ preventScroll: true }); }
 function startGame(){
@@ -1587,6 +1613,29 @@ function frame(now){
   for (const p of players) if (p.ring) { p.ring.visible = rings && !p.out; p.ring.position.set(p.x, .022, p.z); }
   if (mode !== 'pause') { updateFx(rdt); ambience(rdt); }
   updateCamera(rdt); render();
+  // the guest's mirror is drawn right after the 3D frame; if copying it turns out slow on this device, every other frame
+  if (mirror && (mirror.ms < 7 || (mirror.n++ & 1))) { const t0 = performance.now(); drawMirror(); mirror.ms += (performance.now() - t0 - mirror.ms) * .1; }
+}
+
+/* A guest invited from the arcade page only receives video. This mirror canvas is what gets streamed to them:
+   the 3D frame plus a drawn copy of the HUD, which lives in the page and would otherwise be missing. */
+let mirror = null;
+function espejo(){ if (!mirror) { const c = document.createElement('canvas'); c.width = 960; c.height = 540; c.style.cssText = 'position:absolute;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(c); mirror = { c, x: c.getContext('2d'), ms: 0, n: 0 }; } return mirror.c; }
+function drawMirror(){
+  const c = mirror.c, x = mirror.x, W = 960, H = MU.clamp(Math.round(960 * canvas.height / Math.max(1, canvas.width)), 360, 960); if (c.height !== H) c.height = H;
+  x.drawImage(canvas, 0, 0, W, H);
+  const txt = (s, X, Y, px, col, al) => { x.font = `italic 800 ${px}px 'Barlow Condensed','Arial Narrow',sans-serif`; x.textAlign = al || 'left'; x.lineJoin = 'round'; x.lineWidth = Math.max(3, px / 6); x.strokeStyle = 'rgba(8,6,16,.9)'; x.strokeText(s, X, Y); x.fillStyle = col; x.fillText(s, X, Y); };
+  const bar = (X, Y, w, h, k, col) => { x.fillStyle = 'rgba(11,10,20,.8)'; x.fillRect(X, Y, w, h); x.fillStyle = col; x.fillRect(X, Y, w * MU.clamp(k, 0, 1), h); x.strokeStyle = 'rgba(241,236,255,.85)'; x.lineWidth = 2; x.strokeRect(X, Y, w, h); };
+  if (mode === 'play' || mode === 'win' || mode === 'pause') {
+    players.forEach((p, i) => { const X = 16 + i * 300; txt((i ? '2P ' : '1P ') + p.ch.name.toUpperCase(), X, 30, 24, i ? '#27e0ff' : '#ffc83a'); txt(p.out ? 'FUERA' : '×' + p.lives, X + 270, 30, 22, '#ffc83a', 'right'); bar(X, 38, 270, 13, p.hp / p.maxHp, '#ffc83a'); bar(X, 56, 170, 7, p.energy / 100, '#27e0ff'); });
+    txt('NIVEL ' + (levelIx + 1) + ' · ' + LV.name.toUpperCase(), W - 16, 26, 17, '#a59fc4', 'right'); txt(String(score).padStart(6, '0'), W - 16, 58, 32, '#f1ecff', 'right');
+    if (combo >= 2) txt(combo + ' GOLPES', W - 16, 96, 26, '#ffc83a', 'right');
+    if (boss) { txt((boss.nombre || '').toUpperCase(), W / 2, H - 38, 20, '#ff2d55', 'center'); bar(W / 2 - 220, H - 30, 440, 13, boss.hp / boss.maxHp, '#ff2d55'); }
+    if (!ui.banner.hidden && ui.banner._m) { if (ui.banner._s) txt(ui.banner._s.toUpperCase(), W / 2, H * .3 - 34, 18, '#27e0ff', 'center'); txt(ui.banner._m.toUpperCase(), W / 2, H * .3, 36, '#f1ecff', 'center'); }
+    if (players.length < 2 && (performance.now() / 600 | 0) % 2) txt('2P: PULSA START PARA ENTRAR', W / 2, H - 72, 24, '#27e0ff', 'center');
+    if (mode === 'pause') txt('PAUSA', W / 2, H / 2, 48, '#f1ecff', 'center');
+  } else { x.fillStyle = 'rgba(11,10,20,.62)'; x.fillRect(0, 0, W, H); txt('ASFALTO ROJO', W / 2, H / 2 - 22, 56, '#ff2d55', 'center');
+    txt(mode === 'select' ? 'EL ANFITRIÓN ESTÁ ELIGIENDO LUCHADOR' : mode === 'clear' ? 'NIVEL SUPERADO · EL ANFITRIÓN PASA AL SIGUIENTE' : mode === 'over' ? 'FIN DE LA PARTIDA · ' + score + ' PUNTOS' : 'ESPERANDO AL ANFITRIÓN', W / 2, H / 2 + 28, 24, '#f1ecff', 'center'); }
 }
 
 /* ---------- portraits for the fighter select screen, rendered once from the real models ---------- */
@@ -1605,11 +1654,11 @@ function makePortraits(){
 
 /* ---------- boot ---------- */
 function boot(){
-  buildRain(); buildWorld(0); setupPost(); label(); setPlayers(['hero']); attract();
+  buildRain(); buildWorld(0); setupPost(); label();   // the street stays empty until the fighters are loaded, so the plain stand-in dolls never flash on screen
   const pb = $('#btnPlay'); pb.disabled = true; pb.textContent = 'Cargando…';
   const ready = () => { pb.disabled = false; pb.textContent = 'Jugar'; if (SALON) { openSelect(); avisar({ tipo: 'ejs-inicio' }); } };
   loadAssets().then(() => { try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
-    .catch(e => { console.warn('Modelos no disponibles, se usan los muñecos:', e && e.message); ASSET.ok = false; ready(); });
+    .catch(e => { console.warn('Modelos no disponibles, se usan los muñecos:', e && e.message); ASSET.ok = false; setPlayers(['hero']); attract(); ready(); });
   new ResizeObserver(resize).observe(view); resize();
   if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("150px 'Bungee'")]).then(() => { for (const s of sources) if (s.redraw) s.redraw(); }).catch(() => {});
   canvas.addEventListener('webglcontextlost', e => e.preventDefault());
@@ -1618,7 +1667,7 @@ function boot(){
 // Hooks for the arcade page that hosts the game (coins, pause, score, screenshot, guest input) and for automated tests
 window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ return players[0]; }, get players(){ return players; }, get enemies(){ return enemies; },
   get s(){ const p = players[0]; return { mode, level: levelIx, camX, zi, score, lives: p && p.lives, hp: p && Math.round(p.hp), n: enemies.length, px: p && p.x, boss: !!boss, np: players.length, progress, post: post.ok && post.on }; },
-  moneda, entrada, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
+  moneda, entrada, espejo, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
   start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame(); },
   sim(sec, fn){ for (let i = 0, n = sec * 60; i < n && mode === 'play'; i++) { if (fn) fn(i, inputs[0], players[0], enemies, inputs[1], players[1]); if (hitStop > 0) hitStop = 0; step(1 / 60); updateCamera(1 / 60);
     for (const I of inputs) if (!I.keep) for (const k in I.held) I.held[k] = false; } },
