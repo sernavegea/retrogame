@@ -6,7 +6,11 @@ cada moneda de mas vale un credito para continuar y los puntos pasan al salon al
 Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con su pantalla de inicio.
 
 QUE TRAE
-  3 niveles con jefe (El barrio, El poligono, El desguace), cada uno mas duro que el anterior.
+  4 niveles, cada uno con su calle y su local: El barrio (jefe en el bar), El centro (peluqueria),
+  El poligono (gimnasio) y El desguace (casino). Al limpiar la calle se entra por la puerta y el jefe espera dentro.
+  Armas por el suelo y en las cajas: bate, tuberia, navaja y botella. Golpe las usa (se gastan), Especial las lanza.
+  Hay enemigos armados (sueltan el arma al caer) y uno de amarillo que tira botellas desde lejos.
+  Tres dificultades: Facil, Normal y Dificil. En Normal y Dificil los enemigos bloquean y los jefes se enfurecen a media vida.
   4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
   Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon
@@ -18,7 +22,7 @@ CONTROLES
   Dos jugadores: 1P con WASD y J K L; 2P con flechas y las teclas , . -  (o 1 2 3 del teclado numerico).
   El 2P puede entrar en plena partida pulsando dos veces la tecla , o con un segundo mando.
   Mando (PS5, Xbox...): stick o cruceta, cuadrado golpe, equis salto, circulo o triangulo especial, Options pausa.
-  En los menus: izquierda/derecha luchador, arriba/abajo nivel, triangulo 1 o 2 jugadores, equis empezar.
+  En los menus: izquierda/derecha luchador, arriba/abajo nivel, L1/R1 dificultad, triangulo 1 o 2 jugadores, equis empezar.
   Embestida: especial mientras te mueves a un lado.   Mazazo: manten pulsado golpe y suelta.
 
 ARCHIVOS
