@@ -719,7 +719,7 @@ const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
    Están siempre al principio del pasillo, no se guardan en el navegador y no se pueden editar ni quitar. */
 const DE_LA_CASA = [
   { id:'casa-asfalto-rojo', casa:true, sistema:'casa', nombre:'Asfalto Rojo', color:'#ff2d55', web:'asfalto-rojo/index.html', portada:'asfalto-rojo/portada.jpg', romNombre:'',
-    controles:'Flechas o WASD para moverte, J golpe, K salto y L especial.' }
+    controles:'Flechas o WASD para moverte, J golpe, K salto y L especial.', dobles:true }
 ];
 const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11, L2:12, R2:13 };
 
@@ -1447,7 +1447,7 @@ function pintarFicha(){
   ficha.style.setProperty('--color', m.color);
   $('jugar').hidden = modo === 'invitado' || jugando;
   $('editar').hidden = modo === 'invitado' || jugando || !!m.casa;
-  $('invitar').hidden = !(modo === 'local' && jugando) || !!m.casa;   // los juegos de la casa son de un jugador
+  $('invitar').hidden = !(modo === 'local' && jugando) || (!!m.casa && !m.dobles);
   $('apuntar').hidden = !(modo === 'local' && jugando);
   $('maximizar').hidden = !jugando;
   $('bj-apuntar').hidden = modo !== 'local';
@@ -1666,7 +1666,7 @@ async function iniciarEmulador(m, fichas){
 addEventListener('message', e => {
   if (!iframe || e.source !== iframe.contentWindow || e.data?.tipo !== 'ejs-inicio') return;
   arrancado = true; clearTimeout(tArranque); pantalla.querySelector('.aviso-arranque')?.remove();
-  info.textContent = actual.m.casa ? `Partida en marcha. ${actual.m.controles} Cada moneda de más es un crédito para continuar.`
+  info.textContent = actual.m.casa ? `Elige luchador y a pelear. ${actual.m.controles} Cada moneda de más es un crédito para continuar.`
     : ES_ARCADE(actual.m.sistema) ? 'Partida en marcha. Tus monedas entran como créditos del jugador 1.' : 'Partida en marcha.';
   if (fichasPendientes){ meterFichas(0, fichasPendientes); fichasPendientes = 0; }
   stats(actual.m.id).partidas++; guardar(); inicioPartida = Date.now();
@@ -1727,7 +1727,7 @@ function liberarEmulador(f){
   } catch {}
 }
 function emu(){ try { return iframe && iframe.contentWindow.EJS_emulator; } catch { return null; } }
-function pulsar(jugador, boton, valor){ const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
+function pulsar(jugador, boton, valor){ if (casa()){ try { casa().entrada(jugador, boton, valor); } catch {} return; } const e = emu(); if (e && e.gameManager) e.gameManager.simulateInput(jugador, boton, valor); }
 async function meterFichas(jugador, n){
   if (casa()){ try { casa().moneda(n); } catch {} if (iframe) iframe.focus(); return; }
   if (!ES_ARCADE(actual.m.sistema)) return;
@@ -1771,7 +1771,7 @@ $('invitar').addEventListener('click', async () => {
     if (conexion){ c.on('open', () => { c.send({ t:'lleno' }); setTimeout(() => c.close(), 300); }); return; }
     conexion = c;
     c.on('open', () => {
-      c.send({ t:'hola', nombre: actual.m.nombre, color: actual.m.color, arcade: ES_ARCADE(actual.m.sistema) });
+      c.send({ t:'hola', nombre: actual.m.nombre, color: actual.m.color, arcade: ES_ARCADE(actual.m.sistema), casa: !!actual.m.casa });
       const stream = canvas.captureStream(60);
       peer.call(c.peer, stream);
       info.textContent = 'Tu amigo se ha unido. Él es el jugador 2.';
@@ -1815,7 +1815,8 @@ function entrarComoInvitado(codigo){
         modo = 'invitado'; jugando = true; actual = null;
         capa.classList.add('invitado','jugando'); pintarFicha(); pintarBandeja();
         if (!pantalla.querySelector('video')) pantalla.innerHTML = '<div id="mensaje"><p>Conectando con la partida…</p></div>';
-        info.textContent = d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
+        info.textContent = d.casa ? 'Eres el jugador 2. Pulsa Start para entrar: Y golpea, B salta y A es el especial.'
+          : d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
         mostrarCapa(null);
         if (esMovil) maximizar();
       }

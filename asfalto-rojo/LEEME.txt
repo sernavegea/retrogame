@@ -1,12 +1,25 @@
-ASFALTO ROJO - prototipo de beat 'em up en 3D. Maquina de la casa de MenteRetro.
+ASFALTO ROJO - beat 'em up en 3D. Maquina de la casa de MenteRetro.
 
 Esta carpeta va tal cual en la raiz del repositorio, junto al index.html del salon.
-El salon la abre con  asfalto-rojo/index.html?salon=1  y entonces el juego arranca solo,
+El salon la abre con  asfalto-rojo/index.html?salon=1  y entonces el juego va directo a elegir luchador,
 cada moneda de mas vale un credito para continuar y los puntos pasan al salon al salir.
 Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con su pantalla de inicio.
 
+QUE TRAE
+  3 niveles con jefe (El barrio, El poligono, El desguace), cada uno mas duro que el anterior.
+  4 luchadores: Nico desde el principio; Vera, Toro y el Chatarrero se desbloquean al superar los niveles 1, 2 y 3.
+  Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
+  Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon.
+  El progreso se guarda en el navegador de cada jugador.
+
+CONTROLES
+  Un jugador:   WASD o flechas, J golpe, K salto, L especial. P pausa, M musica.
+  Dos jugadores: 1P con WASD y J K L; 2P con flechas y las teclas , . -  (o 1 2 3 del teclado numerico).
+  El 2P puede entrar en plena partida pulsando dos veces la tecla , o con un segundo mando.
+  Embestida: especial mientras te mueves a un lado.   Mazazo: manten pulsado golpe y suelta.
+
 ARCHIVOS
-  index.html    todo el juego: escenario, combate, enemigos, interfaz y sonido.
+  index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
   models.js     cuerpos 3D, animaciones y texturas. Incluye la textura de Nico con la cara de la foto de referencia.
   lib/          three.js r128 y sus cargadores de modelos.
   portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
