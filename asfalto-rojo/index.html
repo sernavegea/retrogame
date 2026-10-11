@@ -886,8 +886,8 @@ function buildKiosk(X, i){
 
 /* ---------- the front door of each boss's place, on the street ---------- */
 let doorMark = null;
-function buildVenue(X, kind){
-  const V = ROOMS[kind].front, w = 6.6, h = 5.6, d = painter(512, 512, w, h);
+function genericFront(X, V){
+  const w = 6.6, h = 5.6, d = painter(512, 512, w, h);
   d.r(0, 0, w, h, V.wall); for (let y = 0; y < h; y += .3) d.r(0, y, w, .03, 'rgba(0,0,0,.22)');
   d.r(0, 0, w, .5, V.trim); d.r(0, 3.6, w, .22, V.trim); d.r(0, h - .3, w, .3, 'rgba(0,0,0,.45)');
   for (const wx of [.45, w - 2.25]) { d.r(wx - .1, .85, 2, 2.4, V.trim); d.grad(wx, .95, 1.8, 2.2, V.glow, '#1a1016', true);
@@ -901,6 +901,37 @@ function buildVenue(X, kind){
   box3(mat(V.awn, .7), X, 3.3, WALL_Z + .7, 2.5, .09, 1.2, [.22, 0, 0]); box3(mat(V.carpet, .9), X, .168, WALL_Z + 1.2, 1.9, .012, 2.2);
   if (V.pole) { const pm = board(.3, 1, (x, W, H) => { x.fillStyle = '#f4f2ee'; x.fillRect(0, 0, W, H); for (let i = -4; i < 12; i++) { x.fillStyle = i % 2 ? '#d02a3a' : '#2a4ad0'; x.beginPath(); x.moveTo(0, i * H / 6); x.lineTo(W, i * H / 6 - H / 5); x.lineTo(W, i * H / 6 - H / 5 + H / 14); x.lineTo(0, i * H / 6 + H / 14); x.fill(); } }, .7);
     cyl3(pm, X - 1.55, 1.75, WALL_Z + .4, .13, 1.1); cyl3(mat(0xc8c8d0, .3, .8), X - 1.55, 2.36, WALL_Z + .4, .16, .12); cyl3(mat(0xc8c8d0, .3, .8), X - 1.55, 1.14, WALL_Z + .4, .16, .12); }
+}
+// A real place for level 3: the front of the SoulBody training centre, after the owner's photo. A kettlebell between two leaves, the name on a blue corrugated band, a dark wall below.
+function soulLogo(d, cx, cy, s, mono){
+  const k = d.x, X = v => (cx + v * s) * d.sx, Y = v => d.Hp - (cy + v * s) * d.sy, rx = v => v * s * d.sx, ry = v => v * s * d.sy, ink = mono || '#33363d';
+  if (!mono) for (const sg of [-1, 1]) { k.fillStyle = '#7ac943'; k.beginPath(); k.ellipse(X(sg * .8), Y(-.2), rx(.2), ry(.64), sg * .42, 0, 6.3); k.fill(); }
+  k.fillStyle = ink; k.beginPath(); k.ellipse(X(0), Y(-.12), rx(.62), ry(.58), 0, 0, 6.3); k.fill();
+  k.strokeStyle = ink; k.lineWidth = rx(.2); k.beginPath(); k.ellipse(X(0), Y(.5), rx(.34), ry(.36), 0, Math.PI, Math.PI * 2); k.stroke();
+  if (!mono) { k.fillStyle = '#f0553a'; k.beginPath(); k.moveTo(X(0), Y(-.5)); k.bezierCurveTo(X(-.66), Y(0), X(-.3), Y(.4), X(0), Y(.1)); k.bezierCurveTo(X(.3), Y(.4), X(.66), Y(0), X(0), Y(-.5)); k.fill();
+  }
+}
+function soulText(d, t, x, y, size, fill){ const k = d.x; k.save(); k.translate(x * d.sx, d.Hp - y * d.sy); k.transform(1, 0, -.24, 1, 0, 0); k.font = `900 ${Math.round(size * d.sy)}px 'Arial Black','Segoe UI Black','Helvetica Neue',Impact,sans-serif`; k.textAlign = 'center'; k.textBaseline = 'middle'; k.fillStyle = fill; k.fillText(t, 0, 0); k.restore(); }
+function soulBand(d, w, y0, hh){   // the blue ribbed cladding, lit a little so the name reads at dusk
+  d.r(0, y0, w, hh, '#3f8fe6'); for (let xx = 0; xx < w; xx += .22) { d.r(xx, y0, .08, hh, 'rgba(0,0,40,.17)'); d.r(xx + .11, y0, .03, hh, 'rgba(255,255,255,.08)'); } d.r(0, y0 - .05, w, .1, '#15161a'); }
+function soulGlow(d, y0, hh, a){ const c = d.x.canvas, py = d.Hp - (y0 + hh) * d.sy, ph = hh * d.sy; d.e.globalAlpha = a; d.e.drawImage(c, 0, py, c.width, ph, 0, py, c.width, ph); d.e.globalAlpha = 1; }
+function buildSoulFront(X){
+  const w = 15, h = 6.5, band = 3.5, d = painter(1024, 512, w, h);
+  d.r(0, 0, w, band, '#26282e'); for (let xx = 0; xx < w; xx += 1.5) d.r(xx, 0, .025, band, 'rgba(0,0,0,.28)'); d.r(0, 0, w, .3, '#1a1b20'); d.r(0, 1.25, w, .05, '#3f8fe6');
+  soulBand(d, w, band, h - band); soulLogo(d, 2.05, 5.02, 1.02); soulText(d, 'SoulBody', 8.9, 5.2, 1.55, '#33363d'); soulText(d, 'CENTRO DE ENTRENAMIENTO', 8.55, 3.98, .38, '#33363d'); soulGlow(d, band, h - band, .32);
+  d.r(6.45, 0, 2.1, 3.06, '#111216'); d.grad(6.6, 0, 1.8, 2.6, '#ffe2b0', '#5a3c22', true); d.g(6.95, .15, .5, 2.25, '#2a5a9a'); d.r(6.6, 2.6, 1.8, .4, '#5a5e68'); for (let yy = 2.62; yy < 2.99; yy += .09) d.r(6.6, yy, 1.8, .03, '#2e3038');
+  for (let gx = 7.74; gx < 8.4; gx += .11) d.g(gx, 0, .035, 2.6, '#0c0c10'); d.g(7.7, 0, .05, 2.6, '#0c0c10'); d.g(7.7, 1.3, .7, .04, '#0c0c10');
+  for (const wx of [2.7, 9.7]) { d.r(wx - .08, 1.5, 2.76, 1.56, '#0c0c10'); d.grad(wx, 1.58, 2.6, 1.4, '#3c414c', '#22252d'); soulLogo(d, wx + .5, 2.3, .4, 'rgba(235,238,245,.62)'); soulText(d, 'SoulBody', wx + 1.62, 2.36, .42, 'rgba(235,238,245,.62)'); }
+  d.r(.5, 0, .05, 3.2, '#15161a'); d.r(.63, 0, .04, 3, '#15161a'); d.r(.3, 3.1, .5, .25, '#15161a');
+  const g = d.x.createLinearGradient(0, 512 * .84, 0, 512); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.42)'); d.x.fillStyle = g; d.x.fillRect(0, 512 * .84, 1024, 512 * .16);
+  const side = mat(0x15161a, .9), b = new T.Mesh(new T.BoxGeometry(w, h, 4), [side, side, side, side, d.mat({ roughness: .7, metalness: .2 }), side]); b.position.set(X, h / 2, WALL_Z - 1.86); b.receiveShadow = true; world.add(b);
+  const chrome = mat(0xb8bcc6, .25, .9); for (const px of [-1.5, -.6, .3]) cyl3(chrome, X + px, .62, WALL_Z + 1.35, .025, .92); for (const ry of [1.06, .62]) box3(chrome, X - .6, ry, WALL_Z + 1.35, 1.85, .04, .04);
+  box3(chrome, X - 1.5, 1.06, WALL_Z + .75, .04, .04, 1.2);
+  box3(mat(0x9a4c46, .85), X, .168, WALL_Z + 1.15, 7.5, .012, 2.25);
+  lightAt(X - 3.6, 4.8, WALL_Z + 2.4, 0xdfeaff, 1.25); lightAt(X + 4, 4.8, WALL_Z + 2.4, 0xdfeaff, 1.25); buildCar(X - 5.6, 0xe9e9ee);
+}
+function buildVenue(X, kind){
+  const V = ROOMS[kind].front; if (V.build) V.build(X); else genericFront(X, V);
   lightAt(X, 2.5, WALL_Z + 1.8, V.glow, 1.5); halo(X, 1.5, WALL_Z + .5, V.glow, 3.4, 3.6, .28);
   const pool = plane3(new T.MeshBasicMaterial({ map: glowTex, color: V.glow, transparent: true, opacity: .16, depthWrite: false, blending: T.AdditiveBlending }), X, .02, WALL_Z + 3.6, 6, 5, [-Math.PI / 2, 0, 0]);
   // chevrons on the ground that light up when it is time to go in
@@ -967,33 +998,34 @@ const ROOMS = {
       const tube = new T.MeshBasicMaterial({ color: new T.Color(1.4, 1.4, 1.5) }); for (const lx of [-9, -1, 7]) { box3(tube, X + lx, 4.5, RWALL + 1.9, 3.4, .06, .14).castShadow = false; halo(X + lx, 4.4, RWALL + 1.95, 0xf4f8ff, 5, 1.4, .18); lightAt(X + lx, 3.9, RWALL + 3, 0xf4f8ff, .95); }
       neonSign('TIJERAS', '#ff5aa8', X + 3.6, 4.25, .9, 4.6, { z: RWALL }); neonSign('ABIERTO', '#3df2ff', X - 13.8, 3.5, .6, 3, { z: RWALL }); } },
 
-  gym: { donde: 'el gimnasio', tile: 4, rough: .7, side: 0x2c3038,
-    th: { bg: 0x08090c, fog: [0x08090c, 34, 90], hemi: [0xcfe0ff, 0x1a1c24, .52], key: [0xdfe8ff, .6], fill: [0xffc83a, .16], rain: false,
-      env: ['#0c0e14', '#2a3040', '#8a96b0', '#30343e', '#08090c'], envGlow: [[2.2, 2.4, 2.8], [2.6, 2, .6], [1.6, 2, 2.6], [2.4, 2.4, 2.6]] },
-    front: { wall: '#3c4048', trim: '#16171c', glow: '#ffe08a', sign: ['GIMNASIO', '#ffc83a'], awn: 0xd8a21a, carpet: 0x1c1c22 },
+  gym: { donde: 'SoulBody', tile: 4, rough: .7, side: 0x1f2126, glowK: .8,
+    th: { bg: 0x08090c, fog: [0x08090c, 34, 90], hemi: [0xcfe0ff, 0x1a1c24, .52], key: [0xdfe8ff, .6], fill: [0x3f8fe6, .2], rain: false,
+      env: ['#0c0e14', '#24364e', '#8aa6c8', '#2a3444', '#08090c'], envGlow: [[2.2, 2.4, 2.8], [1, 1.8, 2.8], [1.6, 2, 2.6], [2.4, 2.4, 2.6]] },
+    front: { build: buildSoulFront, glow: '#ffe2b0' },
     items: [['caja', -9.5, 2.3, 'batido'], ['tubo', -3.5, -1.3], ['caja', 10, -1.3, 'arma'], ['tubo', 6, 2]],
-    floor(x){ x.fillStyle = '#2a2c32'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 5000; i++) { x.fillStyle = pick(['rgba(255,255,255,.12)', 'rgba(60,140,255,.2)', 'rgba(255,200,58,.16)', 'rgba(0,0,0,.25)']); x.fillRect(R() * 512, R() * 512, 2, 2); }
+    floor(x){ x.fillStyle = '#26282d'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 5000; i++) { x.fillStyle = pick(['rgba(255,255,255,.12)', 'rgba(63,143,230,.22)', 'rgba(0,0,0,.25)']); x.fillRect(R() * 512, R() * 512, 2, 2); }
       x.strokeStyle = 'rgba(0,0,0,.6)'; x.lineWidth = 3; for (let i = 0; i <= 512; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); } },
-    wall(d){ d.r(0, 0, 20, 14, '#3c4048'); for (let yy = 0; yy < 6; yy += .28) { d.r(0, yy, 20, .02, 'rgba(0,0,0,.28)'); for (let xx = (Math.round(yy / .28) % 2) * .3; xx < 20; xx += .6) d.r(xx, yy, .02, .28, 'rgba(0,0,0,.28)'); }
-      d.grad(0, 5, 20, 9, '#07080b', '#3c4048'); d.r(0, 1, 20, .26, '#e8b21c'); d.r(0, .92, 20, .08, '#111'); d.r(0, 1.26, 20, .06, '#111');
-      d.grad(6.5, 1.4, 7, 2.3, '#b6c4d2', '#6a7a8c'); for (let q = 6.5; q <= 13.5; q += 1.75) d.r(q - .02, 1.4, .04, 2.3, '#2a2e36'); d.frame(6.5, 1.4, 7, 2.3, .06, '#2a2e36');
-      d.x.strokeStyle = 'rgba(255,255,255,.4)'; d.x.lineWidth = 6; for (const q of [7.2, 9.6, 12]) { d.x.beginPath(); d.x.moveTo(q * d.sx, d.Hp - 3.5 * d.sy); d.x.lineTo((q + .7) * d.sx, d.Hp - 1.6 * d.sy); d.x.stroke(); }
-      d.t('SIN DOLOR NO HAY GLORIA', 10, 4.25, .5, '#f4f0e0');
-      for (let i = 0; i < 6; i++) { const lx = .3 + i * .78; d.r(lx, 0, .72, 2.1, i % 2 ? '#2a5a9a' : '#d8721c'); d.frame(lx, 0, .72, 2.1, .02, '#111'); d.r(lx + .12, 1.6, .48, .06, 'rgba(0,0,0,.5)'); d.r(lx + .12, 1.48, .48, .06, 'rgba(0,0,0,.5)'); d.r(lx + .56, 1, .06, .14, '#c8c8d0'); }
-      for (const [px, col] of [[15, '#a8282f'], [16.7, '#2a5a9a'], [18.4, '#e8b21c']]) { d.r(px, 1.6, 1.3, 1.8, '#111'); d.grad(px + .06, 1.66, 1.18, 1.68, col, '#16171c'); d.circ(px + .65, 2.9, .2, '#f0d8c0'); d.r(px + .4, 1.9, .5, .8, '#f0d8c0'); d.circ(px + .28, 2.5, .17, '#111'); d.circ(px + 1.02, 2.5, .17, '#111'); }
-      for (let q = 1; q < 20; q += 3.2) { d.r(q - .08, 5.5, 2.16, 1.16, '#16171c'); d.g(q, 5.58, 2, 1, '#2a4a7a'); d.r(q + .97, 5.58, .06, 1, '#16171c'); } },
-    props(X){ const steel = mat(0x8a8e98, .35, .8), black = mat(0x15161a, .6, .2), red = mat(0xa8282f, .6), z = RWALL + 1.1;
-      for (const [bxx, col] of [[-12.4, 0xa8282f], [-10.4, 0x15161a], [12.6, 0x2a5a9a]]) { cyl3(mat(col, .6), X + bxx, 1.75, z + .1, .29, 1.25); cyl3(steel, X + bxx, 3.6, z + .1, .015, 2.5); sph3(mat(col, .6), X + bxx, 1.12, z + .1, .29, .4); }
-      const rx = X + 5.2, rz = RWALL + .98; box3(mat(0x2a5a9a, .8), rx, .28, rz, 7, .56, 1.9); box3(red, rx, .28, rz + .96, 7, .5, .03); box3(mat(0xe8e6e0, .8), rx, .565, rz, 6.8, .02, 1.75);
-      for (const a of [-3.3, 3.3]) for (const b of [-.8, .8]) { cyl3(b > 0 ? red : mat(0x2a5a9a, .5), rx + a, 1.2, rz + b, .07, 1.4); }
-      for (const hy of [1, 1.35, 1.7]) { box3(mat(0xf4f0e0, .6), rx, hy, rz + .8, 6.6, .035, .035); box3(mat(0xf4f0e0, .6), rx, hy, rz - .8, 6.6, .035, .035); for (const a of [-3.3, 3.3]) box3(mat(0xf4f0e0, .6), rx + a, hy, rz, .035, .035, 1.6); }
-      const wx = X - 4; box3(black, wx, .5, z - .2, 3.2, .06, .5); box3(black, wx, 1, z - .3, 3.2, .06, .5); for (const a of [-1.55, 1.55]) box3(black, wx + a, .6, z - .25, .06, 1.2, .5);
-      for (let i = 0; i < 6; i++) for (const sy of [.62, 1.12]) { const dx = wx - 1.25 + i * .5, r = .08 + (i % 3) * .02; cyl3(steel, dx, sy, z - .25 + (sy > 1 ? -.05 : 0), .025, .36, [Math.PI / 2, 0, 0]); for (const s of [-.16, .16]) cyl3(black, dx, sy, z - .25 + s + (sy > 1 ? -.05 : 0), r, .1, [Math.PI / 2, 0, 0]); }
-      const bx0 = X - 8.2; box3(black, bx0, .45, z, 1.3, .1, .35); for (const a of [-.5, .5]) box3(steel, bx0 + a, .22, z, .06, .44, .3); for (const a of [-.5, .5]) box3(steel, bx0 + a, .75, z - .3, .05, 1.5, .05);
-      cyl3(steel, bx0, 1.3, z - .3, .022, 2, [0, 0, Math.PI / 2]); for (const a of [-.8, .8]) for (const q of [0, .07]) cyl3(black, bx0 + a + Math.sign(a) * q, 1.3, z - .3, .23 - q, .05, [0, 0, Math.PI / 2]);
-      for (let i = 0; i < 3; i++) { const kx = X - 1 + i * .5; sph3(black, kx, .17, z + .2, .15); cyl3(black, kx, .36, z + .2, .08, .08); }
-      const tube = new T.MeshBasicMaterial({ color: new T.Color(1.8, 1.95, 2.1) }); for (const lx of [-10, -2, 6, 14]) { box3(tube, X + lx, 4.7, RWALL + 2, 2.8, .05, .12).castShadow = false; halo(X + lx, 4.6, RWALL + 2.05, 0xdfeaff, 4.4, 1.2, .26); lightAt(X + lx, 4, RWALL + 3.2, 0xdfeaff, 1.2); }
-      neonSign('GYM EL MULO', '#ffc83a', X - 4.5, 4.9, .85, 6, { z: RWALL }); } },
+    wall(d){ d.r(0, 0, 20, 14, '#2a2c32'); for (let xx = 0; xx < 20; xx += 1.25) d.r(xx, 0, .025, 3.3, 'rgba(0,0,0,.3)'); d.r(0, 0, 20, .35, '#1c1d22'); d.r(0, 1.15, 20, .05, '#3f8fe6');
+      soulBand(d, 20, 3.3, 3); soulLogo(d, 5.4, 4.85, 1.02); soulText(d, 'SoulBody', 11.6, 5.1, 1.5, '#33363d'); soulText(d, 'CENTRO DE ENTRENAMIENTO', 11.3, 3.9, .34, '#33363d'); soulGlow(d, 3.3, 3, .12);
+      d.grad(0, 6.3, 20, 7.7, '#05060a', '#1c1d22'); for (let xx = .6; xx < 20; xx += 2.4) d.r(xx, 6.3, .14, 7.7, 'rgba(0,0,0,.5)'); d.r(0, 6.3, 20, .1, '#101116');
+      d.r(1.1, 1.45, 2.5, 1.55, '#cfd3d7'); d.frame(1.1, 1.45, 2.5, 1.55, .05, '#8a8e96'); const mk = "'Comic Sans MS','Segoe Print',cursive,sans-serif";
+      d.t('WOD', 2.35, 2.76, .3, '#c2332a', false, mk); d.t('21 - 15 - 9', 2.35, 2.42, .2, '#1c3a8a', false, mk); d.t('THRUSTERS', 2.35, 2.12, .19, '#16171c', false, mk); d.t('PULL-UPS', 2.35, 1.86, .19, '#16171c', false, mk); d.t('¡A TOPE!', 2.35, 1.6, .15, '#1c7a2a', false, mk);
+      d.r(15.55, 2.42, 1.6, .6, '#0c0c10'); d.t('12:00', 16.35, 2.72, .42, '#ff3a2a', true, 'monospace');
+      d.grad(17.6, 1.3, 2.2, 1.9, '#9fb0bf', '#5e7080'); d.frame(17.6, 1.3, 2.2, 1.9, .05, '#16171c'); },
+    props(X){ const steel = mat(0x15161a, .5, .6), bar = mat(0x9a9ea8, .3, .85), black = mat(0x16171b, .7, .2), wood = mat(0xb8905a, .7), rope = mat(0xc8b48a, .9), z = RWALL + .55;
+      for (let i = 0; i < 6; i++) { const ux = X - 3.6 + i * 1.8; for (const dz of [0, 1.1]) box3(steel, ux, 1.4, z + dz, .09, 2.8, .09); box3(steel, ux, 2.78, z + .55, .07, .07, 1.2);
+        if (i < 5) for (const dz of [0, 1.1]) cyl3(bar, ux + .9, 2.62, z + dz, .02, 1.8, [0, 0, Math.PI / 2]); }
+      for (const s of [-.25, .25]) { cyl3(rope, X - 2.7 + s, 2.06, z + 1.1, .012, 1.1); const ring = new T.Mesh(G('gring', () => new T.TorusGeometry(.11, .014, 6, 16)), wood); ring.position.set(X - 2.7 + s, 1.42, z + 1.1); ring.castShadow = true; world.add(ring); }
+      cyl3(rope, X + 2.7, 1.33, z + 1.1, .028, 2.6);
+      const b0 = X + .9; cyl3(bar, b0, 1.45, z + 1.22, .016, 2.1, [0, 0, Math.PI / 2]); for (const s of [-1, 1]) [[0x2a5ac2, .225], [0xd0a21a, .225], [0x1c7a2a, .2]].forEach((p, i) => cyl3(mat(p[0], .7), b0 + s * (.72 + i * .07), 1.45, z + 1.22, p[1], .055, [0, 0, Math.PI / 2]));
+      [0x2a5ac2, 0xc22a2a, 0xd0a21a, 0x1c7a2a, 0x16171b, 0x2a5ac2].forEach((c, i) => cyl3(mat(c, .7), X + 6.7, .06 + i * .1, z + .5, .225, .09));
+      for (let i = 0; i < 7; i++) { const kx = X - 9.4 + i * .44, r = .13 + (i % 3) * .016; sph3(black, kx, r + .02, z + .4, r); cyl3(mat([0xd0a21a, 0x2a5ac2, 0xc22a2a, 0x7ac943][i % 4], .6), kx, r + .02, z + .4, r + .006, .05);
+        const hd = new T.Mesh(G('kbh', () => new T.TorusGeometry(.07, .018, 6, 12, Math.PI)), black); hd.position.set(kx, r * 2 - .01, z + .4); world.add(hd); }
+      box3(wood, X - 6, .38, z + .4, .75, .76, .6); box3(wood, X - 5.1, .25, z + .35, .6, .5, .5); box3(wood, X - 6, .91, z + .4, .5, .3, .5);
+      for (let i = 0; i < 5; i++) sph3(mat([0x3f8fe6, 0xc22a2a, 0x16171b, 0x7ac943, 0xd0a21a][i], .8), X + 8.5 + (i % 3) * .42, .19 + (i > 2 ? .34 : 0), z + .3, .18);
+      cyl3(mat(0x16171b, .6), X - 12.6, 1.75, z + .8, .29, 1.25); cyl3(bar, X - 12.6, 3.7, z + .8, .015, 2.7); sph3(mat(0x16171b, .6), X - 12.6, 1.12, z + .8, .29, .4);
+      cyl3(mat(0xe8e6e0, .9), X + 4.6, .2, z + .2, .2, .4);
+      const tube = new T.MeshBasicMaterial({ color: new T.Color(1.8, 1.95, 2.1) }); for (const lx of [-10, -2, 6, 14]) { box3(tube, X + lx, 4.9, RWALL + 2.3, 2.8, .05, .12).castShadow = false; halo(X + lx, 4.8, RWALL + 2.35, 0xdfeaff, 4.4, 1.2, .24); lightAt(X + lx, 4.1, RWALL + 3.3, 0xdfeaff, 1.2); } } },
 
   casino: { donde: 'el casino', tile: 4, rough: .85, side: 0x3a0a14, glowK: .6,
     th: { bg: 0x0a0406, fog: [0x0a0406, 34, 90], hemi: [0xffc060, 0x2a0a10, .46], key: [0xffe0a0, .5], fill: [0xff3050, .24], rain: false,
@@ -1104,9 +1136,10 @@ STYLES.vera = Object.assign({}, STYLES.punk, { skin: 0xc98f6b, top: 0xba62c4, pa
 STYLES.chaval = Object.assign({}, STYLES.hero, { top: 0xece9e2, pants: 0x263260, boots: 0xc42832, hair: 0x33291f, head: 'bald', glove: 0xe8b48c, s: .86, bulk: .88 });
 STYLES.tinta = Object.assign({}, STYLES.hero, { top: 0x16161a, pants: 0x84866f, boots: 0x141418, hair: 0xd9cfae, head: 'bald', glove: 0xd9a482, s: 1, bulk: .96 });
 STYLES.lanza = Object.assign({}, STYLES.thug, { top: 0xd8b21c, pants: 0x343846, s: .98 });
+STYLES.atleta = Object.assign({}, STYLES.thug, { top: 0xc98f6b, pants: 0x16161c, head: 'bald', sleeve: 0, s: 1.02, bulk: 1.06 });
 STYLES.capo3 = Object.assign({}, STYLES.thug, { top: 0xeceaf0, pants: 0x1a1a20, hair: 0x4ab0ff, s: 1.12, bulk: 1.02 });
 STYLES.capo1 = Object.assign({}, STYLES.punk, { s: 1.1, bulk: 1, hair: 0xb96bff, top: 0x3a1d4a, pants: 0x18181e });
-STYLES.capo2 = Object.assign({}, STYLES.brute, { s: 1.42, bulk: 1.5, top: 0x8a1f1f, pants: 0x3a4230 });
+STYLES.capo2 = Object.assign({}, STYLES.brute, { s: 1.42, bulk: 1.5, top: 0xb9825e, pants: 0x16161c });
 const THUG_TOPS = [0x6a45b0, 0x2f6fa8, 0x8a3a2a, 0x3f7a4a, 0x7a6a2a];
 
 function limb(r1, r2, len, mat){
@@ -1237,8 +1270,10 @@ LOOKS.lanza = Object.assign({}, LOOKS.thug, { tone: [.95, .86, .8], hairColor: [
   z: Object.assign(paint([216, 178, 28], [1, 2, 3, 4, 5, 6, 16]), paint([52, 56, 70], [9, 10, 11, 15]), paint([232, 232, 236], [12, 13, 14])) });
 LOOKS.capo3 = Object.assign({}, LOOKS.thug, { tone: [1, .93, .9], hairColor: [.35, 1.5, 2.4], hairGlow: 0x0c3a5a, bulk: 1.02, tintZones: null, band: 0xff5aa8,
   z: Object.assign(paint([236, 234, 240], [1, 2, 3, 4, 5, 6, 16]), paint([26, 26, 32], [9, 10, 11, 15]), paint([12, 12, 14], [12, 13, 14]), paint([226, 103, 138], [7, 18])) });
-LOOKS.capo2 = Object.assign({}, LOOKS.brute, { tone: [.74, .62, .56], bulk: 1.24, tintZones: null,
-  z: Object.assign(paint([150, 24, 26], [2, 16]), paint([60, 68, 46], [10, 11, 15]), paint([16, 16, 18], [12, 13, 14, 9]), paint([28, 28, 32], [8, 17, 7, 18])) });
+LOOKS.capo2 = Object.assign({}, LOOKS.brute, { tone: [.9, .78, .7], bulk: 1.3, tintZones: null,   // the gym's boss: bare torso, black shorts, blue wrist wraps
+  z: Object.assign(paint([22, 22, 26], [9, 10, 15]), paint([16, 16, 18], [12, 13, 14]), paint([63, 143, 230], [7, 18])) });
+LOOKS.atleta = Object.assign({}, LOOKS.thug, { tone: [.98, .88, .82], gait: 'Jog', hairColor: [.2, .16, .13], bulk: 1.04, tintZones: [9, 10, 15],
+  z: Object.assign(paint([24, 24, 30], [9, 10, 15]), paint([228, 228, 232], [12]), paint([30, 30, 36], [13, 14]), paint([20, 20, 24], [7, 18])) });
 
 const SKINS = ['hero', 'vera', 'chaval', 'tinta'], GRIP = [0, 0, 1, .09];   // skin textures that carry a face taken from a reference photo
 // Loose clothes (a T-shirt, baggy shorts) should not show the muscles underneath: their zones get a flattened copy of the body's normal map.
@@ -1409,12 +1444,15 @@ const EATK = {
   capo2: { dur: 1, hit: .52, hold: .22, wind: POSE.smashW, pose: POSE.smash, dmg: 19, range: 1.5, kb: 7, launch: 6, down: true, m: [['OverhandThrow', 0, .26, .42], ['OverhandThrow', .26, .378, .52], ['OverhandThrow', .378, 1.3, 1]] },
 };
 EATK.lanza = EATK.thug;
+EATK.atleta = { dur: .62, hit: .28, hold: .12, wind: POSE.eWind, pose: POSE.cross, dmg: 8, range: 1.5, kb: 3, stun: .28, m: [['Punch_Cross', 0, .1, .2], ['Punch_Cross', .1, .267, .28], ['Punch_Cross', .267, 1, .62]] };
+const ATL_SHORTS = [0x16161c, 0x2a5ac2, 0xa8282f, 0x4a4f58, 0x1c7a4a];
 const DASH = { dmg: 18, kb: 8, launch: 6.5, down: true };
 const EDEF = {
   thug:  { hp: 34, speed: 2.3, pts: 200, cd: [.7, 1.5] },
   punk:  { hp: 26, speed: 3.3, pts: 250, cd: [.4, 1.1] },
   brute: { hp: 80, speed: 1.55, pts: 600, cd: [1, 1.8], armor: 3 },
   lanza: { hp: 24, speed: 2.9, pts: 300, cd: [1.7, 2.7], ranged: true, arma: 'botella' },
+  atleta: { hp: 38, speed: 2.85, pts: 320, cd: [.5, 1.15] },
   capo1: { hp: 180, speed: 3.4, pts: 2500, cd: [.35, .8], armor: 4, jefe: true, dash: true, nombre: 'La Navaja', arma: 'cuchillo' },
   capo3: { hp: 215, speed: 3.1, pts: 3000, cd: [.38, .85], armor: 4, jefe: true, dash: true, nombre: 'El Tijeras', arma: 'cuchillo' },
   capo2: { hp: 260, speed: 1.9, pts: 3500, cd: [.7, 1.3], armor: 5, jefe: true, dash: true, nombre: 'El Mulo' },
@@ -1522,8 +1560,8 @@ const LEVELS = [
   { name: 'El polígono', theme: 1, room: 'gym', armas: ['tubo', 'bate'], hp: 1.3, dmg: 1.24, spd: 1.09, eng: 3, zones: [
     { x: 16, title: 'Muelle de carga', waves: [['thug:tubo', 'punk', 'thug'], ['brute', 'punk', 'thug', 'lanza']] },
     { x: 42, title: 'Nave 7', waves: [['punk', 'punk:cuchillo', 'thug', 'thug:bate'], ['brute', 'brute', 'lanza']] },
-    { x: 68, title: 'La báscula', waves: [['thug', 'thug:tubo', 'punk', 'punk', 'lanza'], ['brute', 'punk:cuchillo', 'punk', 'thug:bate']] },
-    { x: ROOM_X, room: true, boss: true, title: 'Gimnasio El Mulo', waves: [['capo2', 'punk', 'punk', 'thug:tubo']] } ] },
+    { x: 68, title: 'La báscula', waves: [['thug', 'thug:tubo', 'punk', 'punk', 'lanza'], ['brute', 'punk:cuchillo', 'atleta', 'thug:bate']] },
+    { x: ROOM_X, room: true, boss: true, title: 'SoulBody', waves: [['atleta', 'atleta', 'atleta:tubo'], ['capo2', 'atleta', 'atleta']] } ] },
   { name: 'El desguace', theme: 2, room: 'casino', armas: ['tubo', 'bate', 'cuchillo'], hp: 1.45, dmg: 1.36, spd: 1.13, eng: 3, zones: [
     { x: 16, title: 'La verja', waves: [['brute', 'thug:tubo', 'thug', 'punk'], ['punk:cuchillo', 'punk', 'punk', 'thug', 'lanza']] },
     { x: 42, title: 'La prensa', waves: [['brute', 'brute', 'thug:bate', 'lanza'], ['thug', 'punk:cuchillo', 'thug:tubo', 'punk', 'brute']] },
@@ -1776,7 +1814,7 @@ function target(e){
   e.tgt = best || players[0]; e.tgtT = rnd(1.6, 3.2); return e.tgt;
 }
 function spawnEnemy(spec, x, z){
-  const kind = kindOf(spec), arm = spec.split(':')[1], def = EDEF[kind], e = makeFighter(kind, kind === 'thug' ? THUG_TOPS[Math.random() * THUG_TOPS.length | 0] : 0), hp = Math.round(def.hp * LV.hp * DF.hp * (duo() ? 1.35 : 1)), ref = players[0];
+  const kind = kindOf(spec), arm = spec.split(':')[1], def = EDEF[kind], e = makeFighter(kind, kind === 'thug' ? THUG_TOPS[Math.random() * THUG_TOPS.length | 0] : kind === 'atleta' ? ATL_SHORTS[Math.random() * ATL_SHORTS.length | 0] : 0), hp = Math.round(def.hp * LV.hp * DF.hp * (duo() ? 1.35 : 1)), ref = players[0];
   Object.assign(e, { x, z, hp, maxHp: hp, speed: def.speed * LV.spd * rnd(.92, 1.08), pts: def.pts, armor: def.armor, jefe: !!def.jefe, canDash: !!def.dash, ranged: !!def.ranged, rage: false, nombre: def.nombre, dmgK: LV.dmg * DF.dmg, cdR: def.cd,
     cd: rnd(.4, 1.2), cd2: rnd(2, 3.5), wait: rnd(0, 1.2), retT: 0, hz: z, hd: 3, side: x > ref.x ? 1 : -1, engage: false, reach: EATK[kind].range * STYLES[kind].s * .92,
     idleP: def.jefe || kind === 'brute' ? POSE.idle : POSE.loose, facing: x > ref.x ? -1 : 1, tgt: null, tgtT: 0 });
