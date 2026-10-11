@@ -1,7 +1,7 @@
 /* Service worker de MenteRetro.
    Guarda la web para que abra aunque no haya conexión.
    Las ROMs no pasan por aquí: están en el navegador de cada usuario (IndexedDB). */
-const VERSION = 'menteretro-v25';
+const VERSION = 'menteretro-v26';
 const BASICOS = ['./', './index.html', './que-es.html', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/apple-touch-icon.png', './iconos/favicon-32.png'];
 
 self.addEventListener('install', e => {
@@ -9,7 +9,7 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k !== VERSION && !k.startsWith('asfalto-rojo-')).map(k => caches.delete(k))   /* la caché de Asfalto Rojo la lleva su propio service worker */)).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', e => {

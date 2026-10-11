@@ -2,10 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="description" content="Asfalto Rojo: beat 'em up callejero en 3D, a solas o a dobles.">
+<meta name="theme-color" content="#0b0a14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Asfalto Rojo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="iconos/icono-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="iconos/icono-32.png">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Asfalto Rojo</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:ital,wght@0,500;0,700;1,700;1,800&display=swap">
+<style>
+@font-face{font-family:'Bungee';src:url(fuentes/bungee-400.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Barlow Condensed';src:url(fuentes/barlow-condensed-500-normal.woff2) format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Barlow Condensed';src:url(fuentes/barlow-condensed-700-normal.woff2) format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Barlow Condensed';src:url(fuentes/barlow-condensed-700-italic.woff2) format('woff2');font-weight:700;font-style:italic;font-display:swap}
+@font-face{font-family:'Barlow Condensed';src:url(fuentes/barlow-condensed-800-italic.woff2) format('woff2');font-weight:800;font-style:italic;font-display:swap}
+</style>
 <style>
 /* Layout: one-screen arcade cabinet. The 3D street fills the stage, the HUD rides its corners
    as slanted fighting-game plates, and on a phone held upright the stage sits on top with the pad below. */
@@ -17,6 +32,8 @@
   --f-ui:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
 }
 html,body{height:100%}
+html{touch-action:manipulation}
+@supports (height:100dvh){html,body{height:100dvh}}
 body{background:var(--ink);color:var(--paper);font-family:var(--f-ui);font-size:17px;overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
@@ -28,7 +45,7 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
   background:radial-gradient(ellipse at 50% 55%,transparent 52%,rgba(5,3,14,.62) 100%)}
 
 /* ---------- HUD ---------- */
-#hud{position:absolute;inset:0;pointer-events:none;padding:14px 16px;font-style:italic;font-weight:800;
+#hud{position:absolute;inset:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);pointer-events:none;padding:14px 16px;font-style:italic;font-weight:800;
   text-transform:uppercase;letter-spacing:.04em;text-shadow:0 2px 0 rgba(0,0,0,.55)}
 .plate{position:absolute;display:flex;flex-direction:column;gap:5px}
 .p1{left:16px;top:14px;width:min(44vw,300px)}
@@ -57,6 +74,7 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 .boss .who{justify-content:center;color:var(--hot);font-size:18px}
 .boss .bar .fill{background:linear-gradient(180deg,#ff8aa0,var(--hot) 60%,#b3123a)}
 .boss .bar .lag{background:var(--paper)}
+#moveName{position:absolute;right:16px;top:178px;text-align:right;font-family:var(--f-display);font-style:normal;font-weight:400;font-size:clamp(16px,2.6vw,24px);color:var(--cool);animation:slide .25s ease-out}
 #combo{position:absolute;right:16px;top:104px;text-align:right;color:var(--gold);font-size:20px;line-height:1}
 #combo b{display:block;font-family:var(--f-display);font-style:normal;font-weight:400;font-size:46px;line-height:.95}
 #combo b{transform-origin:right center}
@@ -77,7 +95,8 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 .tools button[aria-pressed="false"]{color:var(--mute);text-decoration:line-through}
 
 /* ---------- overlays ---------- */
-.overlay{position:absolute;inset:0;z-index:5;display:flex;padding:20px 16px;overflow:auto;
+.overlay{position:absolute;inset:0;z-index:5;display:flex;overflow:auto;
+  padding:max(20px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
   background:linear-gradient(90deg,rgba(11,10,20,.93) 0,rgba(11,10,20,.8) 34%,rgba(11,10,20,0) 72%)}
 .overlay.mid{justify-content:center;text-align:center;background:rgba(11,10,20,.78)}
 .card{width:min(100%,430px);margin-block:auto;margin-left:clamp(0px,5vw,72px);display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -111,6 +130,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
   background:var(--ink-2);box-shadow:0 0 0 1px var(--mute);color:var(--paper)}
 .opts button[aria-pressed="false"]{color:var(--mute)}
 .credit{margin:0;font-size:14px;font-weight:500;color:var(--mute)}
+#instHint{color:var(--cool);font-size:15px}
 .cta:disabled{background:var(--mute);box-shadow:5px 5px 0 var(--ink-2);cursor:progress}
 .stats{display:flex;gap:26px;margin:4px 0;justify-content:center;flex-wrap:wrap}
 .stats div{display:flex;flex-direction:column}
@@ -183,19 +203,20 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
 .touch #pad{display:block;position:absolute;inset:0;pointer-events:none;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #stick{position:absolute;left:0;bottom:0;width:44%;height:62%;pointer-events:auto;touch-action:none}
-#stick .base{position:absolute;left:max(26px,env(safe-area-inset-left,0px) + 10px);bottom:26px;width:118px;height:118px;border-radius:50%;
+#stick .base{position:absolute;left:max(26px,env(safe-area-inset-left,0px) + 10px);bottom:calc(26px + env(safe-area-inset-bottom,0px));width:118px;height:118px;border-radius:50%;
   background:rgba(241,236,255,.08);box-shadow:inset 0 0 0 2px rgba(241,236,255,.38)}
 #knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;
   background:rgba(241,236,255,.5);box-shadow:0 0 0 2px var(--ink)}
-#btns{position:absolute;right:max(18px,env(safe-area-inset-right,0px) + 8px);bottom:20px;width:190px;height:170px;pointer-events:none}
+#btns{position:absolute;right:max(18px,env(safe-area-inset-right,0px) + 8px);bottom:calc(20px + env(safe-area-inset-bottom,0px));width:200px;height:184px;pointer-events:none}
 .pb{position:absolute;width:76px;height:76px;border-radius:50%;pointer-events:auto;touch-action:none;
   font-weight:800;font-style:italic;font-size:15px;letter-spacing:.06em;text-transform:uppercase;
   background:rgba(11,10,20,.5);box-shadow:inset 0 0 0 3px currentColor}
 .pb.on{background:currentColor}
 .pb.on span{color:var(--ink)}
-#bA{right:0;bottom:0;width:92px;height:92px;color:var(--hot);font-size:18px}
-#bJ{right:104px;bottom:6px;color:var(--cool)}
-#bS{right:34px;bottom:100px;width:66px;height:66px;color:var(--gold);font-size:13px}
+#bA{right:0;bottom:0;width:90px;height:90px;color:var(--hot);font-size:18px}
+#bK{right:100px;bottom:2px;width:80px;height:80px;color:#ff9a3a;font-size:14px}
+#bJ{right:8px;bottom:100px;width:72px;height:72px;color:var(--cool)}
+#bS{right:92px;bottom:92px;width:64px;height:64px;color:var(--gold);font-size:13px}
 .pb span{color:var(--paper)}
 @media (orientation:portrait){
   .touch #view{flex:0 0 auto;height:min(58%,92vw)}
@@ -203,7 +224,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     linear-gradient(180deg,var(--ink-2),var(--ink))}
   .touch #stick{width:50%;height:100%}
   .touch #stick .base{left:50%;bottom:50%;margin:0 0 -59px -59px}
-  .touch #btns{right:50%;bottom:50%;margin:0 calc(-25% - 95px) -85px 0}
+  .touch #btns{right:50%;bottom:50%;margin:0 calc(-25% - 100px) -92px 0;transform:scale(.94)}
   .overlay{background:linear-gradient(180deg,rgba(11,10,20,.55) 0,rgba(11,10,20,.9) 34%)}
   .overlay.mid{background:rgba(11,10,20,.82)}
   h1{font-size:clamp(44px,15vw,80px)}
@@ -215,7 +236,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
   .keys{font-size:15px;gap:2px 12px}
   .cta{font-size:20px;padding:8px 22px 6px}
 }
-@media (orientation:landscape){.touch .boss{bottom:auto;top:60px;width:min(38vw,340px)}.touch #go{top:27%}}
+@media (orientation:landscape){.touch .boss{bottom:auto;top:60px;width:min(38vw,340px)}.touch #go{top:27%}#hud{bottom:env(safe-area-inset-bottom,0px)}}
 @media (prefers-reduced-motion:reduce){#go,#banner,#combo.pop b{animation:none}}
 </style>
 
@@ -247,6 +268,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       </div>
       <div class="plate score"><span id="lvl">Nivel 1</span><b id="score">000000</b></div>
       <div id="combo" hidden><b id="comboN">2</b>golpes</div>
+      <div id="moveName" hidden></div>
       <div id="go" hidden>Avanza ▶</div>
       <div id="banner" hidden></div>
       <div class="plate boss" id="bossBox" hidden>
@@ -262,6 +284,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div id="btns">
       <button class="pb" id="bS" type="button" tabindex="-1"><span>Esp</span></button>
       <button class="pb" id="bJ" type="button" tabindex="-1"><span>Salto</span></button>
+      <button class="pb" id="bK" type="button" tabindex="-1"><span>Patada</span></button>
       <button class="pb" id="bA" type="button" tabindex="-1"><span>Golpe</span></button>
     </div>
   </div>
@@ -272,15 +295,18 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <h1>Asfalto <span>Rojo</span></h1>
       <p class="lede">La banda del Chatarrero se ha quedado con el barrio. Cuatro niveles, cuatro luchadores, bates y navajas por el suelo y un jefe esperando en cada local. A solas o a dobles.</p>
       <button class="cta" id="btnPlay" type="button">Jugar</button>
+      <p class="credit" id="instHint" hidden></p>
       <dl class="keys">
         <dt>Moverse</dt><dd><span class="k"><kbd>WASD</kbd> o flechas.</span><span class="t">Joystick de la izquierda.</span></dd>
         <dt>Golpe</dt><dd><span class="k"><kbd>J</kbd> o <kbd>Z</kbd>.</span><span class="t">Botón rojo.</span> Tres seguidos acaban en gancho.</dd>
-        <dt>Salto</dt><dd><span class="k"><kbd>K</kbd>, <kbd>X</kbd> o espacio.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
+        <dt>Patada</dt><dd><span class="k"><kbd>K</kbd> o <kbd>X</kbd>.</span><span class="t">Botón naranja.</span> Mézclala con el golpe: cada orden es un combo distinto.</dd>
+        <dt>Salto</dt><dd><span class="k">Espacio, <kbd>I</kbd> o <kbd>V</kbd>.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
         <dt>Especial</dt><dd><span class="k"><kbd>L</kbd> o <kbd>C</kbd>.</span><span class="t">Botón amarillo.</span> Molinete que golpea a los dos lados y gasta la barra azul. Al superar niveles ganas golpes nuevos.</dd>
       </dl>
       <div class="opts">
         <button id="optFx" type="button" aria-pressed="true">Brillo de neón: sí</button>
         <button id="optMusic" type="button" aria-pressed="true">Música: sí</button>
+        <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
       <p class="credit">Personajes y animaciones: Quaternius (CC0).</p>
     </div>
@@ -481,7 +507,7 @@ function buildSky(){
 const WALLS = ['#33294f', '#472a3a', '#253648', '#3a3a48', '#4a3324', '#2c3d3a', '#3b2d52'];
 const GLOW = ['#ffc86a', '#ffae52', '#8fe3ff', '#c9a6ff', '#ffd9a8', '#ff8fb5'];
 function facade(w, h){
-  const W = 512, H = 1024, sx = W / w, sy = H / h;
+  const W = coarse ? 256 : 512, H = coarse ? 512 : 1024, sx = W / w, sy = H / h;
   const [c, x] = cv(W, H), [ce, xe] = cv(W, H);
   const box = (k, X, Y, Wd, Ht, fill) => { k.fillStyle = fill; k.fillRect(X * sx, H - (Y + Ht) * sy, Wd * sx, Ht * sy); };
   xe.fillStyle = '#000'; xe.fillRect(0, 0, W, H);
@@ -1103,8 +1129,10 @@ function applyTheme(){
   if (rain) rain.visible = TH.rain;
 }
 function clearWorld(){
+  const old = new Set();
   world.traverse(o => { if (o.geometry) o.geometry.dispose(); const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
-    for (const m of ms) { for (const k of ['map', 'emissiveMap', 'roughnessMap']) if (m[k] && m[k] !== glowTex && m[k] !== streakTex && m[k] !== starTex) m[k].dispose(); m.dispose(); } });
+    for (const m of ms) { for (const k of ['map', 'emissiveMap', 'roughnessMap']) if (m[k] && m[k] !== glowTex && m[k] !== streakTex && m[k] !== starTex) { const im = m[k].image; m[k].dispose(); if (im && im.getContext) old.add(im); } m.dispose(); } });
+  for (const im of old) im.width = im.height = 0;
   scene.remove(world); world = new T.Group(); scene.add(world); sources.length = 0; flickers.length = 0; steam.length = 0; fires.length = 0; doorMark = null;
 }
 function buildWorld(ix){
@@ -1425,8 +1453,8 @@ function animModel(f, dt){
   let name = guard ? 'Guard' : 'Idle_Loop', time = time_(f), rate = 12, lean = 0, kick = 0, bob = 0;
   if (s === 'idle') { if (guard) { tgt.Idle_Loop = .2; bob = Math.sin(time * 5 + f.seed) * .012; } }
   else if (s === 'walk') { const g = (M.gait || M.look.gait) === 'Jog'; name = (g ? 'Jog_Fwd_Loop' : 'Walk_Loop') + (guard ? '_G' : ''); time = f.walkT * (g ? .125 : .25); rate = 14; }
-  else if (s === 'attack') { const r = segTime(f.atk.m, f.t); name = r[0]; time = r[1]; rate = 38; }
-  else if (s === 'jump') { if (f.air) { name = 'NinjaJump_Idle_Loop'; kick = 1; lean = -.42; } else name = 'Jump_Loop'; time = f.t; rate = 16; }
+  else if (s === 'attack') { const a = f.atk, r = segTime(a.m, f.t); name = r[0]; time = r[1]; rate = 38; if (a.leg) { kick = f.t > a.hit * .3 && f.t < a.hit + a.hold ? 1 : 0; lean = a.lean; M.kdir = a.leg; } }
+  else if (s === 'jump') { if (f.air) { name = 'NinjaJump_Idle_Loop'; kick = 1; lean = -.42; M.kdir = null; } else name = 'Jump_Loop'; time = f.t; rate = 16; }
   else if (s === 'spin') { name = 'A_TPose'; time = 0; rate = 30; lean = .12; }
   else if (s === 'hurt') { name = f.hc ? 'Hit_Head' : 'Hit_Chest'; time = Math.min(f.t * 1.15, M.clips[name].duration - .01); rate = 40; }
   else if (s === 'fall') { name = 'Hit_Knockback'; M.kb = Math.min(.33, f.t * .62); time = M.kb; rate = 30; }
@@ -1443,8 +1471,8 @@ function animModel(f, dt){
   M.cur = name; M.mixer.update(0);
   const sc = f.st.s * MSCALE, bk = M.look.bulk || 1;
   f.root.position.set(f.x, f.y * (s === 'fall' ? .55 : 1) + bob, f.z); f.root.scale.set(f.facing * sc * bk, sc, sc * bk); f.rig.rotation.y = FACE + f.spin;
-  M.kick += ((kick ? 1 : 0) - M.kick) * (1 - Math.exp(-18 * dt)); M.lean = (M.lean || 0) + (lean - (M.lean || 0)) * (1 - Math.exp(-14 * dt)); f.body.rotation.x = M.lean;
-  if (M.kick > .02) { const b = M.bones; f.root.updateMatrixWorld(true); _dir.set(-.1, -.1, 1).normalize(); aimBone(M.obj, b.thigh_r, b.calf_r, _dir, M.kick); aimBone(M.obj, b.calf_r, b.foot_r, _dir, M.kick); }
+  M.kick += ((kick ? 1 : 0) - M.kick) * (1 - Math.exp(-(M.kdir ? 30 : 18) * dt)); M.lean = (M.lean || 0) + (lean - (M.lean || 0)) * (1 - Math.exp(-14 * dt)); f.body.rotation.x = M.lean;
+  if (M.kick > .02) { const b = M.bones; f.root.updateMatrixWorld(true); if (M.kdir) _dir.set(M.kdir[0], M.kdir[1], M.kdir[2]).normalize(); else _dir.set(-.1, -.1, 1).normalize(); aimBone(M.obj, b.thigh_r, b.calf_r, _dir, M.kick); aimBone(M.obj, b.calf_r, b.foot_r, _dir, M.kick); }
   let er = 0, eg = 0, eb = 0;
   if (f.flash > 0) { f.flash -= dt; er = eg = eb = .42; } else if (f.blockT > 0) { f.blockT -= dt; er = .08; eg = .3; eb = .62; } else if (f.tele) { const pu = .26 + .26 * Math.sin(time_(f) * 38); er = pu; eg = pu * .08; eb = pu * .1; }
   else if (s === 'charge') { const pu = .22 + .2 * Math.sin(time_(f) * 30); er = pu; eg = pu * .7; eb = pu * .1; }
@@ -1462,6 +1490,17 @@ const PATK = [
   // the charged blow, unlocked later: hold the button and let go
   { dur: .62, hit: .2, hold: .2, wind: POSE.smashW, pose: POSE.smash, dmg: 26, range: 1.75, kb: 8, launch: 7.6, down: true, lunge: 3, m: [['OverhandThrow', .25, .378, .2], ['OverhandThrow', .378, 1.3, .62]] },
 ];
+PATK[2].fin = true; PATK[2].nm = 'Gancho';
+// Kicks and the combos they open. The leg is aimed by hand over the guard pose (leg: where it points, in the fighter's own frame; giro: a full turn while it sweeps).
+// The key is what was pressed so far in the chain: P punch, K kick. A finisher (fin) ends the chain.
+const GUARDM = d => [['Guard', 0, .01, d]];
+const KATK = {
+  K:   { nm: 'Patada', dur: .36, hit: .13, hold: .1, wind: POSE.kickW, pose: POSE.kick, dmg: 9, range: 1.8, kb: 3.6, stun: .42, lunge: 1.8, leg: [0, .04, 1], lean: -.28, m: GUARDM(.36) },
+  KK:  { nm: 'Patada giratoria', fin: true, dur: .6, hit: .27, hold: .14, wind: POSE.kickW, pose: POSE.kick, dmg: 15, range: 1.9, kb: 7.4, launch: 5.8, down: true, lunge: 2.4, leg: [0, .14, 1], lean: -.18, giro: true, m: GUARDM(.6) },
+  PK:  { nm: 'Barrido', fin: true, dur: .46, hit: .17, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.75, kb: 2.2, launch: 3.4, down: true, lunge: 2, leg: [0, -.6, .8], lean: .26, m: GUARDM(.46) },
+  PPK: { nm: 'Patada lateral', fin: true, dur: .56, hit: .2, hold: .16, wind: POSE.kickW, pose: POSE.kick, dmg: 19, range: 1.95, kb: 9.4, launch: 5.6, down: true, lunge: 3, leg: [0, .18, 1], lean: -.5, m: GUARDM(.56) },
+  KP:  { nm: 'Gancho al cielo', fin: true, dur: .5, hit: .15, hold: .18, wind: POSE.kickW, pose: POSE.smash, dmg: 12, range: 1.6, kb: 1.4, launch: 9.2, down: true, lunge: 2, m: [['Melee_Hook', .04, .272, .15], ['Melee_Hook', .272, .467, .28], ['Melee_Hook_Rec', 0, .6, .5]] },
+};
 const AIRK = { dmg: 12, range: 1.35, kb: 5.5, launch: 5.6, down: true }, PDASH = { dmg: 12, range: 1.25, kb: 7, launch: 5.6, down: true };
 const SPIN = { dmg: 15, kb: 6.5, launch: 7.2, down: true };
 const EATK = {
@@ -1621,7 +1660,7 @@ const salon = { cred: 0, perdida: false };
 const avisar = d => { if (SALON) try { window.parent.postMessage(d, '*'); } catch (e) {} };
 if (SALON) { try { salon.cred = Math.max(0, (parseInt(new URLSearchParams(location.search).get('cred'), 10) || 1) - 1); } catch (e) {} document.body.classList.add('salon'); }
 
-function makeInput(){ return { x: 0, y: 0, q: { atk: 0, jump: 0, spc: 0 }, held: { atk: false, jump: false, spc: false },
+function makeInput(){ return { x: 0, y: 0, q: { atk: 0, kick: 0, jump: 0, spc: 0 }, held: { atk: false, kick: false, jump: false, spc: false },
   press(k){ this.q[k] = .2; this.held[k] = true; }, release(k){ this.held[k] = false; },
   take(k){ if (this.q[k] > 0) { this.q[k] = 0; return true; } return false; },
   clear(){ for (const k in this.q) { this.q[k] = 0; this.held[k] = false; } } }; }
@@ -1695,7 +1734,7 @@ function music(){ const ac = snd.ac; if (!ac || !snd.musicOn || mode !== 'play')
     snd.next += STEP; snd.step++; } }
 
 /* ---------- HUD ---------- */
-const ui = { hud: $('#hud'), score: $('#score'), lvl: $('#lvl'), combo: $('#combo'), comboN: $('#comboN'), go: $('#go'), banner: $('#banner'),
+const ui = { hud: $('#hud'), score: $('#score'), lvl: $('#lvl'), combo: $('#combo'), comboN: $('#comboN'), move: $('#moveName'), go: $('#go'), banner: $('#banner'),
   bossBox: $('#bossBox'), bossHp: $('#bossHp'), bossLag: $('#bossLag'), bossName: $('#bossName'), title: $('#title'), pause: $('#pause'), end: $('#end'), select: $('#select'), clear: $('#clear'),
   pl: [0, 1].map(i => ({ root: $('#pl' + i), name: $('#pn' + i), lives: $('#lv' + i), hp: $('#hp' + i), lag: $('#hl' + i), en: $('#en' + i), enBar: $('#eb' + i), arm: $('#wp' + i) })) };
 const cache = {};
@@ -1777,7 +1816,17 @@ function makePlayer(idx, key){
 }
 function setPlayers(keys){ for (const p of players) disposeFighter(p); players = []; keys.forEach((k, i) => players.push(makePlayer(i, k))); for (const k in cache) delete cache[k]; }
 function placePlayers(x){ players.forEach((p, i) => Object.assign(p, { x: x - i * 1.1, y: 0, z: players.length > 1 ? (i ? -.9 : .9) : .5, vx: 0, vy: 0, state: p.out ? 'out' : 'idle', t: 0, facing: 1, inv: 0, spin: 0, air: false, juggle: 0, holdT: 0 })); }
-function startAtk(p, step){ const I = p.in, W = p.arma && WEAPONS[p.arma.k]; if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1; p.state = 'attack'; p.step = step; p.atk = W ? W.atk[step % W.atk.length] : PATK[step]; p.t = 0; p.done = false; p.conn = false; p.buf = false; p.vx = p.facing * p.atk.lunge; if (step >= 2 || W) sfx('whoosh'); }
+// which blow comes out: t is 'P' (punch or the weapon in hand), 'K' (kick) or 'C' (the charged blow). A chain goes on only if the last blow landed.
+function nextAtk(p, t){
+  const W = t === 'P' && p.arma && WEAPONS[p.arma.k];
+  if (W) { p.wstep = p.seq === 'W' && p.chain !== null ? (p.wstep || 0) + 1 : 0; p.seq = 'W'; return W.atk[p.wstep % W.atk.length]; }
+  let seq = (p.chain && p.seq !== 'W' ? p.seq : '') + t, a = seq === 'P' ? PATK[0] : seq === 'PP' ? PATK[1] : seq === 'PPP' ? PATK[2] : KATK[seq];
+  if (!a) { seq = t; a = t === 'P' ? PATK[0] : KATK.K; } p.seq = seq; return a;
+}
+function startAtk(p, t){ const I = p.in; if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1;
+  const a = t === 'C' ? PATK[3] : nextAtk(p, t); if (t === 'C') p.seq = '';
+  p.state = 'attack'; p.atk = a; p.t = 0; p.done = false; p.conn = false; p.buf = null; p.chain = false; p.spin = 0; p.vx = p.facing * a.lunge; if (a.fin || a.leg || t === 'C' || p.seq === 'W') sfx('whoosh'); }
+let moveT = 0; function moveName(n){ ui.move.textContent = n; ui.move.hidden = true; void ui.move.offsetWidth; ui.move.hidden = false; moveT = 1.1; }
 function spend(p, n){ if (p.energy < n) { p.enFlash = .4; sfx('nope'); return false; } p.energy -= n; return true; }
 function trySpin(p){ if (!spend(p, 40)) return false; p.state = 'spin'; p.t = 0; p.set = new Set(); p.spin = 0; sfx('spin'); return true; }
 function tryDash(p){ if (!spend(p, 22)) return false; p.facing = p.in.x > 0 ? 1 : -1; p.state = 'dash'; p.t = 0; p.set = new Set(); sfx('whoosh'); return true; }
@@ -1795,17 +1844,19 @@ function updatePlayer(p, dt){
       if (m > .15) { p.x += I.x * spd * dt; p.z += I.y * spd * .72 * dt; if (Math.abs(I.x) > .2) p.facing = I.x > 0 ? 1 : -1; p.state = 'walk'; p.walkT += spd * Math.min(1, m) * dt * 2.5; } else p.state = 'idle';
       if (I.take('spc')) special(p);
       else if (I.take('jump')) { p.state = 'jump'; p.t = 0; p.air = false; p.vy = 8.8; p.y = .02; p.avx = I.x * spd * .98; p.avz = I.y * 2.2; p.set = new Set(); sfx('jump'); }
-      else if (I.take('atk')) { p.holdT = 0; startAtk(p, 0); }
+      else if (I.take('atk')) { p.holdT = 0; p.chain = null; startAtk(p, 'P'); }
+      else if (I.take('kick')) { p.chain = null; startAtk(p, 'K'); }
       else if (progress >= 2 && I.held.atk && !p.arma) { p.holdT += dt; if (p.holdT > .3) { p.state = 'charge'; p.t = 0; } } else p.holdT = 0;
       break; }
     case 'attack': { const a = p.atk;
-      if (I.take('atk')) p.buf = true;
-      if (!p.done && p.t >= a.hit) { p.done = true; p.conn = strike(p, a); if (p.conn) wear(p); else if (p.step < 2) sfx('whoosh'); }
+      if (I.take('atk')) p.buf = 'P'; else if (I.take('kick')) p.buf = 'K';
+      if (a.giro) p.spin = Math.min(1, p.t / (a.hit + a.hold)) * Math.PI * 2;
+      if (!p.done && p.t >= a.hit) { p.done = true; p.conn = strike(p, a); if (p.conn) { if (p.seq === 'W') wear(p); if (a.fin && a.nm) moveName(a.nm); } else if (!a.fin) sfx('whoosh'); }
       if (p.done && I.q.spc > 0) { I.take('spc'); if (special(p)) break; }
-      if (p.t >= a.dur) { if (p.buf) startAtk(p, p.arma ? p.step + 1 : p.conn && p.step < 2 ? p.step + 1 : 0); else if (progress >= 2 && I.held.atk && p.step < 3 && !p.arma) { p.state = 'charge'; p.t = 0; } else p.state = 'idle'; }
+      if (p.t >= a.dur) { p.spin = 0; if (p.buf) { p.chain = p.conn && !a.fin; startAtk(p, p.buf); } else if (progress >= 2 && I.held.atk && a !== PATK[3] && !p.arma) { p.state = 'charge'; p.t = 0; } else { p.state = 'idle'; p.seq = ''; } }
       break; }
     case 'charge': { if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1;
-      if (!I.held.atk || p.t > 1.6) { p.holdT = 0; if (p.t >= .22) startAtk(p, 3); else p.state = 'idle'; }
+      if (!I.held.atk || p.t > 1.6) { p.holdT = 0; if (p.t >= .22) startAtk(p, 'C'); else p.state = 'idle'; }
       break; }
     case 'dash': {
       if (p.t >= p.dashW) { p.x += p.facing * 12 * dt; p.inv = Math.max(p.inv, .06); strike(p, PDASH, p.set); if ((time * 30 | 0) % 3 === 0) dust(p.x, p.z, 1); }
@@ -1813,7 +1864,7 @@ function updatePlayer(p, dt){
       break; }
     case 'jump': {
       p.x += p.avx * dt; p.z += p.avz * dt;
-      if (!p.air && I.take('atk')) { p.air = true; sfx('whoosh'); if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1; }
+      if (!p.air && (I.take('atk') || I.take('kick'))) { p.air = true; sfx('whoosh'); if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1; }
       if (p.air && p.y > .25) strike(p, AIRK, p.set);
       break; }
     case 'spin': { const D = .6; p.spin = p.t / D * Math.PI * 4; p.inv = Math.max(p.inv, .05); p.x += I.x * 1.6 * dt;
@@ -1967,7 +2018,7 @@ function news(from, to){ const out = [];
   for (const m of MOVES) if (m.need > from && m.need <= to) out.push(['Nuevo golpe', m.name, m.how]);
   for (const k of CHAR_ORDER) { const c = CHARS[k]; if (c.need > from && c.need <= to) out.push(['Nuevo luchador', c.name, c.tag + '. Elígelo en tu próxima partida.']); }
   return out; }
-function fillMoves(el){ const rows = [['Combo', 'Golpe tres veces seguidas.'], ['Patada voladora', 'Golpe en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
+function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada lateral', 'Golpe, Golpe, Patada. Manda lejos al rival.'], ['Barrido', 'Golpe, Patada. Lo tumba en el sitio.'], ['Patada giratoria', 'Patada, Patada.'], ['Gancho al cielo', 'Patada, Golpe. Lo levanta para rematarlo en el aire.'], ['Patada voladora', 'Golpe o Patada en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
   for (const m of MOVES) rows.push([m.name, progress >= m.need ? m.how : 'Bloqueado. Supera el nivel ' + m.need + '.']);
   el.innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join(''); }
 
@@ -1986,7 +2037,7 @@ function renderSelect(){
   $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>Nivel ${i + 1}</button>`).join('');
   $('#selDiff').innerHTML = DIFFS.map((d, i) => `<button type="button" data-d="${i}" aria-pressed="${i === diffIx}">${d.name}</button>`).join('');
   const padHint = padN ? 'Mando: ◀ ▶ luchador · ▲ ▼ nivel · L1 R1 dificultad · △ 1 o 2 jugadores · ✕ empezar.' + (wantTwo && padN < 2 ? ' Con un solo mando, el mando lo lleva el 2P.' : '') : '';
-  $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD y J K L. 2P: flechas y las teclas , . - (o 1 2 3 del teclado numérico). También con dos mandos.')
+  $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD, J golpe, K patada, L especial, espacio salto. 2P: flechas, coma golpe, punto patada, guion especial, Mayús derecha salto (o 1 2 3 0 del numérico). También con dos mandos.')
     : SALON ? 'Dobles a distancia: empieza la partida y pulsa «Dobles» (o «Invitar a dobles», debajo de la máquina). Tu amigo entra con el código.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.');
 }
 function openSelect(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'select'; backdrop(); renderSelect(); ui.select.hidden = false; $('#btnFight').focus({ preventScroll: true }); }
@@ -2048,9 +2099,9 @@ function toTitle(){ document.body.classList.remove('playing'); hideAll(); ui.hud
 
 /* ---------- input ---------- */
 const keys = {}, remote = [{}, {}];
-const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyK: 'jump', KeyX: 'jump', Space: 'jump', KeyL: 'spc', KeyC: 'spc' };
-const KP1 = { KeyJ: 'atk', KeyK: 'jump', Space: 'jump', KeyL: 'spc' };
-const KP2 = { Numpad1: 'atk', Numpad2: 'jump', Numpad3: 'spc', Comma: 'atk', Period: 'jump', Slash: 'spc', Minus: 'spc' };
+const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyK: 'kick', KeyX: 'kick', Space: 'jump', KeyI: 'jump', KeyV: 'jump', KeyL: 'spc', KeyC: 'spc' };
+const KP1 = { KeyJ: 'atk', KeyK: 'kick', Space: 'jump', KeyI: 'jump', KeyL: 'spc' };
+const KP2 = { Numpad1: 'atk', Numpad2: 'kick', Numpad3: 'spc', Numpad0: 'jump', NumpadEnter: 'jump', Comma: 'atk', Period: 'kick', Slash: 'spc', Minus: 'spc', ShiftRight: 'jump' };
 function pressFor(who, k, sure){
   if (mode !== 'play') return;
   if (who === 1 && players.length < 2) { if (sure || time - joinAsk < 3) joinP2(); else { joinAsk = time; banner('¿Entra el 2P?', 'Pulsa otra vez para unirte'); } return; }
@@ -2075,14 +2126,14 @@ stickEl.addEventListener('pointerdown', e => { e.preventDefault(); stick.id = e.
 stickEl.addEventListener('pointermove', e => { if (e.pointerId === stick.id) stickMove(e); });
 const stickEnd = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; } };
 stickEl.addEventListener('pointerup', stickEnd); stickEl.addEventListener('pointercancel', stickEnd);
-for (const [id, k] of [['bA', 'atk'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
+for (const [id, k] of [['bA', 'atk'], ['bK', 'kick'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
   b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); if (mode === 'play') inputs[0].press(k); });
   const up = () => { b.classList.remove('on'); inputs[0].release(k); }; b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   b.addEventListener('contextmenu', e => e.preventDefault()); }
 // A guest of the arcade page plays as 2P: the host forwards their pad as (player, button, pressed)
 function entrada(j, b, v){
   const who = j ? 1 : 0, on = !!v, dir = { 4: 'u', 5: 'd', 6: 'l', 7: 'r' }[b]; if (dir) { remote[who][dir] = on; return; }
-  const k = { 1: 'atk', 0: 'jump', 8: 'spc', 9: 'spc' }[b];
+  const k = { 1: 'atk', 9: 'kick', 0: 'jump', 8: 'spc' }[b];
   if (who === 1 && players.length < 2) { if (on && (k || b === 3)) pressFor(1, k || 'atk', true); return; }
   if (!k) return; if (on) pressFor(who, k, true); else inputs[who].release(k);
 }
@@ -2108,7 +2159,7 @@ function pollInputs(){
   pads.forEach((g, i) => { const who = twoP && pads.length < 2 ? 1 : Math.min(i, 1), pv = padPrev[g.index] || (padPrev[g.index] = {}), b = n => !!(g.buttons[n] && g.buttons[n].pressed);
     let gx = Math.abs(g.axes[0]) > .25 ? g.axes[0] : 0, gy = Math.abs(g.axes[1]) > .25 ? g.axes[1] : 0;
     if (b(14)) gx = -1; if (b(15)) gx = 1; if (b(12)) gy = -1; if (b(13)) gy = 1; ax[who][0] += gx; ax[who][1] += gy;
-    for (const [bi, k] of [[2, 'atk'], [0, 'jump'], [1, 'spc'], [3, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
+    for (const [bi, k] of [[2, 'atk'], [3, 'kick'], [0, 'jump'], [1, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
     // menus with the pad: one new press or one new push of the stick is one step
     const dx = gx < -.5 ? -1 : gx > .5 ? 1 : 0, dy = gy < -.5 ? -1 : gy > .5 ? 1 : 0, ex = dx !== pv.dx ? dx : 0, ey = dy !== pv.dy ? dy : 0, hit = {}; pv.dx = dx; pv.dy = dy;
     for (const n of [0, 1, 2, 3, 4, 5, 9]) { const d = b(n); hit[n] = d && !pv['m' + n]; pv['m' + n] = d; }
@@ -2220,6 +2271,7 @@ function frame(now){
     if (mode === 'play' || mode === 'win') { playT += rdt; music(); }
     for (let i = 0; i < players.length; i++) { const p = players[i], u = ui.pl[i]; if (p.enFlash > 0) { p.enFlash -= rdt; u.enBar.style.opacity = (now / 60 | 0) % 2 ? '.35' : '1'; if (p.enFlash <= 0) u.enBar.style.opacity = ''; } }
     if (bannerT > 0) { bannerT -= rdt; if (bannerT <= 0) ui.banner.hidden = true; }
+    if (moveT > 0) { moveT -= rdt; if (moveT <= 0) ui.move.hidden = true; }
     hud();
   } else if (mode === 'win') { time += rdt * .6; winT += rdt; for (const p of players) if (!p.out) { physics(p, rdt); animate(p, rdt); } hud(); if (winT > 2.4) afterWin(); }
   else if (mode !== 'pause') { time += rdt; for (const p of players) animate(p, rdt); for (const e of enemies) animate(e, rdt); }
@@ -2268,6 +2320,18 @@ function renderPortraits(W, H, zoom, front){
   renderer.setRenderTarget(null); rt.dispose(); return out;
 }
 function makePortraits(){ portraits = renderPortraits(240, 300, 1); }
+
+/* ---------- installing it as an app (the stand-alone build ships a manifest and a service worker) ---------- */
+const framed = (() => { try { return window.top !== window; } catch (e) { return true; } })();
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const installed = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+const hasManifest = !!document.querySelector('link[rel="manifest"]');
+if (hasManifest && !framed && !installed && isIOS) { const h = $('#instHint'); h.hidden = false; h.textContent = 'Para instalarlo en el iPhone: ábrelo en Safari, pulsa Compartir y elige «Añadir a pantalla de inicio».'; }
+let installEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; if (!framed) $('#btnInstall').hidden = false; });
+$('#btnInstall').onclick = () => { if (installEv) { installEv.prompt(); installEv = null; } $('#btnInstall').hidden = true; };
+if (hasManifest && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) { const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').catch(() => {}); navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !SALON && mode === 'title') location.reload(); }); }
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 /* ---------- boot ---------- */
 function boot(){

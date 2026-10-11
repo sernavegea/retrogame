@@ -292,7 +292,7 @@ fieldset.campo{border:0;padding:0;margin:0 0 .9rem}
   .abierta.maximizada.casa .bj-aviso:not(:empty){top:calc(env(safe-area-inset-top,0px) + 50px)}
 }
 /* Mando del invitado en los juegos de la casa: solo los tres botones que usan */
-.abierta.casa .accion-btns [data-b="9"],.abierta.casa .accion-btns [data-b="11"],.abierta.casa .accion-btns [data-b="10"],
+.abierta.casa .accion-btns [data-b="11"],.abierta.casa .accion-btns [data-b="10"],
 .abierta.casa .accion-btns [data-b="12"],.abierta.casa .accion-btns [data-b="2"],.abierta.casa .accion-btns [data-b="13"]{display:none}
 .abierta.casa .accion-btns button{font-size:.66rem}
 .abierta.maximizada.invitado .mando{position:fixed;left:0;right:0;z-index:21;margin:0;width:auto;
@@ -740,7 +740,7 @@ const ES_ARCADE = s => s === 'arcade' || s === 'mame2003_plus';
    Están siempre al principio del pasillo, no se guardan en el navegador y no se pueden editar ni quitar. */
 const DE_LA_CASA = [
   { id:'casa-asfalto-rojo', casa:true, sistema:'casa', nombre:'Asfalto Rojo', color:'#ff2d55', web:'asfalto-rojo/index.html', portada:'asfalto-rojo/portada.jpg', romNombre:'',
-    controles:'Flechas o WASD para moverte, J golpe, K salto y L especial. También con mando.', dobles:true }
+    controles:'Flechas o WASD para moverte, J golpe, K patada, L especial y espacio para saltar. También con mando.', dobles:true }
 ];
 const BTN = { B:0, Y:1, SELECT:2, START:3, ARRIBA:4, ABAJO:5, IZQ:6, DER:7, A:8, X:9, L:10, R:11, L2:12, R2:13 };
 
@@ -1785,7 +1785,7 @@ function avisoDobles(html, ms){
   clearTimeout(tAviso); $('bj-aviso').innerHTML = html || '';
   if (html && ms) tAviso = setTimeout(() => { $('bj-aviso').innerHTML = ''; }, ms);
 }
-const ROTULOS_CASA = { 1:'Golpe', 0:'Salto', 8:'Esp.' };
+const ROTULOS_CASA = { 1:'Golpe', 9:'Patada', 0:'Salto', 8:'Esp.' };
 function rotulosMando(casa){
   document.querySelectorAll('.accion-btns [data-b]').forEach(x => {
     if (x.dataset.orig === undefined) x.dataset.orig = x.textContent;
@@ -1859,7 +1859,7 @@ function entrarComoInvitado(codigo){
         modo = 'invitado'; jugando = true; actual = null;
         capa.classList.add('invitado','jugando'); capa.classList.toggle('casa', !!d.casa); rotulosMando(!!d.casa); pintarFicha(); pintarBandeja();
         if (!pantalla.querySelector('video')) pantalla.innerHTML = '<div id="mensaje"><p>Conectando con la partida…</p></div>';
-        info.textContent = d.casa ? 'Eres el jugador 2. Pulsa Start para entrar. Con teclado: flechas, A golpea, Z salta, X es el especial y Enter es Start.'
+        info.textContent = d.casa ? 'Eres el jugador 2. Pulsa Start para entrar. Con teclado: flechas, A golpea, S patada, Z salta, X es el especial y Enter es Start.'
           : d.arcade ? 'Eres el jugador 2. Echa una moneda y pulsa Start.' : 'Eres el jugador 2. Pulsa Start cuando el juego te lo pida.';
         mostrarCapa(null);
         if (esMovil) maximizar();

@@ -1,0 +1,26 @@
+{
+ "name": "Asfalto Rojo",
+ "short_name": "Asfalto Rojo",
+ "description": "Beat 'em up callejero en 3D, a solas o a dobles.",
+ "lang": "es",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#0b0a14",
+ "theme_color": "#0b0a14",
+ "icons": [
+  {
+   "src": "iconos/icono-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "iconos/icono-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
