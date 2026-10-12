@@ -67,6 +67,19 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 .bar.en.low .fill{background:var(--mute)}
 .arm{position:absolute;right:0;bottom:-4px;font-size:13px;line-height:1;color:var(--gold);letter-spacing:.06em;white-space:nowrap}
 #fade{position:absolute;inset:0;background:#05040a;opacity:0;pointer-events:none}
+#intro{position:absolute;inset:0;pointer-events:none;z-index:6;font-family:var(--f-ui)}
+#intro .lb{position:absolute;left:0;right:0;height:10%;background:#000}#intro .top{top:0}#intro .bot{bottom:0}
+#inCap{position:absolute;left:50%;bottom:13%;transform:translateX(-50%);width:min(88%,780px);margin:0;text-align:center;font-style:italic;font-weight:700;font-size:clamp(18px,2.7vw,28px);line-height:1.25;color:#f1ecff;text-shadow:0 2px 0 #000,0 0 18px rgba(0,0,0,.9)}
+#inCard{position:absolute;left:6%;top:18%;padding:10px 16px 12px;background:rgba(10,8,18,.82);border-left:5px solid var(--gold);max-width:min(60%,380px);animation:slide .3s ease-out}
+#inCard b{display:block;font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4.4vw,46px);line-height:1;color:var(--gold);text-transform:uppercase}
+#inCard span{display:block;margin-top:6px;font-weight:600;font-size:clamp(15px,2vw,20px);color:var(--paper)}
+#inTitle{position:absolute;left:0;right:0;top:20%;margin:0;text-align:center;font-family:var(--f-display);font-weight:400;font-size:clamp(44px,9vw,110px);line-height:1;color:var(--paper);text-transform:uppercase;text-shadow:0 4px 0 #000,0 0 30px rgba(255,45,85,.6);animation:slide .4s ease-out}
+#inTitle span{color:var(--hot)}
+#inSkip{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(10% + 10px);pointer-events:auto;padding:6px 14px;font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(10,8,18,.7);box-shadow:0 0 0 1px var(--mute)}
+#storyCap{position:absolute;left:0;right:0;bottom:22px;width:min(86%,720px);margin:0 auto;box-sizing:border-box;padding:8px 14px;text-align:center;font-family:var(--f-ui);font-style:italic;font-weight:700;font-size:clamp(15px,2vw,20px);line-height:1.25;color:#f1ecff;background:rgba(8,6,16,.72);border-left:4px solid var(--hot);pointer-events:none;animation:slide .3s ease-out}
+body:not(.playing) #storyCap{display:none}
+.touch #storyCap{bottom:auto;top:96px}
+.story{max-width:46ch;font-style:italic;color:var(--paper)}
 .score{right:16px;top:50px;align-items:flex-end;gap:0}
 .score span{font-size:13px;color:var(--mute);letter-spacing:.14em;white-space:nowrap}
 .score b{font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
@@ -249,6 +262,8 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <canvas id="c" aria-label="Asfalto Rojo, juego de lucha callejera en 3D"></canvas>
     <div id="vig"></div>
     <div id="fade"></div>
+    <p id="storyCap" hidden></p>
+    <div id="intro" hidden><i class="lb top"></i><i class="lb bot"></i><p id="inCap" aria-live="polite"></p><div id="inCard" hidden><b></b><span></span></div><h2 id="inTitle" hidden>Asfalto <span>Rojo</span></h2><button id="inSkip" type="button">Saltar ▸</button></div>
 
     <div id="hud" hidden>
       <div class="plate pl p1" id="pl0">
@@ -295,7 +310,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div class="card">
       <p class="eyebrow">Beat 'em up callejero · prototipo</p>
       <h1>Asfalto <span>Rojo</span></h1>
-      <p class="lede">La banda del Chatarrero se ha quedado con el barrio. Cuatro niveles, cuatro luchadores, bates y navajas por el suelo y un jefe esperando en cada local. A solas o a dobles.</p>
+      <p class="lede">Don Rojo y sus bandas cobran a cada negocio de la ciudad. Cuatro amigos del barrio dicen basta: diez niveles, bates y navajas por el suelo y un jefe esperando en cada local. A solas o a dobles.</p>
       <button class="cta" id="btnPlay" type="button">Jugar</button>
       <p class="credit" id="instHint" hidden></p>
       <dl class="keys">
@@ -308,6 +323,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <div class="opts">
         <button id="optFx" type="button" aria-pressed="true">Brillo de neón: sí</button>
         <button id="optMusic" type="button" aria-pressed="true">Música: sí</button>
+        <button id="btnStory" type="button">Ver la historia</button>
         <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
       <p class="credit">Personajes y animaciones: Quaternius (CC0).</p>
@@ -331,6 +347,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div class="card">
       <p class="eyebrow" id="endEyebrow">Fin de la partida</p>
       <h2 id="endTitle">Te han tumbado</h2>
+      <p class="lede story" id="endStory" hidden></p>
       <div class="stats">
         <div><span>Puntos</span><b id="stScore">0</b></div>
         <div><span>Tiempo</span><b id="stTime">0:00</b></div>
@@ -361,6 +378,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div class="card">
       <p class="eyebrow" id="clearEyebrow">Nivel superado</p>
       <h2 id="clearTitle">El barrio</h2>
+      <p class="lede story" id="clearStory"></p>
       <div class="stats">
         <div><span>Puntos</span><b id="clScore">0</b></div>
         <div><span>Tiempo</span><b id="clTime">0:00</b></div>
@@ -2483,6 +2501,7 @@ function renderSelect(){
 }
 function openSelect(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'select'; backdrop(); renderSelect(); ui.select.hidden = false; $('#btnFight').focus({ preventScroll: true }); }
 function startGame(){
+  if (!startGame.go && startLevel === 0 && !introSeen() && !dbg.noIntro) { playIntro(() => { startGame.go = true; startGame(); startGame.go = false; }); return; }
   audioInit(); twoP = wantTwo; setPlayers(twoP ? [picks[0], picks[1]] : [picks[0]]);
   score = 0; playT = 0; bestCombo = 0; combo = 0; loadLevel(startLevel, true); banner('¡A por ellos!', 'Nivel ' + (levelIx + 1) + ' · ' + LV.name);
 }
@@ -2493,7 +2512,7 @@ function loadLevel(ix, fresh){
     else { if (p.out) { p.out = false; p.lives = 1; p.hp = p.maxHp; } else p.hp = Math.min(p.maxHp, Math.max(p.hp, 0) + p.maxHp * .5); p.energy = Math.max(p.energy, 40); } }
   placePlayers(3); camX = 6.5; camMax = LV.zones[0].x; zi = 0; zone = null; wave = 0; shake = 0; hitStop = 0; slowT = 0; for (const I of inputs) I.clear(); for (const k in cache) delete cache[k];
   hideAll(); ui.hud.hidden = false; ui.go.hidden = false; ui.banner.hidden = true; mode = 'play'; document.body.classList.add('playing'); last = performance.now();
-  banner(LV.name, 'Nivel ' + (ix + 1)); canvas.focus && canvas.focus();
+  banner(LV.name, 'Nivel ' + (ix + 1)); storyLine(STORY[ix] ? STORY[ix].go : ''); canvas.focus && canvas.focus();
 }
 function joinP2(){
   if (players.length > 1 || mode !== 'play') return; twoP = true;
@@ -2506,7 +2525,7 @@ function afterWin(){
   const prev = progress; progress = Math.max(progress, levelIx + 1); saveProgress(); const nw = news(prev, progress);
   if (levelIx + 1 >= LEVELS.length) { endGame(true, nw); return; }
   mode = 'clear'; document.body.classList.remove('playing'); ui.go.hidden = true; ui.banner.hidden = true; ui.clear.hidden = false; if (nw.length) sfx('unlock');
-  $('#clearEyebrow').textContent = 'Nivel ' + (levelIx + 1) + ' superado'; $('#clearTitle').textContent = LV.name;
+  $('#clearEyebrow').textContent = 'Nivel ' + (levelIx + 1) + ' superado'; $('#clearTitle').textContent = LV.name; $('#clearStory').textContent = STORY[levelIx] ? STORY[levelIx].done : '';
   $('#clScore').textContent = score; $('#clTime').textContent = fmtTime(playT); listUnlocks($('#clearUnlocks'), nw);
   $('#btnNext').textContent = 'Nivel ' + (levelIx + 2) + ' · ' + LEVELS[levelIx + 1].name; $('#btnNext').focus({ preventScroll: true });
 }
@@ -2525,7 +2544,7 @@ function moneda(n){
   salon.cred += n; if (mode === 'play') banner('Crédito +' + n, 'Te vale para continuar');
 }
 function endGame(won, nw){
-  mode = 'over'; hideAll(); ui.end.hidden = false; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing');
+  mode = 'over'; hideAll(); ui.end.hidden = false; $('#endStory').hidden = !won; if (won) $('#endStory').textContent = STORY[LEVELS.length - 1].done; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing');
   salon.perdida = !won;
   if (SALON) { $('#btnAgain').hidden = true; $('#btnChange').hidden = true; const c = $('#endCoin'); c.hidden = false; c.textContent = won ? 'Echa otra moneda para volver a empezar.' : 'Echa otra moneda para continuar donde has caído.'; avisar({ tipo: 'casa-fin', puntos: score, gano: !!won }); }
   $('#endEyebrow').textContent = won ? 'La ciudad es libre' : 'Fin de la partida · Nivel ' + (levelIx + 1);
@@ -2553,6 +2572,7 @@ addEventListener('keydown', e => {
   const c = e.code, m2 = KP2[c], m1 = (twoP ? KP1 : KSOLO)[c];
   if (mode === 'play' && (m1 || m2 || c.startsWith('Arrow'))) e.preventDefault();
   if (e.repeat) return; keys[c] = true;
+  if (mode === 'intro') { if (canSkip() && c !== 'KeyM') endIntro(); return; }
   if (mode === 'play') { if (m2) pressFor(1, m2); else if (m1) pressFor(0, m1); if (c === 'KeyP' || c === 'Escape') setPause(true); }
   else if (mode === 'pause' && (c === 'KeyP' || c === 'Escape')) setPause(false);
   if (c === 'KeyM') toggleMusic();
@@ -2582,6 +2602,7 @@ const padPrev = {}; let padN = 0;
 function padMenu(slot, ex, ey, hit){
   const go = hit[0] || hit[9], click = id => { const el = $('#' + id); if (el && !el.hidden && !el.disabled) el.click(); };
   if (mode === 'title') { if (go && !SALON) click('btnPlay'); }
+  else if (mode === 'intro') { if (canSkip() && (go || hit[1] || hit[2] || hit[3])) endIntro(); }
   else if (mode === 'select') {
     if (slot === 1 && !wantTwo) { if (ex || ey || go || hit[1] || hit[2] || hit[3]) $('#selMode2').click(); return; }   // a second pad asks for a second player
     if (ex) { const ok = CHAR_ORDER.filter(unlockedChar), at = ok.indexOf(picks[slot]); picks[slot] = ok[(at + ex + ok.length) % ok.length]; sfx('pick'); renderSelect(); }
@@ -2622,6 +2643,7 @@ function toggleFx(){ if (!post.ok) return; post.on = !post.on; label(); try { lo
 try { if (localStorage.getItem('ar-music') === '0') snd.musicOn = false; if (localStorage.getItem('ar-fx') === '0') post.on = false; } catch (_) {}
 $('#optFx').onclick = $('#optFx2').onclick = toggleFx;
 $('#optMusic').onclick = $('#optMusic2').onclick = $('#btnMusic').onclick = toggleMusic;
+$('#inSkip').onclick = () => endIntro(); $('#btnStory').onclick = () => playIntro(toTitle);
 $('#btnPlay').onclick = openSelect; $('#btnFight').onclick = startGame; $('#btnAgain').onclick = again; $('#btnChange').onclick = openSelect; $('#btnNext').onclick = nextLevel;
 $('#selMode1').onclick = () => { wantTwo = false; renderSelect(); }; $('#selMode2').onclick = () => { wantTwo = true; if (picks[1] === picks[0]) picks[1] = CHAR_ORDER.find(k => k !== picks[0] && unlockedChar(k)) || picks[0]; renderSelect(); };
 $('#roster').onclick = e => { const b = e.target.closest('[data-k]'); if (!b || b.disabled) return; const k = b.dataset.k, p = b.dataset.p; picks[+p] = k; renderSelect(); const again = $(`#roster [data-k="${k}"][data-p="${p}"]`); if (again) again.focus({ preventScroll: true }); };
@@ -2685,6 +2707,7 @@ function updateCamera(dt){
   shake = Math.max(0, shake - dt * 1.8); const sh = calm ? 0 : shake * shake * 1.6;
   const ox = mode === 'title' ? -3.2 * Math.min(1, camera.aspect / 1.6) : 0;
   camera.position.set(camX + ox + (Math.random() - .5) * sh, CAM_Y + (Math.random() - .5) * sh, CAM_Z); camera.lookAt(camX + ox, LOOK_Y, 0);
+  if (mode === 'intro' && IN && IN.cam) { const c = IN.cam; camera.position.set(c[0], c[1], c[2]); camera.lookAt(c[3], c[4], c[5]); }
   if (dbg.cam) { camera.position.set(dbg.cam[0], dbg.cam[1], dbg.cam[2]); camera.lookAt(dbg.cam[3], dbg.cam[4], dbg.cam[5]); }
   key.position.set(camX - 6, 13, 10); key.target.position.set(camX, 0, -1); key.target.updateMatrixWorld();
   fill.position.set(camX + 8, 5, 12); fill.target.position.set(camX, 1, 0); fill.target.updateMatrixWorld();
@@ -2700,6 +2723,85 @@ function ambience(dt){
   if (rain) { const a = rainPos; for (let i = 0; i < RAIN_N; i++) { const o = i * 6; let y = a[o + 1] - 19 * dt, x = a[o] - 1.6 * dt; if (y < 0) { y += 11; x = camX + rnd(-17, 17); } if (x < camX - 18) x += 36; else if (x > camX + 18) x -= 36; a[o] = x; a[o + 1] = y; a[o + 3] = x + .05; a[o + 4] = y + .5; } rain.geometry.attributes.position.needsUpdate = true; }
 }
 
+/* ---------- the story: an opening scene, a line when each level starts and another when it is cleared ---------- */
+// go: shown at the bottom of the screen as the level starts; done: on the screen between levels (on the last one, the ending)
+const STORY = [
+  { go: 'La Navaja cobra a los bares del barrio para Don Rojo. Esta noche le toca al Bar La Luna.', done: 'El Bar La Luna vuelve a abrir. La Navaja suelta un nombre: El Tijeras, en el centro.' },
+  { go: 'El Tijeras recoge el dinero de las tiendas del centro desde su peluquería.', done: 'El dinero del centro iba al polígono: El Mulo se ha quedado con el gimnasio SoulBody.' },
+  { go: 'El Mulo ha echado a los socios de SoulBody y ha llenado el gimnasio de matones.', done: 'SoulBody vuelve a ser de sus socios. Los coches que roba la banda acaban en el desguace de El Chatarrero.' },
+  { go: 'El Chatarrero desmonta coches robados y se gasta lo que saca en su casino.', done: 'Las cuentas del casino hablan claro: todo sube hasta Don Rojo. Su mercancía entra por el puerto.' },
+  { go: 'Lo que Don Rojo vende entra por el muelle. El Pescadero lo esconde en la lonja.', done: 'La lonja queda limpia. El Pescadero avisa: el Socorrista vigila la costa desde su chiringuito.' },
+  { go: 'En el paseo marítimo nadie abre una sombrilla sin pagar al Socorrista.', done: 'La playa vuelve a ser de todos. En el mercado, los puestos pagan a La Aguja.' },
+  { go: 'La Aguja marca a los de la banda con un tatuaje rojo. Tinta conoce ese dibujo.', done: 'El estudio Aguja Negra cierra. Los coches de la banda salen del taller de El Grasas, junto a las vías.' },
+  { go: 'Bajo el puente, El Grasas prepara los coches que usa la banda.', done: 'Sin coches, la banda se esconde en la zona de copas. La tarjeta que abre la Torre Roja la guarda El Portero.' },
+  { go: 'El Portero de la discoteca Ritmo guarda la tarjeta del ascensor de la Torre Roja.', done: 'La tarjeta es vuestra. Solo queda una puerta: la de la Torre Roja.' },
+  { go: 'En lo alto de la Torre Roja espera Don Rojo. Y no está solo.', done: 'Don Rojo ha caído. A la mañana siguiente, todas las persianas de la ciudad suben sin pagar a nadie.' },
+];
+const BIOS = { hero: 'Entrena a medio barrio. Pega con cabeza.', chaval: 'El más joven y el más rápido. No se está quieto.', vera: 'Atleta. Nunca ha dejado una carrera a medias.', tinta: 'Tatuador. Sus puños pesan tanto como su aguja.' };
+
+let IN = null;   // the opening scene while it plays
+const canSkip = () => IN && performance.now() - IN.start > 600;
+const introSeen = () => { try { return localStorage.getItem('ar-intro') === '1'; } catch (_) { return false; } };
+const inEl = { box: $('#intro'), cap: $('#inCap'), card: $('#inCard'), title: $('#inTitle') };
+function introActor(kind, x, z, facing, hero){
+  const f = makeFighter(kind); if (!f.root.parent) scene.add(f.root);
+  Object.assign(f, { x, z, facing, isPlayer: !!hero, engage: !hero, state: 'idle', t: 0 });
+  if (hero) { f.st = Object.assign({}, f.st, { s: CHARS[kind].s }); if (f.model) f.model.gait = 'Jog'; }
+  IN.actors.push(f); return f;
+}
+function introClear(){ for (const f of IN.actors) disposeFighter(f); IN.actors = []; IN.moves = []; }
+const HEROES = ['hero', 'chaval', 'vera', 'tinta'];
+// each shot: where it happens, who is there, how the camera moves ([t, eye xyz, target xyz]) and what is written
+const SHOTS = [
+  { dur: 7.6, street: 9, cast(){ introActor('capo9', 86, -1.5, -1); introActor('brute', 84.3, -.7, -1); introActor('brute', 87.7, -.8, -1); },
+    cam: [[0, 80, .8, 6.5, 86, 7.5, -6], [7.6, 83.4, 2.1, 7.4, 86, 1.6, -1]],
+    caps: [[.5, 'Hace un año nadie había oído hablar de Don Rojo. Hoy es el dueño de la Torre Roja… y quiere el resto de la ciudad.']] },
+  { dur: 7.2, street: 0, cast(){ introActor('capo1', 86, -.5, -1); const t = introActor('thug', 84.6, -1.5, 1); t.hit = EATK.thug; introActor('brute', 87.9, -1.1, -1); introActor('punk', 89, .6, -1); },
+    cam: [[0, 77.5, 2.6, 9, 82, 1.6, -2], [7.2, 83, 1.9, 7, 86, 1.4, -1]],
+    caps: [[.4, 'Sus bandas cobran a cada negocio. Al que no paga, se lo cierran a golpes.']] },
+  { dur: 11.2, street: 0, cast(){ HEROES.forEach((k, i) => { const f = introActor(k, 54 + i * .5, [.7, -.4, .9, -.9][i], 1, true); IN.moves.push([f, 54, 62.6 + i * 1.6, .2 + i * 2.3, 2.4 + i * 2.3]); f.card = [2.4 + i * 2.3, CHARS[k].name, BIOS[k]]; }); },
+    cam: [[0, 61, 1.8, 5.6, 60.5, 1.25, 0], [2.4, 63, 1.75, 5.4, 62.6, 1.25, 0], [4.7, 64.6, 1.75, 5.4, 64.2, 1.25, 0], [7, 66.2, 1.75, 5.4, 65.8, 1.25, 0], [9.3, 67.8, 1.75, 5.4, 67.4, 1.25, 0], [11.2, 66, 2.2, 8.4, 65.4, 1.3, 0]],
+    caps: [] },
+  { dur: 7.4, street: 0, cast(){ HEROES.forEach((k, i) => introActor(k, 79.4 + i * 1.05, [.7, -.4, 1.1, -.8][i], 1, true)); introActor('capo1', 86.2, -.2, -1); introActor('thug', 85, -1.3, -1); introActor('brute', 87.6, -1, -1); introActor('punk', 87.2, .9, -1); },
+    cam: [[0, 83, 2.5, 10.5, 83, 1.3, 0], [7.4, 83, 1.9, 8, 83, 1.25, 0]],
+    caps: [[.3, 'Esta noche, el Bar La Luna no va a pagar.'], [3.6, 'NICO: —Se acabó pagar.']], title: 5 },
+];
+function playIntro(done){
+  audioInit(); hideAll(); ui.hud.hidden = true; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing');
+  clearActors(); setPlayers([]); mode = 'intro'; IN = { i: -1, t: 0, T: 0, actors: [], moves: [], done, cam: null, start: performance.now() };
+  inEl.box.hidden = false; inEl.title.hidden = true; inEl.card.hidden = true; inEl.cap.textContent = ''; introShot(0);
+}
+function introShot(i){
+  const S = SHOTS[i]; IN.i = i; IN.t = 0; introClear(); fadeEl.style.opacity = 1;
+  levelIx = S.street; LV = LEVELS[S.street]; inRoom = awaiting = false; useStreet(S.street); S.cast();
+  inEl.cap.textContent = ''; inEl.card.hidden = true; last = performance.now();
+}
+function endIntro(){
+  if (!IN) return; const done = IN.done; introClear(); IN = null; inEl.box.hidden = true; fadeEl.style.opacity = 0;
+  try { localStorage.setItem('ar-intro', '1'); } catch (_) {}
+  for (const I of inputs) I.clear(); done();
+}
+function introStep(dt){
+  const S = SHOTS[IN.i]; IN.t += dt; IN.T += dt; const t = IN.t;
+  fadeEl.style.opacity = Math.max(0, 1 - t / .5, (t - (S.dur - .45)) / .45 * (IN.i < SHOTS.length - 1 ? 1 : 0));
+  for (const [f, x0, x1, t0, t1] of IN.moves) { if (t < t0) { f.x = x0; f.state = 'idle'; } else if (t < t1) { const u = (t - t0) / (t1 - t0); f.x = x0 + (x1 - x0) * u; f.state = 'walk'; f.walkT += Math.abs(x1 - x0) / (t1 - t0) * dt * 2.5; f.facing = 1; } else { f.x = x1; f.state = 'idle'; } }
+  for (const f of IN.actors) { if (f.hit) { f.t += dt; if (f.state !== 'attack' || f.t > f.hit.dur + .5) { f.state = 'attack'; f.atk = f.hit; f.t = 0; } } }
+  // camera
+  const K = S.cam; let k = 0; while (k < K.length - 2 && t > K[k + 1][0]) k++; const A = K[k], B = K[k + 1], u = MU.clamp((t - A[0]) / (B[0] - A[0]), 0, 1), e = u * u * (3 - 2 * u);
+  IN.cam = A.slice(1).map((v, j) => v + (B[j + 1] - v) * e); camX = IN.cam[3];
+  // captions type themselves out; a name card follows each fighter as they arrive
+  let cap = ''; for (const c of S.caps) if (t >= c[0]) cap = c[1].slice(0, Math.floor((t - c[0]) * 42));
+  if (inEl.cap.textContent !== cap) inEl.cap.textContent = cap;
+  const who = IN.actors.find(f => f.card && t >= f.card[0] && t < f.card[0] + 2.2);
+  if (who) { if (inEl.card._k !== who.card[1]) { inEl.card._k = who.card[1]; inEl.card.querySelector('b').textContent = who.card[1]; inEl.card.querySelector('span').textContent = who.card[2]; inEl.card.hidden = false; } }
+  else if (!inEl.card.hidden) { inEl.card.hidden = true; inEl.card._k = null; }
+  inEl.title.hidden = !(S.title && t >= S.title);
+  if (t >= S.dur) { if (IN.i + 1 < SHOTS.length) introShot(IN.i + 1); else endIntro(); }
+}
+// a short line of story at the bottom of the screen while a level starts
+let storyT = 0; const storyEl = $('#storyCap');
+function storyLine(s){ storyEl.textContent = s; storyEl.hidden = !s; storyT = s ? 7 : 0; }
+
 /* ---------- main loop ---------- */
 let last = performance.now();
 function frame(now){
@@ -2712,9 +2814,11 @@ function frame(now){
     if (mode === 'play' || mode === 'win') { playT += rdt; music(); }
     for (let i = 0; i < players.length; i++) { const p = players[i], u = ui.pl[i]; if (p.enFlash > 0) { p.enFlash -= rdt; u.enBar.style.opacity = (now / 60 | 0) % 2 ? '.35' : '1'; if (p.enFlash <= 0) u.enBar.style.opacity = ''; } }
     if (bannerT > 0) { bannerT -= rdt; if (bannerT <= 0) ui.banner.hidden = true; }
+    if (storyT > 0) { storyT -= rdt; if (storyT <= 0) storyEl.hidden = true; }
     if (moveT > 0) { moveT -= rdt; if (moveT <= 0) ui.move.hidden = true; }
     hud();
   } else if (mode === 'win') { time += rdt * .6; winT += rdt; for (const p of players) if (!p.out) { physics(p, rdt); animate(p, rdt); } hud(); if (winT > 2.4) afterWin(); }
+  else if (mode === 'intro') { time += rdt; if (IN) introStep(rdt); if (IN) for (const f of IN.actors) animate(f, rdt); }
   else if (mode !== 'pause') { time += rdt; for (const p of players) animate(p, rdt); for (const e of enemies) animate(e, rdt); }
   if (trans) { trans.t += rdt; const k = trans.t / .42; if (!trans.done && k >= 1) { trans.done = true; trans.fn(); } fadeEl.style.opacity = k < 1 ? k : Math.max(0, 2.3 - k); if (k >= 2.3) { trans = null; fadeEl.style.opacity = 0; } }
   const rings = mode === 'play' || mode === 'win' || mode === 'pause';
@@ -2791,7 +2895,8 @@ window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ r
   get s(){ const p = players[0]; return { mode, level: levelIx, camX, zi, score, lives: p && p.lives, hp: p && Math.round(p.hp), n: enemies.length, px: p && p.x, boss: !!boss, np: players.length, progress, post: post.ok && post.on }; },
   get pickups(){ return pickups; }, get shots(){ return shots; }, get zona(){ return { zi, inRoom, awaiting, wave, envKey }; }, sala(){ zi = LV.zones.length - 1; zone = null; for (const e of enemies) disposeFighter(e); enemies = []; enterRoom(); }, dar(k, i){ const p = players[i || 0]; giveWeapon(p, k, WEAPONS[k].uses); }, diff(i){ diffIx = i; DF = DIFFS[i]; }, poner(spec, dx, dz){ const p = players[0], e = spawnEnemy(spec, p.x + dx, p.z + (dz || 0)); e.wait = 0; return e; },
   moneda, entrada, espejo, retratos: renderPortraits, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
-  start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame(); },
+  start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame.go = true; startGame(); startGame.go = false; },
+  introAt(i, t){ if (!IN) playIntro(toTitle); if (IN.i !== i) introShot(i); IN.t = t; IN.T = t + 1; introStep(0); return { i: IN.i, cap: inEl.cap.textContent, card: inEl.card.hidden ? '' : inEl.card.textContent, title: !inEl.title.hidden }; },
   sim(sec, fn){ for (let i = 0, n = sec * 60; i < n && mode === 'play'; i++) { if (trans) { if (!trans.done) trans.fn(); trans = null; fadeEl.style.opacity = 0; } if (fn) fn(i, inputs[0], players[0], enemies, inputs[1], players[1]); if (hitStop > 0) hitStop = 0; step(1 / 60); updateCamera(1 / 60);
     for (const I of inputs) if (!I.keep) for (const k in I.held) I.held[k] = false; } },
   lineup(){ clearActors(); mode = 'title'; const p = players[0]; p.x = 6.2; p.z = .6; ['thug', 'punk', 'brute', 'boss', 'capo1', 'capo2'].forEach((k, i) => { const e = spawnEnemy(k, 8 + i * 1.45, .6); e.facing = -1; }); boss = null; },

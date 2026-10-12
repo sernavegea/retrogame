@@ -5,6 +5,13 @@ El salon la abre con  asfalto-rojo/index.html?salon=1  y entonces el juego va di
 cada moneda de mas vale un credito para continuar y los puntos pasan al salon al salir.
 Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con su pantalla de inicio.
 
+HISTORIA
+  Don Rojo y sus bandas cobran a cada negocio de la ciudad; al que no paga, se lo cierran a golpes.
+  Nico, Chispa, Vera y Tinta, cuatro amigos del barrio, deciden plantarse. Cada jefe que cae suelta el nombre
+  del siguiente, de la Navaja del Bar La Luna hasta Don Rojo, en lo alto de la Torre Roja.
+  La primera partida desde el nivel 1 empieza con una intro (se salta con cualquier boton); se puede volver a ver
+  con "Ver la historia" en la pantalla de inicio. Cada nivel abre con una frase de la historia y la cuenta sigue al superarlo.
+
 QUE TRAE
   10 niveles, cada uno con su calle y su local, donde espera el jefe:
     1 El barrio (bar)                 6 El paseo maritimo (chiringuito)
