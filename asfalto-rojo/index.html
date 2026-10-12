@@ -1453,8 +1453,8 @@ function animModel(f, dt){
   let name = guard ? 'Guard' : 'Idle_Loop', time = time_(f), rate = 12, lean = 0, kick = 0, bob = 0;
   if (s === 'idle') { if (guard) { tgt.Idle_Loop = .2; bob = Math.sin(time * 5 + f.seed) * .012; } }
   else if (s === 'walk') { const g = (M.gait || M.look.gait) === 'Jog'; name = (g ? 'Jog_Fwd_Loop' : 'Walk_Loop') + (guard ? '_G' : ''); time = f.walkT * (g ? .125 : .25); rate = 14; }
-  else if (s === 'attack') { const a = f.atk, r = segTime(a.m, f.t); name = r[0]; time = r[1]; rate = 38; if (a.leg) { kick = f.t > a.hit * .3 && f.t < a.hit + a.hold ? 1 : 0; lean = a.lean; M.kdir = a.leg; } }
-  else if (s === 'jump') { if (f.air) { name = 'NinjaJump_Idle_Loop'; kick = 1; lean = -.42; M.kdir = null; } else name = 'Jump_Loop'; time = f.t; rate = 16; }
+  else if (s === 'attack') { const a = f.atk, r = segTime(a.m, f.t); name = r[0]; time = r[1]; rate = 38; if (a.kf) lean = (a.lean || 0) * Math.min(1, f.t / a.hit, (a.dur - f.t) / .12); }
+  else if (s === 'jump') { if (f.air) { name = 'NinjaJump_Idle_Loop'; kick = 1; lean = -.42; } else name = 'Jump_Loop'; time = f.t; rate = 16; }
   else if (s === 'spin') { name = 'A_TPose'; time = 0; rate = 30; lean = .12; }
   else if (s === 'hurt') { name = f.hc ? 'Hit_Head' : 'Hit_Chest'; time = Math.min(f.t * 1.15, M.clips[name].duration - .01); rate = 40; }
   else if (s === 'fall') { name = 'Hit_Knockback'; M.kb = Math.min(.33, f.t * .62); time = M.kb; rate = 30; }
@@ -1471,8 +1471,12 @@ function animModel(f, dt){
   M.cur = name; M.mixer.update(0);
   const sc = f.st.s * MSCALE, bk = M.look.bulk || 1;
   f.root.position.set(f.x, f.y * (s === 'fall' ? .55 : 1) + bob, f.z); f.root.scale.set(f.facing * sc * bk, sc, sc * bk); f.rig.rotation.y = FACE + f.spin;
-  M.kick += ((kick ? 1 : 0) - M.kick) * (1 - Math.exp(-(M.kdir ? 30 : 18) * dt)); M.lean = (M.lean || 0) + (lean - (M.lean || 0)) * (1 - Math.exp(-14 * dt)); f.body.rotation.x = M.lean;
-  if (M.kick > .02) { const b = M.bones; f.root.updateMatrixWorld(true); if (M.kdir) _dir.set(M.kdir[0], M.kdir[1], M.kdir[2]).normalize(); else _dir.set(-.1, -.1, 1).normalize(); aimBone(M.obj, b.thigh_r, b.calf_r, _dir, M.kick); aimBone(M.obj, b.calf_r, b.foot_r, _dir, M.kick); }
+  M.kick += ((kick ? 1 : 0) - M.kick) * (1 - Math.exp(-18 * dt)); M.lean = (M.lean || 0) + (lean - (M.lean || 0)) * (1 - Math.exp(-14 * dt)); f.body.rotation.x = M.lean; { const a = s === 'attack' && f.atk, rl = a && a.rollk ? keyAt(a.rollk, f.t) : a && a.roll ? a.roll * MU.clamp(Math.min(f.t / a.hit, (a.dur - f.t) / .14), 0, 1) : 0; M.roll = (M.roll || 0) + (rl - (M.roll || 0)) * (1 - Math.exp(-16 * dt)); f.body.rotation.z = M.roll; }
+  if (s === 'attack' && f.atk.kf) { const a = f.atk, kf = a.kf, t = f.t, w = Math.min(1, t / (kf[0][0] * .8), (a.dur - t) / .1); let i = 0; while (i < kf.length - 2 && t > kf[i + 1][0]) i++;
+    if (w > .01) { const A = kf[i], B = kf[i + 1], u = MU.clamp((t - A[0]) / (B[0] - A[0]), 0, 1), e = u * u * (3 - 2 * u), b = M.bones, mix = k => _dir.set(A[k][0] + (B[k][0] - A[k][0]) * e, A[k][1] + (B[k][1] - A[k][1]) * e, A[k][2] + (B[k][2] - A[k][2]) * e).normalize();
+      const L = a.leg === 'l' ? [b.thigh_l, b.calf_l, b.foot_l] : [b.thigh_r, b.calf_r, b.foot_r];
+      f.root.updateMatrixWorld(true); aimBone(M.obj, L[0], L[1], mix(1), w); aimBone(M.obj, L[1], L[2], mix(2), w); if (A[3] || B[3]) { const fa = A[3] || B[3], fb = B[3] || A[3]; _dir.set(fa[0] + (fb[0] - fa[0]) * e, fa[1] + (fb[1] - fa[1]) * e, fa[2] + (fb[2] - fa[2]) * e).normalize(); aimBone(M.obj, L[2], a.leg === 'l' ? b.ball_l : b.ball_r, _dir, w * (A[3] && B[3] ? 1 : A[3] ? 1 - e : e)); } } }
+  else if (M.kick > .02) { const b = M.bones; f.root.updateMatrixWorld(true); _dir.set(-.1, -.1, 1).normalize(); aimBone(M.obj, b.thigh_r, b.calf_r, _dir, M.kick); aimBone(M.obj, b.calf_r, b.foot_r, _dir, M.kick); }
   let er = 0, eg = 0, eb = 0;
   if (f.flash > 0) { f.flash -= dt; er = eg = eb = .42; } else if (f.blockT > 0) { f.blockT -= dt; er = .08; eg = .3; eb = .62; } else if (f.tele) { const pu = .26 + .26 * Math.sin(time_(f) * 38); er = pu; eg = pu * .08; eb = pu * .1; }
   else if (s === 'charge') { const pu = .22 + .2 * Math.sin(time_(f) * 30); er = pu; eg = pu * .7; eb = pu * .1; }
@@ -1491,14 +1495,25 @@ const PATK = [
   { dur: .62, hit: .2, hold: .2, wind: POSE.smashW, pose: POSE.smash, dmg: 26, range: 1.75, kb: 8, launch: 7.6, down: true, lunge: 3, m: [['OverhandThrow', .25, .378, .2], ['OverhandThrow', .378, 1.3, .62]] },
 ];
 PATK[2].fin = true; PATK[2].nm = 'Gancho';
-// Kicks and the combos they open. The leg is aimed by hand over the guard pose (leg: where it points, in the fighter's own frame; giro: a full turn while it sweeps).
-// The key is what was pressed so far in the chain: P punch, K kick. A finisher (fin) ends the chain.
-const GUARDM = d => [['Guard', 0, .01, d]];
+// Kicks and the combos they open. A kick is a karate kick: the knee comes up with the leg folded, the shin snaps out, and it folds back before the foot goes down.
+// kf lists the poses of the kicking leg as [time, thigh direction, shin direction], in the fighter's own frame (x: to his left, y: up, z: ahead); leg 'l' kicks with the left one.
+// twist: the hips turn that far (radians, + to his left) into the blow and come back; giro: a whole turn to his right, the blow landing three quarters of the way round;
+// roll: the trunk leans away from the leg. The key is what was pressed so far: P punch, K kick; fin ends the chain.
+const GUARDM = d => [['Guard', 0, .01, d]], FOLD = [0, -1, -.12];
 const KATK = {
-  K:   { nm: 'Patada', dur: .36, hit: .13, hold: .1, wind: POSE.kickW, pose: POSE.kick, dmg: 9, range: 1.8, kb: 3.6, stun: .42, lunge: 1.8, leg: [0, .04, 1], lean: -.28, m: GUARDM(.36) },
-  KK:  { nm: 'Patada giratoria', fin: true, dur: .6, hit: .27, hold: .14, wind: POSE.kickW, pose: POSE.kick, dmg: 15, range: 1.9, kb: 7.4, launch: 5.8, down: true, lunge: 2.4, leg: [0, .14, 1], lean: -.18, giro: true, m: GUARDM(.6) },
-  PK:  { nm: 'Barrido', fin: true, dur: .46, hit: .17, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.75, kb: 2.2, launch: 3.4, down: true, lunge: 2, leg: [0, -.6, .8], lean: .26, m: GUARDM(.46) },
-  PPK: { nm: 'Patada lateral', fin: true, dur: .56, hit: .2, hold: .16, wind: POSE.kickW, pose: POSE.kick, dmg: 19, range: 1.95, kb: 9.4, launch: 5.6, down: true, lunge: 3, leg: [0, .18, 1], lean: -.5, m: GUARDM(.56) },
+  K:   { nm: 'Patada', dur: .52, hit: .21, hold: .1, wind: POSE.kickW, pose: POSE.kick, dmg: 10, range: 1.9, kb: 4.2, stun: .45, lunge: 1.6, leg: 'l', m: GUARDM(.52),
+    yaw: [[0, 0], [.1, -1.5], [.38, -1.5], [.52, 0]], rollk: [[0, 0], [.12, .18], [.21, .32], [.32, .32], [.48, 0]],
+    kf: [[.1, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.21, [.97, -.24, .05], [.97, -.22, .02], [.05, -.85, .5]], [.31, [.97, -.24, .05], [.97, -.22, .02], [.05, -.85, .5]], [.4, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.5, [.2, -1, .15], FOLD]] },
+  KK:  { nm: 'Patada circular', dur: .5, hit: .2, hold: .08, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.85, kb: 4, stun: .5, lunge: 2, twist: -1.15, roll: .22, leg: 'l', m: GUARDM(.5),
+    kf: [[.08, [.8, .3, .35], [-.15, -.35, -1]], [.2, [.85, .28, .45], [.88, .3, .45]], [.27, [.7, .28, .7], [.62, .3, .8]], [.38, [.35, .1, .9], FOLD]] },
+  KKK: { nm: 'Patada giratoria', fin: true, dur: .74, hit: .36, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 17, range: 2, kb: 8, launch: 6, down: true, lunge: 2.4, m: GUARDM(.74),
+    yaw: [[0, 0], [.08, .25], [.2, -1.6], [.3, -3.6], [.36, -4.71], [.5, -4.71], [.74, -6.283]], rollk: [[0, 0], [.2, 0], [.36, -.34], [.48, -.34], [.64, 0]],
+    kf: [[.18, [0, .45, .9], [0, -.75, -.65], [0, -.4, .9]], [.28, [-.5, .55, .67], [.8, -.55, -.15], [-.1, -.3, .95]], [.36, [-.97, -.24, .05], [-.97, -.22, .02], [-.05, -.85, .5]], [.48, [-.97, -.24, .05], [-.97, -.22, .02], [-.05, -.85, .5]], [.56, [-.5, .55, .67], [.8, -.55, -.15]], [.66, [-.1, -1, .1], [0, -1, -.05]]] },
+  PK:  { nm: 'Barrido', fin: true, dur: .46, hit: .17, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.75, kb: 2.2, launch: 3.4, down: true, lunge: 2, lean: .24, twist: .35, m: GUARDM(.46),
+    kf: [[.08, [-.5, -.6, .45], [.1, -.75, -.6]], [.17, [-.15, -.66, .74], [.12, -.52, .84]], [.26, [.1, -.66, .74], [.4, -.5, .76]], [.36, [-.1, -.9, .3], FOLD]] },
+  PPK: { nm: 'Patada lateral', fin: true, dur: .6, hit: .25, hold: .14, wind: POSE.kickW, pose: POSE.kick, dmg: 19, range: 2, kb: 9.4, launch: 5.6, down: true, lunge: 3.2, leg: 'l', m: GUARDM(.6),
+    yaw: [[0, 0], [.12, -1.55], [.44, -1.55], [.6, 0]], rollk: [[0, 0], [.14, .2], [.25, .45], [.4, .45], [.56, 0]],
+    kf: [[.13, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.25, [.97, -.14, .05], [.97, -.12, .02], [.05, -.85, .5]], [.38, [.97, -.14, .05], [.97, -.12, .02], [.05, -.85, .5]], [.47, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.58, [.2, -1, .15], FOLD]] },
   KP:  { nm: 'Gancho al cielo', fin: true, dur: .5, hit: .15, hold: .18, wind: POSE.kickW, pose: POSE.smash, dmg: 12, range: 1.6, kb: 1.4, launch: 9.2, down: true, lunge: 2, m: [['Melee_Hook', .04, .272, .15], ['Melee_Hook', .272, .467, .28], ['Melee_Hook_Rec', 0, .6, .5]] },
 };
 const AIRK = { dmg: 12, range: 1.35, kb: 5.5, launch: 5.6, down: true }, PDASH = { dmg: 12, range: 1.25, kb: 7, launch: 5.6, down: true };
@@ -1825,7 +1840,8 @@ function nextAtk(p, t){
 }
 function startAtk(p, t){ const I = p.in; if (Math.abs(I.x) > .3) p.facing = I.x > 0 ? 1 : -1;
   const a = t === 'C' ? PATK[3] : nextAtk(p, t); if (t === 'C') p.seq = '';
-  p.state = 'attack'; p.atk = a; p.t = 0; p.done = false; p.conn = false; p.buf = null; p.chain = false; p.spin = 0; p.vx = p.facing * a.lunge; if (a.fin || a.leg || t === 'C' || p.seq === 'W') sfx('whoosh'); }
+  p.state = 'attack'; p.atk = a; p.t = 0; p.done = false; p.conn = false; p.buf = null; p.chain = false; p.spin = 0; p.vx = p.facing * a.lunge; if (a.fin || a.kf || t === 'C' || p.seq === 'W') sfx('whoosh'); }
+function keyAt(k, t){ let i = 0; while (i < k.length - 2 && t > k[i + 1][0]) i++; const A = k[i], B = k[i + 1], u = MU.clamp((t - A[0]) / (B[0] - A[0]), 0, 1); return A[1] + (B[1] - A[1]) * u; }
 let moveT = 0; function moveName(n){ ui.move.textContent = n; ui.move.hidden = true; void ui.move.offsetWidth; ui.move.hidden = false; moveT = 1.1; }
 function spend(p, n){ if (p.energy < n) { p.enFlash = .4; sfx('nope'); return false; } p.energy -= n; return true; }
 function trySpin(p){ if (!spend(p, 40)) return false; p.state = 'spin'; p.t = 0; p.set = new Set(); p.spin = 0; sfx('spin'); return true; }
@@ -1850,7 +1866,7 @@ function updatePlayer(p, dt){
       break; }
     case 'attack': { const a = p.atk;
       if (I.take('atk')) p.buf = 'P'; else if (I.take('kick')) p.buf = 'K';
-      if (a.giro) p.spin = Math.min(1, p.t / (a.hit + a.hold)) * Math.PI * 2;
+      if (a.yaw) p.spin = keyAt(a.yaw, p.t); else if (a.twist) p.spin = a.twist * Math.sin(Math.PI * Math.min(1, p.t / (a.dur * .85)));
       if (!p.done && p.t >= a.hit) { p.done = true; p.conn = strike(p, a); if (p.conn) { if (p.seq === 'W') wear(p); if (a.fin && a.nm) moveName(a.nm); } else if (!a.fin) sfx('whoosh'); }
       if (p.done && I.q.spc > 0) { I.take('spc'); if (special(p)) break; }
       if (p.t >= a.dur) { p.spin = 0; if (p.buf) { p.chain = p.conn && !a.fin; startAtk(p, p.buf); } else if (progress >= 2 && I.held.atk && a !== PATK[3] && !p.arma) { p.state = 'charge'; p.t = 0; } else { p.state = 'idle'; p.seq = ''; } }
@@ -2018,7 +2034,7 @@ function news(from, to){ const out = [];
   for (const m of MOVES) if (m.need > from && m.need <= to) out.push(['Nuevo golpe', m.name, m.how]);
   for (const k of CHAR_ORDER) { const c = CHARS[k]; if (c.need > from && c.need <= to) out.push(['Nuevo luchador', c.name, c.tag + '. Elígelo en tu próxima partida.']); }
   return out; }
-function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada lateral', 'Golpe, Golpe, Patada. Manda lejos al rival.'], ['Barrido', 'Golpe, Patada. Lo tumba en el sitio.'], ['Patada giratoria', 'Patada, Patada.'], ['Gancho al cielo', 'Patada, Golpe. Lo levanta para rematarlo en el aire.'], ['Patada voladora', 'Golpe o Patada en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
+function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada lateral', 'Golpe, Golpe, Patada. Manda lejos al rival.'], ['Barrido', 'Golpe, Patada. Lo tumba en el sitio.'], ['Patada giratoria', 'Patada, Patada, Patada. La tercera gira de espaldas y tumba.'], ['Gancho al cielo', 'Patada, Golpe. Lo levanta para rematarlo en el aire.'], ['Patada voladora', 'Golpe o Patada en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
   for (const m of MOVES) rows.push([m.name, progress >= m.need ? m.how : 'Bloqueado. Supera el nivel ' + m.need + '.']);
   el.innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join(''); }
 

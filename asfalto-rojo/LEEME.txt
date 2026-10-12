@@ -35,7 +35,7 @@ COMBOS (solo siguen si el golpe anterior acierta)
   Golpe, Golpe, Golpe      Gancho
   Golpe, Golpe, Patada     Patada lateral: manda lejos al rival
   Golpe, Patada            Barrido: lo tumba en el sitio
-  Patada, Patada           Patada giratoria
+  Patada, Patada, Patada   Lateral, circular y la tercera girando de espaldas: patada giratoria, que tumba
   Patada, Golpe            Gancho al cielo: lo levanta para rematarlo en el aire
   En el aire, Golpe o Patada: patada voladora.   Especial quieto: molinete.
   Embestida (nivel 1 superado): especial mientras te mueves.   Mazazo (nivel 2 superado): manten golpe y suelta.
