@@ -140,6 +140,8 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
 .seg{display:inline-flex;flex-wrap:wrap;box-shadow:0 0 0 1px var(--mute)}
 .seg button{padding:6px 14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:15px;background:var(--ink-2);color:var(--paper)}
 .seg button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+#selLevel button{padding-inline:10px;min-width:34px}
+#selLvName{color:var(--gold);font-weight:700}
 .seg button:disabled{color:var(--mute);opacity:.55;cursor:not-allowed}
 .rowsel{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:center}
 .rowsel > span{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:14px;color:var(--mute)}
@@ -349,7 +351,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
         <button id="selMode2" type="button" aria-pressed="false">2 jugadores</button>
       </div>
       <div class="roster" id="roster"></div>
-      <div class="rowsel"><span>Empezar en</span><div class="seg" id="selLevel" role="group" aria-label="Nivel inicial"></div><span>Dificultad</span><div class="seg" id="selDiff" role="group" aria-label="Dificultad"></div></div>
+      <div class="rowsel"><span>Empezar en <b id="selLvName"></b></span><div class="seg" id="selLevel" role="group" aria-label="Nivel inicial"></div><span>Dificultad</span><div class="seg" id="selDiff" role="group" aria-label="Dificultad"></div></div>
       <button class="cta" id="btnFight" type="button">A pelear</button>
       <p class="credit" id="selHint"></p>
     </div>
@@ -498,10 +500,10 @@ function buildSky(){
     px += w + rr(-6, 18); }
   const st = tex(c2); st.wrapS = T.RepeatWrapping; st.repeat.set(2.4, 1);
   const sl = new T.Mesh(new T.PlaneGeometry(300, 17), new T.MeshBasicMaterial({ map: st, transparent: true, fog: false }));
-  sl.position.set(52, 8.5, -34); world.add(sl);
+  sl.position.set(52, 8.5, -34); if (TH.city !== false) world.add(sl);
   // alley back wall so gaps do not read as a void
   const back = new T.Mesh(new T.PlaneGeometry(X1 - X0, 3.4), new T.MeshStandardMaterial({ color: 0x1a1626, roughness: .9 }));
-  back.position.set((X0 + X1) / 2, 1.7, WALL_Z - 5.6); world.add(back);
+  back.position.set((X0 + X1) / 2, 1.7, WALL_Z - 5.6); if (!TH.open) world.add(back);
 }
 
 const WALLS = ['#33294f', '#472a3a', '#253648', '#3a3a48', '#4a3324', '#2c3d3a', '#3b2d52'];
@@ -639,7 +641,7 @@ function carGeo(kind){
     for (const c of [C.wb[1], C.wb[0]]) { s.lineTo(c + .44, .3); s.absarc(c, .34, .44, 0, Math.PI, false); } s.lineTo(o[0][0], o[0][1]);
     const d = C.w - .12, g = new T.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: .06, bevelSize: .045, bevelSegments: 2, curveSegments: 10 }); g.translate(0, 0, -d / 2); return g; });
 }
-function buildCar(X, color, kind){
+function buildCar(X, color, kind, at){
   kind = kind || 'hatch'; const C = CARS[kind], w = C.w, g = new T.Group(), xr = C.o[0][0], xf = C.o[C.o.length - 1][0];
   const paint = new T.MeshStandardMaterial({ color, roughness: .3, metalness: .5 }), glass = G('carGlass', () => new T.MeshStandardMaterial({ color: 0x0a0c12, roughness: .12, metalness: .85 })), trim = G('carTrim', () => new T.MeshStandardMaterial({ color: 0x121216, roughness: .7, metalness: .2 })),
     tyre = G('tyre', () => new T.MeshStandardMaterial({ color: 0x0c0c0e, roughness: .9 })), rim = G('carRim', () => new T.MeshStandardMaterial({ color: 0xb4b8c2, roughness: .3, metalness: .85 })),
@@ -666,8 +668,9 @@ function buildCar(X, color, kind){
   add(UB(), G('carPlate', () => new T.MeshStandardMaterial({ color: 0xeeeeea, roughness: .5 })), xr - .05, .56, 0, .02, .11, .46); add(UB(), trim, xf + .035, .6, 0, .03, .14, w * .5);
   if (C.rails) for (const s of [-1, 1]) add(UB(), trim, -.5, 1.54, s * (w / 2 - .24), 1.35, .035, .04);
   for (const c of C.wb) for (const s of [-1, 1]) { const z = s * (w / 2 - .1); add(G('wheel', () => new T.CylinderGeometry(.34, .34, .24, 14)), tyre, c, .34, z, 1, 1, 1, [Math.PI / 2, 0, 0]); add(UC(), rim, c, .34, z + s * .03, .2, .2, .2, [Math.PI / 2, 0, 0]); add(UC(), trim, c, .34, z + s * .04, .06, .2, .06, [Math.PI / 2, 0, 0]); }
-  g.position.set(X, 0, -3.5); world.add(g);
+  g.position.set(X, at ? at.y : 0, at ? at.z : -3.5); if (at && at.ry) g.rotation.y = at.ry; world.add(g); if (at) return g;
   const gl = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: 0xff2233, transparent: true, opacity: .32, depthWrite: false, blending: T.AdditiveBlending })); gl.scale.set(1.3, .8, 1); gl.position.set(X + xr - .1, ry, -2.65); world.add(gl);
+  return g;
 }
 
 function buildProps(){
@@ -675,6 +678,7 @@ function buildProps(){
   const boxM = new T.MeshStandardMaterial({ color: 0x6a5234, roughness: .9 });
   const dumpM = new T.MeshStandardMaterial({ color: 0x2a4f7a, roughness: .5, metalness: .4 });
   const kind = TH.kind;
+  if (KIND_PROPS[kind]) { KIND_PROPS[kind](); return; }
   if (kind === 'poligono') { const pal = mat(0x8a6a44, .9), drum = [mat(0x1f4a8a, .5, .4), mat(0xa8282f, .5, .4), mat(0xd8a21a, .5, .4)], cone = mat(0xe8621c, .6), white = mat(0xf0ece0, .7);
     for (let X = X0 + 3; X < X1; X += rr(4, 7.5)) { const k = R(), z = WALL_Z + rr(.5, 1); if (Math.abs(X - DOOR_X) < 4.4) continue;
       if (k < .36) for (let i = 0, n = 2 + (R() * 5 | 0); i < n; i++) box3(pal, X + rr(-.04, .04), .24 + i * .15, z, 1.2, .1, 1, [0, rr(-.06, .06), 0]);
@@ -1115,6 +1119,7 @@ function buildRoom(kind){
   const D = ROOMS[kind], X = ROOM_X, W = ROOM_W, [fc, fx] = cv(512, 512); D.floor(fx);
   const fm = tex(fc); fm.wrapS = fm.wrapT = T.RepeatWrapping; fm.repeat.set(W / D.tile, 16 / D.tile);
   const floor = new T.Mesh(new T.PlaneGeometry(W, 16), new T.MeshStandardMaterial({ map: fm, roughness: D.rough, metalness: .08 })); floor.rotation.x = -Math.PI / 2; floor.position.set(X, 0, RWALL + 8); floor.receiveShadow = true; world.add(floor);
+  if (D.floorGlow) { floor.material.emissiveMap = fm; floor.material.emissive.set(0xffffff); floor.material.emissiveIntensity = D.floorGlow; }
   const d = painter(coarse ? 1024 : 2048, coarse ? 512 : 1024, 20, 14); D.wall(d);
   const wm = d.mat({ roughness: .85, emissiveIntensity: D.glowK || .85 }); for (const k of [wm.map, wm.emissiveMap]) { k.wrapS = T.RepeatWrapping; k.repeat.set(W / 20, 1); k.offset.x = .5; }
   const wall = new T.Mesh(new T.PlaneGeometry(W, 14), wm); wall.position.set(X, 7, RWALL); wall.receiveShadow = true; world.add(wall);
@@ -1122,6 +1127,374 @@ function buildRoom(kind){
   box3(mat(0x0c0a10, .8), X, .09, RWALL + .04, W, .18, .08);
   D.props(X);
 }
+
+/* ---------- levels 5 to 10: six more streets ---------- */
+// open: nothing stands right behind the pavement, so the dark back wall is left out; city: false hides the far skyline (the sea has no city behind it)
+THEMES.push(
+  // 4 · the port at night: stacked containers, two cranes and the water behind
+  { seed: 5150, kind: 'puerto', ground: 'concrete', open: true, bg: 0x050c14, fog: [0x0a1a28, 22, 80], sky: ['#02060e', '#081a2e', '#16304a', '#3a5a6a', '#e08a4a'], sil: '#0a1622',
+    hemi: [0x7ab0d0, 0x101418, .4], key: [0xbfe0ff, .62], fill: [0xff9a4a, .2], lamp: 0xffb060, road: '#25272b', walk: '#3c3e42',
+    walls: ['#3a3f46'], glow: ['#ffb45a', '#9fd8ff'], low: 1, lit: .2, shut: .7, shop: .8, rain: false, wet: 6, prop: 'container', steam: false,
+    env: ['#04080e', '#10283a', '#3a6a8a', '#14202a', '#05070a'], envGlow: [[1.4, 2, 2.6], [2.6, 1.6, .7], [.8, 1.6, 2.4], [2.2, 1.4, .8]],
+    signs: [['LONJA', '#3df2ff']] },
+  // 5 · the seafront at dusk: palms, a white railing, sand and sea
+  { seed: 6262, kind: 'playa', ground: 'tiles', tags: 0, open: true, city: false, bg: 0x101a3a, fog: [0x26305e, 30, 100], sky: ['#0c1440', '#2a3a86', '#6a4a9a', '#ff7a6a', '#ffcf8a'], sil: '#141a40',
+    hemi: [0x9fb0ff, 0x4a3a40, .55], key: [0xffd2b0, .72], fill: [0xff7ab0, .22], lamp: 0xffd9a0, road: '#3e3a44', walk: '#c2ad8c',
+    walls: ['#e8dcc8'], glow: ['#ffd9a0', '#ffc86a'], low: 1, lit: .5, shut: 0, shop: 1, rain: false, wet: 2, prop: 'kiosk', steam: false,
+    env: ['#0c1440', '#3a4a90', '#ff8a7a', '#3a2a50', '#0a0a18'], envGlow: [[2.6, 1.8, 1.2], [2.6, 1.2, 1.6], [1.2, 1.8, 2.6], [2.6, 2.2, 1.4]],
+    signs: [['CHIRINGUITO', '#ffc83a']] },
+  // 6 · the morning market: awnings, crates of fruit, delivery vans
+  { seed: 7373, kind: 'mercado', bg: 0x2a1a2a, fog: [0x4a3040, 26, 84], sky: ['#1a1a40', '#4a3a7a', '#c86a8a', '#ffb07a', '#ffe0a8'], sil: '#2a2040',
+    hemi: [0xffd0c0, 0x3a2a30, .62], key: [0xfff0d8, .8], fill: [0x8ab0ff, .2], lamp: 0xffe0b0, road: '#3a3436', walk: '#6a5e5a',
+    walls: ['#b8866a', '#d8b48a', '#8a9aa8', '#c89a7a', '#a87a6a', '#d0c0a0', '#7a8a7a'], glow: ['#ffe0b0', '#fff0d0', '#ffd08a'], tags: 0, low: .55, lit: .3, shut: .2, shop: .9, rain: false, wet: 3, prop: 'van', steam: false,
+    env: ['#2a2040', '#6a4a7a', '#ffb08a', '#4a3a4a', '#1a1418'], envGlow: [[2.6, 2, 1.4], [2.4, 1.6, 1.2], [1.4, 1.8, 2.4], [2.6, 2.2, 1.6]],
+    signs: [['FRUTERIA', '#7dff9a'], ['CARNICERIA', '#ff5a5a'], ['PANADERIA', '#ffc86a'], ['MERCADO', '#ffd24a'], ['PESCADERIA', '#7fe0ff'], ['ULTRAMARINOS', '#ff9a3a'],
+      ['CAFE', '#ffd9a0'], ['CHARCUTERIA', '#ff7a7a'], ['QUESOS', '#ffe08a'], ['FLORES', '#ff8ad0'], ['ESPECIAS', '#ffb060'], ['BAR', '#ffc83a']] },
+  // 7 · the railway: a fence, three tracks, painted wagons and the motorway on pillars
+  { seed: 8484, kind: 'vias', ground: 'dirt', open: true, bg: 0x0a0c10, fog: [0x141a22, 20, 70], sky: ['#04060a', '#0e1620', '#1e2a3a', '#4a3a3a', '#a85a3a'], sil: '#0c1016',
+    hemi: [0x8aa0c0, 0x14100e, .36], key: [0xc8d8ff, .55], fill: [0x7aff9a, .14], lamp: 0xd8ffd0, road: '#25241f', walk: '#3a3832',
+    walls: ['#3a3a3a'], glow: ['#d8ffd0', '#ffb060'], low: 1, lit: .2, shut: .5, shop: .7, rain: true, wet: 12, prop: 'car', steam: true,
+    env: ['#04060a', '#14202e', '#4a6a5a', '#1a1a1e', '#050506'], envGlow: [[1.4, 2.4, 1.6], [2.4, 1.4, .8], [1.2, 1.6, 2.4], [2, 2, 1.4]],
+    signs: [['ESTACION', '#7dff9a']] },
+  // 8 · the night-life street: rain, every sign lit, music from every door
+  { seed: 9595, kind: 'copas', bg: 0x0a0414, fog: [0x1c0830, 18, 62], sky: ['#06020e', '#1a0630', '#4a0c5a', '#b01c7a', '#ff5ab0'], sil: '#14061e',
+    hemi: [0xb06aff, 0x1a0820, .34], key: [0xd0b0ff, .55], fill: [0xff3dd0, .24], lamp: 0xff8ad0, road: '#1c1a24', walk: '#34303e',
+    walls: ['#2a1a3a', '#3a1a2a', '#1a2a3a', '#2a2a36', '#3a2236', '#1e1e2e'], glow: ['#ff5ad0', '#3df2ff', '#b96bff', '#ff3d7f', '#ffd24a'], low: .5, lit: .5, shut: .12, shop: .92, rain: true, wet: 18, prop: 'car', steam: true,
+    env: ['#0a0414', '#3a0c5a', '#ff3dd0', '#1a0a3a', '#060208'], envGlow: [[2.8, .6, 2.4], [.6, 2.4, 2.8], [2.2, .8, 2.8], [2.8, 2, .6]],
+    signs: [['DISCO', '#ff3dd0'], ['COPAS', '#3df2ff'], ['KARAOKE', '#ffd24a'], ['PUB 80', '#b96bff'], ['CHUPITOS', '#ff3d7f'], ['SALSA', '#ff7a3d'], ['LOUNGE', '#3df2ff'],
+      ['RITMO', '#ff5ad0'], ['TEQUILA', '#7dff9a'], ['NEON', '#b96bff'], ['AFTER', '#ff3d7f'], ['BAILE', '#ffd24a'], ['VIP', '#3df2ff'], ['ROCK', '#ff5a3a'], ['JAZZ', '#ffc86a']] },
+  // 9 · the towers: glass offices, a cold blue night and the last door
+  { seed: 1010, kind: 'torres', ground: 'tiles', tags: 0, bg: 0x040814, fog: [0x0a1428, 26, 96], sky: ['#020410', '#06102a', '#0e2048', '#1a3a6a', '#4a6a9a'], sil: '#060c1c',
+    hemi: [0x6a9aff, 0x0a0c14, .38], key: [0xc8dcff, .6], fill: [0xff3d5a, .14], lamp: 0xcfe4ff, road: '#1a1c22', walk: '#4a4e58',
+    walls: ['#1c2230'], glow: ['#cfe4ff', '#ffe2b0'], low: 0, lit: .4, shut: 0, shop: 1, rain: true, wet: 14, prop: 'car', steam: false,
+    env: ['#020410', '#0e2048', '#6a9aff', '#0a1428', '#020308'], envGlow: [[1.2, 1.8, 2.8], [1.6, 2, 2.8], [2.6, 1, 1.2], [2, 2.2, 2.6]],
+    signs: [['BANCO ROJO', '#ff3d5a'], ['TORRE NORTE', '#cfe4ff'], ['SEGUROS', '#3df2ff'], ['HOTEL', '#ffd24a'], ['INVERSIONES', '#cfe4ff'], ['ABOGADOS', '#ffc86a']] },
+);
+
+const CONT_COLS = ['#8a3a22', '#23506a', '#3d5a34', '#7a6420', '#5a2a4a', '#2a6a8a', '#a8642a', '#6a6a72'];
+function contMats(){
+  return CONT_COLS.map(col => { const [c, x] = cv(256, 128); x.fillStyle = col; x.fillRect(0, 0, 256, 128);
+    for (let i = 0; i < 256; i += 10) { x.fillStyle = 'rgba(0,0,0,.26)'; x.fillRect(i, 0, 4, 128); x.fillStyle = 'rgba(255,255,255,.07)'; x.fillRect(i + 5, 0, 2, 128); }
+    for (let i = 0; i < 50; i++) { x.fillStyle = `rgba(70,32,12,${rr(.05, .25)})`; x.fillRect(R() * 256, R() * 128, rr(3, 24), rr(6, 50)); }
+    x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, 0, 256, 5); x.fillRect(0, 123, 256, 5); x.fillRect(0, 0, 5, 128); x.fillRect(251, 0, 5, 128);
+    x.fillStyle = 'rgba(255,255,255,.78)'; x.font = "bold 22px 'Arial Narrow',Arial,sans-serif"; x.fillText(pick(['TRX', 'MSU', 'CGL', 'HPL', 'CRT', 'MAE']) + 'U ' + (100000 + (R() * 899999 | 0)), 16, 34);
+    return new T.MeshStandardMaterial({ map: tex(c), roughness: .6, metalness: .35 }); });
+}
+// flat water out to the horizon, with lights trailing across it
+function buildSea(z0, y, col, lights){
+  const sea = plane3(new T.MeshStandardMaterial({ color: col, roughness: .12, metalness: .75 }), 52, y, z0 - 70, 420, 140, [-Math.PI / 2, 0, 0]); sea.receiveShadow = false;
+  for (const L of lights) { const m = new T.MeshBasicMaterial({ map: streakTex, color: L[3], transparent: true, opacity: L[4] || .35, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+    plane3(m, L[0], y + .02, L[1], L[2], Math.abs(L[1] - z0) * .9, [-Math.PI / 2, 0, 0]); }
+}
+
+function buildPuerto(){
+  const mats = contMats(), geo = G('cont', () => new T.BoxGeometry(6.06, 2.59, 2.44)), quay = mat(0x2a2c30, .85), edge = mat(0x6a6a62, .7);
+  // the quay runs back to the water's edge
+  box3(quay, (X0 + X1) / 2, -.05, WALL_Z - 6.5, X1 - X0 + 40, .1, 13); box3(edge, (X0 + X1) / 2, -.35, WALL_Z - 13, X1 - X0 + 40, .7, .3);
+  for (let X = X0 + 2; X < X1 + 6; X += 6.4) { if (Math.abs(X - DOOR_X) < 7) continue;
+    for (const row of [0, 1]) { const n = row ? 2 + (R() * 2.4 | 0) : (R() < .25 ? 0 : 1 + (R() * 2.2 | 0)), z = WALL_Z - 1.45 - row * 2.62;
+      for (let i = 0; i < n; i++) { const m = new T.Mesh(geo, pick(mats)); m.position.set(X + rr(-.15, .15) + row * 1.6, 1.3 + i * 2.6, z); m.rotation.y = rr(-.01, .01); m.castShadow = m.receiveShadow = true; world.add(m); } } }
+  // two ship-to-shore cranes, legs on the quay and the boom out over the water
+  const red = mat(0xb8322a, .55, .4), white = mat(0xd8d4cc, .6, .3), dark = mat(0x1a1c20, .6, .5);
+  for (const [X, c] of [[22, red], [104, white]]) { const zf = WALL_Z - 8, zb = WALL_Z - 20;
+    for (const dx of [-5, 5]) for (const z of [zf, zb]) box3(c, X + dx, 13, z, .9, 26, .9);
+    for (const z of [zf, zb]) { box3(c, X, 25.5, z, 11, 1.2, 1); box3(c, X, 9, z, 11, .7, .7); }
+    for (const dx of [-5, 5]) { box3(c, X + dx, 26.6, (zf + zb) / 2 - 12, .9, 1.3, 44); box3(c, X + dx, 18, (zf + zb) / 2, .5, .5, 12.5, [Math.atan2(15, 12) - Math.PI / 2, 0, 0]); }
+    box3(dark, X, 28.2, zf - 3, 6, 3, 6); box3(dark, X, 24.2, zf + 2, 2.2, 1.8, 2.4);
+    for (const z of [zf + 2, zb - 22]) { const b = halo(X, 28.4, z, 0xff2233, 2, 2, .7); flickers.push({ s: { k: 1 }, parts: [[b.material, .7]], t: rr(0, 3) }); }
+    halo(X, 24.2, zf + 3.3, 0xffe0a0, 2.4, 1.6, .5); }
+  // a ship moored across the bay, and the lights of the far shore on the water
+  const hull = mat(0x14181e, .6, .3); box3(hull, 64, 2.5, WALL_Z - 34, 70, 7, 9); box3(mat(0xd8d4cc, .7), 92, 9, WALL_Z - 34, 12, 6, 8);
+  for (let i = 0; i < 14; i++) { const b = new T.Mesh(US(), new T.MeshBasicMaterial({ color: new T.Color(2, 1.7, 1.1) })); b.scale.setScalar(.18); b.position.set(87 + (i % 7) * 1.7, 8 + (i / 7 | 0) * 2, WALL_Z - 29.9); world.add(b); }
+  for (let i = 0; i < 26; i++) { const b = new T.Mesh(US(), new T.MeshBasicMaterial({ color: new T.Color(pick([0xffc070, 0xffe0b0, 0x9fd8ff])).multiplyScalar(2), fog: false })); b.scale.setScalar(.35); b.position.set(-60 + i * 9 + rr(-3, 3), rr(.8, 3), -110); world.add(b); }
+  buildSea(WALL_Z - 13, -.7, 0x06121c, [[30, -80, 4, 0xffc070, .25], [70, -80, 3, 0x9fd8ff, .2], [92, WALL_Z - 50, 3, 0xffe0a0, .35], [-10, -80, 4, 0xffc070, .2]]);
+}
+function propsPuerto(){
+  const iron = mat(0x1c1e22, .5, .6), rope = mat(0xc8b48a, .9), crate = mat(0x2a6aa8, .6), crate2 = mat(0xd8d4cc, .6), ice = mat(0xe8f4ff, .2);
+  for (let X = X0 + 3; X < X1; X += rr(4.5, 7)) { if (Math.abs(X - DOOR_X) < 5) continue; const k = R(), z = WALL_Z + rr(.55, .9);
+    if (k < .4) { cyl3(iron, X, .45, z, .2, .6); sph3(iron, X, .78, z, .24, .55); const r = new T.Mesh(G('ropeT', () => new T.TorusGeometry(.32, .05, 6, 16)), rope); r.rotation.x = Math.PI / 2; r.position.set(X + .1, .22, z + .25); world.add(r); }
+    else if (k < .8) for (let i = 0, n = 2 + (R() * 4 | 0); i < n; i++) { box3(i % 2 ? crate : crate2, X + (i % 2) * .62, .3 + (i / 2 | 0) * .34, z, .58, .32, .42); if (i < 2) box3(ice, X + (i % 2) * .62, .48, z, .5, .04, .36); }
+    else { const b = new T.Mesh(G('lifebuoy', () => new T.TorusGeometry(.32, .09, 8, 16)), mat(0xe8621c, .6)); b.position.set(X, 1.2, WALL_Z + .2); world.add(b); cyl3(iron, X, .7, WALL_Z + .12, .04, 1.4); } }
+  buildForklift(40, WALL_Z + 1.2, .6);
+}
+
+function palm(X, z, h, lean){
+  const bark = G('palmBark', () => mat(0x6a5038, .9)), leaf = G('palmLeaf', () => new T.MeshStandardMaterial({ color: 0x2a6a3a, roughness: .8, side: T.DoubleSide })), g = new T.Group();
+  let x = 0, y = 0; for (let i = 0; i < 7; i++) { const s = new T.Mesh(UC(), bark); s.scale.set(.17 - i * .01, h / 7 + .05, .17 - i * .01); x += lean * i * .05; s.position.set(x, y + h / 14, 0); s.rotation.z = -lean * .12; s.castShadow = true; g.add(s); y += h / 7; }
+  for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2 + rr(-.2, .2), f = new T.Group(), l = new T.Mesh(G('frond', () => { const p = new T.PlaneGeometry(2.4, .5, 6, 1); const v = p.attributes.position; for (let k = 0; k < v.count; k++) { const u = (v.getX(k) + 1.2) / 2.4; v.setY(k, v.getY(k) * (1 - u * .8)); v.setZ(k, -u * u * .9); } p.translate(1.2, 0, 0); p.rotateX(Math.PI / 2); p.computeVertexNormals(); return p; }), leaf);
+    l.castShadow = true; f.add(l); f.rotation.set(0, a, 0); l.rotation.z = rr(.05, .35); f.position.set(x, y, 0); g.add(f); }
+  sph3(mat(0x5a3a1a, .7), x, y - .1, 0, .22); g.position.set(X, .16, z); world.add(g);
+}
+function buildPlaya(){
+  const sand = mat(0xc8a87a, .95), wall = mat(0x8a7a66, .9), white = mat(0xeeeae0, .6), len = X1 - X0 + 40, mid = (X0 + X1) / 2;
+  box3(wall, mid, -.6, WALL_Z - .1, len, 1.4, .2); box3(sand, mid, -1.25, WALL_Z - 9, len, .1, 18);
+  // white railing along the edge of the promenade
+  const posts = new T.InstancedMesh(UB(), white, Math.ceil(len / .32)), d = new T.Object3D(); let n = 0;
+  for (let X = X0 - 20; X < X1 + 20; X += .32) { d.position.set(X, .62, WALL_Z + .12); d.scale.set(.07, .9, .07); d.updateMatrix(); posts.setMatrixAt(n++, d.matrix); } posts.count = n; posts.castShadow = true; world.add(posts);
+  box3(white, mid, 1.1, WALL_Z + .12, len, .1, .18); box3(white, mid, .2, WALL_Z + .12, len, .08, .14);
+  // the shoreline: foam, then the sea under a low moon
+  plane3(new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .35, depthWrite: false }), mid, -1.18, WALL_Z - 17.6, len, .9, [-Math.PI / 2, 0, 0]);
+  buildSea(WALL_Z - 18, -1.22, 0x0e1a40, [[70, -90, 7, 0xffe0c0, .45], [20, -90, 2, 0xffc070, .2], [110, -90, 2, 0xff9a7a, .2]]);
+  const moon = new T.Mesh(US(), new T.MeshBasicMaterial({ color: new T.Color(2.2, 2.05, 1.8), fog: false })); moon.scale.setScalar(2.4); moon.position.set(70, 15, -95); world.add(moon); halo(70, 15, -94, 0xffe0c0, 18, 18, .35);
+  // a pier with its lamps, a headland and boats
+  const wood = mat(0x4a3a2a, .9); box3(wood, 112, .2, WALL_Z - 30, 3, .3, 40); for (let z = WALL_Z - 12; z > WALL_Z - 50; z -= 4) { for (const s of [-1.3, 1.3]) box3(wood, 112 + s, -.6, z, .25, 1.8, .25); halo(112 + 1.4, 1.6, z, 0xffd9a0, 1.2, 1.2, .6); }
+  const hill = new T.Mesh(new T.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(0x10142e, 1)); hill.scale.set(60, 9, 14); hill.position.set(-20, -1.2, -80); world.add(hill);
+  for (const [bx, bz] of [[30, -40], [58, -55], [96, -62]]) { box3(mat(0xe8e4dc, .6), bx, -.9, bz, 3, .6, 1.1); cyl3(mat(0xe8e4dc, .5), bx, 1.3, bz, .04, 4); halo(bx, 3.4, bz, 0xff4a3a, .8, .8, .7); }
+  for (let X = X0 + 4; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 6) continue; palm(X, WALL_Z + 1.3, rr(5.2, 6.8), rr(-1, 1)); }
+}
+function propsPlaya(){
+  const wood = mat(0x7a5232, .7), iron = mat(0x1c1c24, .5, .6), bin = mat(0x2a6a8a, .6, .3), cloth = [mat(0xff6a5a, .8), mat(0x2a8a8a, .8), mat(0xffd24a, .8), mat(0xf4f0e8, .8)];
+  for (let X = X0 + 6; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 5) continue; const k = R(), z = WALL_Z + .8;
+    if (k < .5) { box3(wood, X, .62, z, 1.7, .07, .45); box3(wood, X, .95, z - .22, 1.7, .4, .06, [.18, 0, 0]); for (const s of [-.7, .7]) box3(iron, X + s, .38, z, .06, .45, .4); }
+    else if (k < .75) { const b = new T.Mesh(G('bin', () => new T.CylinderGeometry(.3, .25, .85, 12)), bin); b.position.set(X, .58, z); b.castShadow = true; world.add(b); }
+    else { cyl3(iron, X, 1.4, z, .03, 2.5); const pr = new T.Mesh(G('parasol', () => new T.ConeGeometry(1.15, .5, 10)), pick(cloth)); pr.position.set(X, 2.6, z); pr.castShadow = true; world.add(pr); } }
+  // sun loungers and parasols down on the sand
+  for (let X = X0 + 2; X < X1; X += rr(4, 7)) { const z = WALL_Z - rr(3, 12); cyl3(iron, X, .0, z, .03, 2.4); const pr = new T.Mesh(G('parasol', () => new T.ConeGeometry(1.15, .5, 10)), pick(cloth)); pr.position.set(X, 1.15, z); world.add(pr);
+    box3(pick(cloth), X + 1, -1.05, z + .4, 1.8, .1, .6); }
+}
+
+// market stalls: a striped awning on poles, a table, and crates of fruit
+function buildStalls(){
+  const pole = mat(0x2a2a30, .5, .6), table = mat(0x7a5a3a, .8), crateM = mat(0x8a6a44, .9), N = 900, fruit = new T.InstancedMesh(US(), new T.MeshStandardMaterial({ roughness: .55 }), N), d = new T.Object3D(), c = new T.Color(); let n = 0;
+  const stripes = [['#c2283a', '#f4f0e8'], ['#2a7a4a', '#f4f0e8'], ['#2a5aa8', '#f4f0e8'], ['#e8a21c', '#f4f0e8']].map(p => board(2, 1, (x, W, H) => { for (let i = 0; i < 8; i++) { x.fillStyle = p[i % 2]; x.fillRect(i * W / 8, 0, W / 8 + 1, H); } x.fillStyle = 'rgba(0,0,0,.15)'; x.fillRect(0, H * .8, W, H * .2); }));
+  const cols = [[0xd8281c, 0xe84a2a], [0xff9a1a, 0xffb43a], [0xf0d02a, 0xe8c01a], [0x5aa82a, 0x3a8a2a], [0x6a1a5a, 0x8a2a6a], [0xe8e0c0, 0xd8c8a0]];
+  for (let X = X0 + 5; X < X1; X += rr(6.5, 8.5)) { if (Math.abs(X - DOOR_X) < 6.5) continue; const z = WALL_Z + 1.05;
+    for (const s of [-1.5, 1.5]) for (const dz of [-.55, .55]) cyl3(pole, X + s, 1.15, z + dz, .03, 2.3);
+    box3(pick(stripes), X, 2.42, z + .1, 3.4, .06, 1.7, [.16, 0, 0]); box3(table, X, .78, z, 3.1, .08, 1); for (const s of [-1.4, 1.4]) box3(table, X + s, .4, z, .08, .78, .9);
+    for (let i = 0; i < 4; i++) { const cx = X - 1.12 + i * .75, col = pick(cols); box3(crateM, cx, .9, z, .68, .18, .8, [-.22, 0, 0]);
+      for (let k = 0; k < 14 && n < N; k++) { d.position.set(cx + rr(-.26, .26), 1.02 + rr(0, .06), z + rr(-.3, .3)); d.scale.setScalar(rr(.06, .085)); d.updateMatrix(); fruit.setMatrixAt(n, d.matrix); fruit.setColorAt(n++, c.set(pick(col))); } }
+    plane3(board(.8, .4, (x, W, H) => { x.fillStyle = '#16201c'; x.fillRect(0, 0, W, H); x.fillStyle = '#f4f0e0'; x.font = `${H * .5 | 0}px 'Comic Sans MS',cursive`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(pick(['1,20 €', '2 x 3 €', '0,99 €', 'OFERTA', '1,50 €/kg']), W / 2, H / 2); }), X + rr(-1, 1), 1.45, z + .52, .5, .25);
+    for (let i = 0; i < 3; i++) halo(X - 1 + i, 2.2, z + .6, 0xffe0b0, .8, .8, .5);
+    lightAt(X, 2, z + 1.4, 0xffe0b0, .7); }
+  fruit.count = n; fruit.castShadow = true; world.add(fruit);
+}
+
+// railway: fence, tracks with sleepers, painted wagons, catenary, a motorway on pillars
+function graffitiTex(w, h, base){
+  const [c, x] = cv(512, Math.round(512 * h / w)), H = c.height; x.fillStyle = base; x.fillRect(0, 0, 512, H);
+  for (let i = 0; i < 512; i += 14) { x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(i, 0, 3, H); }
+  for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(90,40,20,${rr(.05, .2)})`; x.fillRect(R() * 512, R() * H, rr(4, 40), rr(10, 60)); }
+  for (let k = 0; k < 2; k++) { const word = pick(['ASFALTO', 'ROJO', 'KRS', 'BARRIO', 'NICO', 'ZONA', 'TREN', 'CREW', 'SUR', 'VIA 3']), cx = 80 + k * 240 + rr(-20, 20), fs = rr(.35, .55) * H;
+    x.save(); x.translate(cx, H * .55); x.rotate(rr(-.12, .08)); x.font = `${fs | 0}px ${FONT_D}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+    x.lineWidth = fs * .22; x.strokeStyle = '#111'; x.strokeText(word, 0, 0); const g = x.createLinearGradient(0, -fs / 2, 0, fs / 2); const p = pick([['#ff3d7f', '#ffd24a'], ['#3df2ff', '#7dff6a'], ['#b96bff', '#ff3d7f'], ['#ffd24a', '#ff7a3d']]); g.addColorStop(0, p[0]); g.addColorStop(1, p[1]);
+    x.fillStyle = g; x.fillText(word, 0, 0); x.lineWidth = 2; x.strokeStyle = '#fff'; x.strokeText(word, 0, 0); x.restore(); }
+  return new T.MeshStandardMaterial({ map: tex(c), roughness: .55, metalness: .4 });
+}
+function buildVias(){
+  const len = X1 - X0 + 40, mid = (X0 + X1) / 2, grav = mat(0x3a3632, 1), rail = mat(0x8a8a90, .3, .9), dark = mat(0x16181c, .6, .5), conc = mat(0x5a5a5e, .9);
+  box3(grav, mid, -.04, WALL_Z - 11, len, .08, 22);
+  const [fc, fx] = cv(128, 128); fx.strokeStyle = 'rgba(176,182,198,.95)'; fx.lineWidth = 2.4; for (let i = -128; i < 256; i += 18) { fx.beginPath(); fx.moveTo(i, 0); fx.lineTo(i + 128, 128); fx.moveTo(i + 128, 0); fx.lineTo(i, 128); fx.stroke(); }
+  const ft = tex(fc); ft.wrapS = ft.wrapT = T.RepeatWrapping; ft.repeat.set(len / .9, 2.6 / .9);
+  const fence = new T.Mesh(new T.PlaneGeometry(len, 2.6), new T.MeshStandardMaterial({ map: ft, transparent: true, alphaTest: .25, side: T.DoubleSide, roughness: .5, metalness: .5 })); fence.position.set(mid, 1.45, WALL_Z + .05); world.add(fence);
+  for (let X = X0 - 20; X < X1 + 20; X += 3) cyl3(dark, X, 1.4, WALL_Z + .05, .04, 2.8); box3(dark, mid, 2.75, WALL_Z + .05, len, .05, .05);
+  const [sc, sx] = cv(256, 64); sx.fillStyle = '#3a3632'; sx.fillRect(0, 0, 256, 64); for (let i = 0; i < 256; i += 32) { sx.fillStyle = '#4a3a2a'; sx.fillRect(i + 4, 4, 18, 56); sx.fillStyle = 'rgba(0,0,0,.4)'; sx.fillRect(i + 20, 4, 3, 56); }
+  for (const z of [WALL_Z - 4, WALL_Z - 9, WALL_Z - 14]) { const st = tex(sc); st.wrapS = T.RepeatWrapping; st.repeat.set(len / 4, 1); plane3(new T.MeshStandardMaterial({ map: st, roughness: 1 }), mid, .01, z, len, 2.4, [-Math.PI / 2, 0, 0]);
+    for (const s of [-.72, .72]) box3(rail, mid, .1, z + s, len, .12, .08); }
+  // two strings of wagons on the far tracks
+  const bases = ['#5a2a22', '#2a3a4a', '#4a4a3a', '#3a2a3a', '#6a4a22'];
+  for (const [z, from, gap] of [[WALL_Z - 9, X0 + 4, 1.2], [WALL_Z - 14, X0 + 18, .9]]) for (let X = from; X < X1; X += 14 + gap) { if (R() < .18) continue;
+    const m = graffitiTex(13, 3.2, pick(bases)), side = mat(0x2a2a2e, .6, .5); const w = new T.Mesh(UB(), [side, side, side, side, m, m]); w.scale.set(13, 3.2, 2.9); w.position.set(X + 6.5, 2.35, z); w.castShadow = w.receiveShadow = true; world.add(w);
+    for (const dx of [-4.8, 4.8]) { box3(dark, X + 6.5 + dx, .55, z, 2, .6, 2.2); for (const s of [-.55, .55]) cyl3(dark, X + 6.5 + dx + s, .42, z + 1.1, .34, .1, [Math.PI / 2, 0, 0]); } }
+  // catenary poles and wires
+  for (let X = X0; X < X1 + 10; X += 20) { box3(dark, X, 3.6, WALL_Z - 1.6, .25, 7.2, .25); box3(dark, X, 6.9, WALL_Z - 8, .14, .14, 13); }
+  const wire = new T.MeshBasicMaterial({ color: 0x0a0a0c }); for (const z of [WALL_Z - 4, WALL_Z - 9, WALL_Z - 14]) box3(wire, mid, 6.4, z, len, .025, .025).castShadow = false;
+  // the motorway behind, with traffic lights streaking along it
+  box3(conc, mid, 9, WALL_Z - 22, len, 1.1, 8); box3(conc, mid, 10, WALL_Z - 18.2, len, .9, .3);
+  for (let X = X0; X < X1 + 20; X += 16) box3(conc, X, 4.3, WALL_Z - 22, 1.6, 8.6, 1.6);
+  for (let i = 0; i < 18; i++) halo(X0 + i * 9 + rr(0, 5), 10.1, WALL_Z - 18, i % 2 ? 0xff3a2a : 0xfff0d0, 1.6, .6, .7);
+  for (let X = X0; X < X1 + 20; X += 12) { halo(X, 11.8, WALL_Z - 19, 0xffb060, 1.8, 1.8, .55); box3(dark, X, 11, WALL_Z - 18.4, .1, 2, .1); }
+}
+
+// strings of coloured bulbs across the street fronts
+function bulbStrings(pal, y0){
+  const pts = [], colr = [], wire = [];
+  for (let X = -4; X < X1 - 14; X += 14) for (let i = 0; i <= 24; i++) { const k = i / 24, y = y0 - Math.sin(k * Math.PI) * 1.1, px = X + k * 14;
+    if (i > 0 && i < 24) { pts.push(px, y - .06, WALL_Z + 2.7); const cc = pal[i % pal.length]; colr.push(cc[0], cc[1], cc[2]); }
+    if (i < 24) { const k2 = (i + 1) / 24; wire.push(px, y, WALL_Z + 2.7, X + k2 * 14, y0 - Math.sin(k2 * Math.PI) * 1.1, WALL_Z + 2.7); } }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pts, 3)); g.setAttribute('color', new T.Float32BufferAttribute(colr, 3));
+  const p = new T.Points(g, new T.PointsMaterial({ size: .55, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); p.frustumCulled = false; world.add(p);
+  const wg = new T.BufferGeometry(); wg.setAttribute('position', new T.Float32BufferAttribute(wire, 3)); const wl = new T.LineSegments(wg, new T.LineBasicMaterial({ color: 0x0c0c12 })); wl.frustumCulled = false; world.add(wl);
+}
+function buildCopas(){
+  buildBuildings(); bulbStrings([[2.4, .6, 2], [.6, 2.2, 2.6], [2.4, 2, .6], [1.8, .8, 2.6]], 5.6);
+  // a second row of signs sticking out from the walls, higher up
+  for (let X = X0 + 6, i = 0; X < X1; X += rr(9, 14), i++) { if (Math.abs(X - DOOR_X) < 7) continue; const s = pick(TH.signs);
+    neonSign(s[0], s[1], X, rr(6.8, 8.4), rr(.7, .9), 3.2, { z: WALL_Z + .5 }); }
+}
+
+// the towers: glass curtain walls, lit lobbies, planters on a plaza
+function towerMat(w, h){
+  const [c, x] = cv(256, 512), [ce, e] = cv(256, 512); e.fillStyle = '#000'; e.fillRect(0, 0, 256, 512);
+  const cw = 256 / 8, ch = 512 / 12; x.fillStyle = pick(['#0e1624', '#121a28', '#0c141e']); x.fillRect(0, 0, 256, 512);
+  for (let r = 0; r < 12; r++) for (let q = 0; q < 8; q++) { const lit = R() < TH.lit, col = lit ? pick(['#cfe4ff', '#ffe2b0', '#a8c8ff', '#fff0d0']) : pick(['#16243a', '#1a2a44', '#122036']);
+    for (const k of lit ? [x, e] : [x]) { k.fillStyle = col; k.globalAlpha = lit ? rr(.55, 1) : 1; k.fillRect(q * cw + 2, r * ch + 3, cw - 4, ch - 8); k.globalAlpha = 1; }
+    if (!lit) { x.fillStyle = 'rgba(140,170,255,.08)'; x.fillRect(q * cw + 2, r * ch + 3, (cw - 4) * .5, ch - 8); } }
+  x.fillStyle = 'rgba(200,210,230,.35)'; for (let q = 0; q <= 8; q++) x.fillRect(q * cw - 1, 0, 2, 512); x.fillStyle = 'rgba(0,0,0,.6)'; for (let r = 0; r <= 12; r++) x.fillRect(0, r * ch - 3, 256, 5);
+  const m = tex(c), em = tex(ce); for (const t of [m, em]) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(w / 12, (h - 5) / 18); }
+  return new T.MeshStandardMaterial({ map: m, emissiveMap: em, emissive: 0xffffff, emissiveIntensity: .8, roughness: .15, metalness: .7 });
+}
+function buildTorres(){
+  const side = mat(0x0c1018, .4, .6), lobbyF = mat(0x2a2e36, .4, .6), gold = mat(0xc9a24a, .3, .9); let bx = X0, i = 0;
+  while (bx < X1) { const w = Math.round(rr(13, 20)), h = rr(30, 58), cx = bx + w / 2, near = Math.abs(cx - DOOR_X) < w / 2 + 4;
+    const b = new T.Mesh(new T.BoxGeometry(w, h, 14), [side, side, side, side, towerMat(w, h), side]); b.position.set(cx, h / 2 + 5, WALL_Z - 7.2); b.receiveShadow = true; world.add(b);
+    // the lobby: a lit glass box with the tower's name over the door
+    if (!near) { const d = painter(512, 128, w, 5); d.r(0, 0, w, 5, '#0a0c12'); d.grad(.3, .2, w - .6, 4.2, '#2a2620', '#0e0c0a'); for (let q = .8; q < w - .5; q += rr(2.5, 4)) { d.circ(q, 4, .12, '#ffe2b0', true); d.grad(q - .6, .2, 1.2, 3.6, 'rgba(255,226,176,.28)', 'rgba(0,0,0,0)', true); } d.r(.3, .2, w - .6, .5, '#3a3226'); for (let q = .3; q < w; q += 1.6) d.r(q, 0, .12, 5, '#0a0c12'); d.r(0, 4.4, w, .6, '#1a1e28');
+      const lb = new T.Mesh(new T.BoxGeometry(w - 1, 5, 4), [lobbyF, lobbyF, lobbyF, lobbyF, d.mat({ roughness: .15, metalness: .6, emissiveIntensity: .9 }), lobbyF]); lb.position.set(cx, 2.5, WALL_Z - 1.9); world.add(lb);
+      const s = TH.signs[i % TH.signs.length]; neonSign(s[0], s[1], cx, 5.9, .8, w - 3); box3(gold, cx, 5.05, WALL_Z + .12, w - 1, .1, .1); }
+    for (let k = 0; k < 3; k++) halo(cx + rr(-w / 3, w / 3), h + 5.4, WALL_Z - .2, 0xff2233, 1.2, 1.2, .6);
+    bx += w + rr(.5, 2); i++; }
+}
+function propsTorres(){
+  const stone = mat(0x6a6e78, .5, .2), bush = mat(0x1f4a34, .9), steel = mat(0x8a8e98, .25, .9);
+  for (let X = X0 + 4; X < X1; X += rr(6, 9)) { if (Math.abs(X - DOOR_X) < 5.5) continue; const z = WALL_Z + .9;
+    if (R() < .6) { box3(stone, X, .45, z, 2.4, .6, .9); sph3(bush, X - .5, .9, z, .55, .7); sph3(bush, X + .5, .92, z, .5, .7); }
+    else for (let k = 0; k < 3; k++) { cyl3(steel, X + k * .9, .55, z + .4, .1, .8); sph3(steel, X + k * .9, .96, z + .4, .1); } }
+}
+
+// how each new kind of street is put up, and what stands along it
+const KIND_BUILD = { puerto: buildPuerto, playa: buildPlaya, mercado: () => { buildBuildings(); buildStalls(); }, vias: buildVias, copas: buildCopas, torres: buildTorres };
+const KIND_PROPS = { puerto: propsPuerto, playa: propsPlaya, torres: propsTorres };
+
+/* ---------- the boss rooms of levels 5 to 10 ---------- */
+// Each one is a kind of local business, so a real sponsor can later lend it a name and a sign.
+const tubes = (X, xs, y, z, col, k) => { const m = new T.MeshBasicMaterial({ color: new T.Color(col).multiplyScalar(k || 1.6) }); for (const lx of xs) { box3(m, X + lx, y, z, 3, .05, .12).castShadow = false; halo(X + lx, y - .1, z + .05, col, 4.4, 1.2, .2); lightAt(X + lx, y - .7, z + 1, col, 1.05); } };
+const flashArt = (d, x0, y0, w, h) => { d.r(x0 - .05, y0 - .05, w + .1, h + .1, '#c9a24a'); d.r(x0, y0, w, h, '#efe6d0'); const cx = x0 + w / 2, cy = y0 + h / 2, k = pick([0, 1, 2, 3]), s = Math.min(w, h) * .3;
+  if (k === 0) { d.circ(cx - s * .5, cy + s * .3, s * .55, '#c2283a'); d.circ(cx + s * .5, cy + s * .3, s * .55, '#c2283a'); d.x.fillStyle = '#c2283a'; d.x.beginPath(); d.x.moveTo((cx - s * 1.05) * d.sx, d.Hp - (cy + s * .2) * d.sy); d.x.lineTo((cx + s * 1.05) * d.sx, d.Hp - (cy + s * .2) * d.sy); d.x.lineTo(cx * d.sx, d.Hp - (cy - s * 1.1) * d.sy); d.x.fill(); }
+  else if (k === 1) { d.r(cx - s * .08, cy - s, s * .16, s * 1.5, '#9aa0aa'); d.r(cx - s * .5, cy + s * .45, s, s * .14, '#c9a24a'); d.r(cx - s * .08, cy + s * .55, s * .16, s * .5, '#3a2a1a'); }
+  else if (k === 2) { d.circ(cx, cy, s * .9, '#1a1a1e'); d.circ(cx - s * .3, cy + s * .15, s * .2, '#efe6d0'); d.circ(cx + s * .3, cy + s * .15, s * .2, '#efe6d0'); d.r(cx - s * .3, cy - s * .55, s * .6, s * .12, '#efe6d0'); }
+  else { d.circ(cx, cy, s * .7, '#2a6aa8'); d.circ(cx + s * .55, cy + s * .3, s * .35, '#2a6aa8'); d.r(cx - s * 1.1, cy - s * .1, s * .8, s * .25, '#2a6aa8'); d.circ(cx + s * .7, cy + s * .35, s * .07, '#efe6d0'); } };
+
+Object.assign(ROOMS, {
+  lonja: { donde: 'la lonja', tile: 2, rough: .25, side: 0x2a4a52,
+    th: { bg: 0x081014, fog: [0x081014, 34, 90], hemi: [0xdff4ff, 0x1a2a30, .55], key: [0xeaf6ff, .55], fill: [0x5ac8ff, .2], rain: false,
+      env: ['#0a1418', '#2a4a5a', '#a8c8d8', '#1a3038', '#060a0c'], envGlow: [[1.6, 2.2, 2.6], [1.2, 1.8, 2.4], [2, 2.2, 2.4], [1.4, 2, 2.6]] },
+    front: { wall: '#2a4a5a', trim: '#e8e2d0', glow: '#bfe9ff', sign: ['LONJA', '#3df2ff'], awn: 0x2a6a8a, carpet: 0x1a3a4a },
+    items: [['caja', -10, 2.3, 'batido'], ['cuchillo', -3.5, -1.3], ['botella', 5, 2], ['caja', 10.5, -1.3, 'arma']],
+    floor(x){ x.fillStyle = '#5a666c'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = `rgba(${(i + j) % 2 ? '255,255,255,.05' : '0,0,0,.06'})`; x.fillRect(i * 128, j * 128, 128, 128); }
+      x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 3; for (let i = 0; i <= 512; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); }
+      for (let i = 0; i < 12; i++) { x.fillStyle = `rgba(20,40,50,${rr(.15, .35)})`; x.beginPath(); x.ellipse(R() * 512, R() * 512, rr(20, 70), rr(10, 30), R() * 3, 0, 6.3); x.fill(); } },
+    wall(d){ d.r(0, 0, 20, 14, '#6a8a92'); for (let xx = 0; xx < 20; xx += .3) for (let yy = 0; yy < 2.4; yy += .15) d.r(xx + .01, yy + .01, .28, .13, (Math.round(xx * 3) + Math.round(yy * 7)) % 2 ? '#e8eef0' : '#dce4e8');
+      d.r(0, 2.4, 20, .1, '#2a6a8a'); d.grad(0, 4.6, 20, 9.4, '#0c1418', '#6a8a92');
+      for (const [px, txt, col] of [[2, 'MERLUZA', '#1a3a8a'], [6.5, 'GAMBA ROJA', '#c2283a'], [11, 'DORADA', '#c9a24a'], [15.5, 'SEPIA', '#1a1a1e']]) { d.r(px, 2.8, 3.4, 1, '#16201c'); d.t(txt, px + 1.7, 3.45, .3, '#f4f0e0'); d.t(pick(['12,50 €/kg', '9,90 €/kg', '24 €/kg', '15 €/kg']), px + 1.7, 3.05, .22, col === '#1a1a1e' ? '#ffd24a' : '#ffd24a'); }
+      d.t('PESCADO FRESCO DEL PUERTO', 10, 4.25, .36, '#0c2a3a'); },
+    props(X){ const steel = mat(0xb8c0c8, .25, .9), ice = mat(0xeaf6ff, .15, .1), fish = mat(0xa8b8c8, .25, .8), red = mat(0xd84a3a, .5), blue = mat(0x2a6aa8, .6), z = RWALL + 1.1;
+      for (const cx of [-8, 0, 8]) { box3(steel, X + cx, .45, z, 5, .9, 1.1); box3(ice, X + cx, .93, z, 4.8, .08, 1); for (let i = 0; i < 16; i++) { const f = sph3(i % 4 ? fish : red, X + cx + rr(-2.2, 2.2), 1.02, z + rr(-.35, .35), .09, 1); f.scale.set(.32, .07, .09); f.rotation.y = rr(-.6, .6); } }
+      for (let i = 0; i < 4; i++) for (let k = 0; k < 3; k++) box3(blue, X - 15 + i * .8, .2 + k * .36, RWALL + .7, .7, .34, .5);
+      for (const hx of [-4, 4]) { cyl3(steel, X + hx, 3, z, .015, 1.8); cyl3(steel, X + hx, 2.05, z, .2, .1); cyl3(mat(0xf0ece0, .5), X + hx, 2.2, z, .14, .22); }
+      box3(mat(0x6a6e74, .5, .6), X + 14, .9, RWALL + .7, 2, 1.8, .9); plane3(board(1.6, .5, (x, W, H) => { x.fillStyle = '#0c0c10'; x.fillRect(0, 0, W, H); x.fillStyle = '#ff3a2a'; x.font = `${H * .6 | 0}px monospace`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('SUBASTA 07:30', W / 2, H / 2); }, 1), X + 14, 1.5, RWALL + 1.16, 1.6, .5);
+      tubes(X, [-10, -2, 6, 14], 4.6, RWALL + 2, 0xeaf6ff); neonSign('LONJA', '#3df2ff', X - 2, 5.3, .8, 4, { z: RWALL }); } },
+
+  chiringuito: { donde: 'el chiringuito', tile: 3, rough: .7, side: 0x7a5a3a,
+    th: { bg: 0x140c10, fog: [0x140c10, 34, 90], hemi: [0xffd0a0, 0x3a2418, .52], key: [0xffe0b0, .55], fill: [0x3df2ff, .18], rain: false,
+      env: ['#140c10', '#5a3a2a', '#ff9a5a', '#2a3a4a', '#0a0608'], envGlow: [[2.6, 1.8, 1], [2.4, 1.2, .8], [1, 2.2, 2.4], [2.6, 2, 1]] },
+    front: { wall: '#c9a46a', trim: '#2a8a8a', glow: '#ffd9a0', sign: ['CHIRINGUITO', '#ffc83a'], awn: 0x2a8a8a, carpet: 0xc8a87a, bulbs: true },
+    items: [['caja', -10, 2.3, 'batido'], ['botella', -4, -1.3], ['botella', 4, 2], ['bate', 9.5, -1.3]],
+    floor(x){ for (let r = 0; r < 8; r++) { x.fillStyle = `rgb(${190 + rr(-15, 15) | 0},${150 + rr(-15, 10) | 0},${100 + rr(-10, 10) | 0})`; x.fillRect(0, r * 64, 512, 62); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, r * 64 + 62, 512, 2); }
+      for (let i = 0; i < 2000; i++) { x.fillStyle = `rgba(230,210,170,${R() * .25})`; x.fillRect(R() * 512, R() * 512, 2, 2); } },
+    wall(d){ d.r(0, 0, 20, 14, '#8a6a42'); for (let xx = 0; xx < 20; xx += .18) d.r(xx, 0, .16, 6, pick(['#a8864e', '#9a7a46', '#b08e56'])); for (let xx = 0; xx < 20; xx += .18) for (let yy = .5; yy < 6; yy += .6) d.r(xx, yy, .16, .03, 'rgba(0,0,0,.25)');
+      d.grad(0, 5, 20, 9, '#0a0608', '#8a6a42');
+      for (const [px, col] of [[1, '#ff6a5a'], [2.1, '#2a8aa8'], [17.2, '#ffd24a'], [18.3, '#7dff9a']]) { d.x.fillStyle = col; d.x.beginPath(); d.x.ellipse((px + .45) * d.sx, d.Hp - 2.6 * d.sy, .38 * d.sx, 1.9 * d.sy, 0, 0, 6.3); d.x.fill(); d.r(px + .42, .8, .06, 3.6, 'rgba(255,255,255,.6)'); }
+      d.r(4.5, 2.6, 4, 1.6, '#2a8a8a'); d.t('MOJITOS', 6.5, 3.6, .45, '#ffd24a'); d.t('5 €', 6.5, 3, .4, '#f4f0e0');
+      d.r(11.5, 2.6, 4, 1.6, '#c2283a'); d.t('SARDINAS', 13.5, 3.6, .42, '#f4f0e0'); d.t('ESPETOS', 13.5, 3, .4, '#ffd24a'); },
+    props(X){ const bam = mat(0xb0905a, .7), top = mat(0x7a5232, .5), straw = mat(0xd8b46a, .95), z = RWALL + 1;
+      box3(bam, X - 2, .55, z, 10, 1.1, .8); box3(top, X - 2, 1.14, z + .05, 10.3, .08, 1); for (let xx = -6.8; xx < 3; xx += .35) cyl3(bam, X + xx, .55, z + .41, .07, 1.1);
+      for (let i = 0; i < 7; i++) stool(mat(0x5a3a22, .7), mat(0x2a8a8a, .6), X - 6 + i * 1.3, z + .8, .78);
+      for (let i = 0; i < 10; i++) cyl3(mat(pick([0x7dff9a, 0xffd24a, 0xff6a5a, 0xe8f4ff]), .1, .1), X - 6.5 + rr(0, 9), 1.28, z + rr(-.2, .2), .05, .2);
+      const roof = new T.Mesh(G('thatch', () => new T.ConeGeometry(1, .6, 10)), straw);
+      for (const tx of [9, 13.5]) { cyl3(top, X + tx, .38, z + .4, .05, .76); cyl3(top, X + tx, .78, z + .4, .55, .05); cyl3(bam, X + tx, 1.6, z + .4, .04, 2.2); const r = roof.clone(); r.scale.set(1.3, 1, 1.3); r.position.set(X + tx, 2.85, z + .4); r.castShadow = true; world.add(r); }
+      for (const px of [-13, 17]) palm(X + px, RWALL + .8, 3.6, px < 0 ? .6 : -.6);
+      bulbStringsRoom(X, [[2.4, 1.8, .8], [.8, 2.2, 2.4], [2.4, .9, .9]]);
+      neonSign('CHIRINGUITO', '#ffc83a', X - 2, 5, .9, 6, { z: RWALL }); } },
+
+  tattoo: { donde: 'el estudio de tatuajes', tile: 2, rough: .4, side: 0x2a0e14,
+    th: { bg: 0x0a0406, fog: [0x0a0406, 34, 90], hemi: [0xffb0c0, 0x1a0a10, .42], key: [0xffe0e0, .5], fill: [0xb96bff, .26], rain: false,
+      env: ['#0a0406', '#3a0c1a', '#c84a6a', '#2a0c3a', '#060203'], envGlow: [[2.6, .8, 1.2], [1.6, .8, 2.6], [2.6, 2, 1.6], [1, .6, 2.4]] },
+    front: { wall: '#1a1a1e', trim: '#b02a3a', glow: '#ff7a9a', sign: ['TATTOO', '#b96bff'], awn: 0x1a1a1e, carpet: 0x5a0e1a },
+    items: [['caja', -10, 2.3, 'batido'], ['cuchillo', -4, -1.3], ['caja', 10, -1.3, 'arma'], ['botella', 5, 2]],
+    floor(x){ for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = (i + j) % 2 ? '#e8e2d8' : '#141418'; x.fillRect(i * 64, j * 64, 64, 64); } for (let i = 0; i < 600; i++) { x.fillStyle = `rgba(0,0,0,${R() * .15})`; x.fillRect(R() * 512, R() * 512, rr(4, 30), 1); } },
+    wall(d){ d.r(0, 0, 20, 14, '#5a1420'); d.grad(0, 4.6, 20, 9.4, '#080204', '#5a1420'); d.r(0, 0, 20, 1.1, '#141418'); d.r(0, 1.1, 20, .06, '#c9a24a');
+      for (let i = 0; i < 22; i++) flashArt(d, .4 + (i % 11) * 1.75, 1.6 + (i / 11 | 0) * 1.45, 1.35, 1.2);
+      d.r(8.6, 4.55, 2.8, .5, '#141418'); d.t('INK & STEEL', 10, 4.8, .3, '#ffd24a'); },
+    props(X){ const black = mat(0x16161a, .35, .3), chrome = mat(0xb8bcc6, .25, .9), red = mat(0x8a1626, .5), z = RWALL + 1.3;
+      for (const cx of [-9, -2, 5]) { box3(black, X + cx, .55, z, 2, .18, .7); box3(black, X + cx - 1.1, .85, z, .7, .16, .7, [0, 0, .5]); for (const s of [-.8, .8]) cyl3(chrome, X + cx + s, .25, z, .06, .5); cyl3(chrome, X + cx, .03, z, .3, .05);
+        cyl3(chrome, X + cx + 1.4, .9, z - .3, .02, 1.8); box3(chrome, X + cx + 1.1, 1.82, z - .3, .6, .03, .03); const lampG = halo(X + cx + .8, 1.75, z - .2, 0xfff0e0, .8, .8, .6); lightAt(X + cx + .8, 1.6, z + .5, 0xfff0e0, .7);
+        box3(red, X + cx + 1.4, .55, z + .5, .45, .9, .4); }
+      box3(black, X + 12.5, .9, RWALL + .5, 3, 1.8, .6); for (let i = 0; i < 12; i++) cyl3(mat(pick([0xc2283a, 0x2a6aa8, 0x1c7a2a, 0xe8b21c, 0x111111, 0x7a3aa8]), .3), X + 11.3 + (i % 6) * .45, 1.92, RWALL + .5 + (i / 6 | 0) * .2 - .1, .06, .16);
+      box3(mat(0x9fb0bf, .1, .9), X - 14, 1.6, RWALL + .12, 1.4, 2.2, .04);
+      neonSign('TATTOO', '#b96bff', X - 2.5, 5.2, .9, 4.4, { z: RWALL }); neonSign('PIERCING', '#ff3d7f', X + 9, 4.4, .55, 3, { z: RWALL });
+      for (const lx of [-8, 0, 8]) hangLamp(X + lx, 3, RWALL + 2, 0xff7a9a, 1.1, 0x1a1a1e); } },
+
+  taller: { donde: 'el taller', tile: 4, rough: .8, side: 0x2a2c32,
+    th: { bg: 0x0a0a0c, fog: [0x0a0a0c, 34, 90], hemi: [0xffe0b0, 0x1a1a1e, .5], key: [0xfff0d8, .55], fill: [0xff9a3a, .2], rain: false,
+      env: ['#0a0a0c', '#2a2a30', '#c8a060', '#1a1a20', '#050506'], envGlow: [[2.6, 2, 1.2], [2.4, 1.6, .8], [1.4, 1.8, 2.4], [2.4, 2.2, 1.6]] },
+    front: { wall: '#3a3d44', trim: '#e8b21c', glow: '#ffd27a', sign: ['TALLER', '#ff9a3a'], awn: 0x2a2c34, carpet: 0x1a1a1e },
+    items: [['caja', -10, 2.3, 'batido'], ['tubo', -4, -1.3], ['tubo', 4.5, 2], ['caja', 10, -1.3, 'arma']],
+    floor(x){ x.fillStyle = '#4a4a4e'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 4000; i++) { const v = 50 + R() * 50 | 0; x.fillStyle = `rgba(${v},${v},${v},.3)`; x.fillRect(R() * 512, R() * 512, 2, 2); }
+      for (let i = 0; i < 8; i++) { x.fillStyle = `rgba(10,8,6,${rr(.25, .5)})`; x.beginPath(); x.ellipse(R() * 512, R() * 512, rr(14, 50), rr(8, 24), R() * 3, 0, 6.3); x.fill(); }
+      x.fillStyle = 'rgba(232,178,28,.8)'; x.fillRect(0, 250, 512, 10); },
+    wall(d){ d.r(0, 0, 20, 14, '#4a4e56'); for (let xx = 0; xx < 20; xx += .25) d.r(xx, 0, .08, 14, 'rgba(0,0,0,.18)'); d.grad(0, 5.4, 20, 8.6, '#08080a', '#4a4e56'); d.r(0, 0, 20, 1, '#2a2c32'); for (let xx = 0; xx < 20; xx += .8) d.r(xx, .5, .4, .4, xx % 1.6 < .8 ? '#e8b21c' : '#16161a');
+      for (const bx of [1, 13]) { d.r(bx, 1.5, 5, 2.4, '#8a7a5a'); for (let q = bx + .15; q < bx + 5; q += .2) for (let yy = 1.65; yy < 3.8; yy += .2) d.circ(q, yy, .025, 'rgba(0,0,0,.4)');
+        for (let k = 0; k < 9; k++) { const tx = bx + .4 + k * .52, col = pick(['#c2283a', '#9aa0aa', '#2a5aa8', '#16161a']); d.r(tx, 2.2, .08, rr(.8, 1.3), col); d.r(tx - .1, 3.2, .28, .14, col); } }
+      d.r(7.5, 1.6, 4.5, 1.8, '#16161a'); d.t('NEUMÁTICOS', 9.75, 2.85, .38, '#ffd24a'); d.t('CHAPA · PINTURA', 9.75, 2.2, .3, '#f4f0e0'); },
+    props(X){ const red = mat(0xb8221c, .4, .5), steel = mat(0x6a6e74, .4, .7), tyre = G('tyre', () => new T.MeshStandardMaterial({ color: 0x0c0c0e, roughness: .9 })), yel = mat(0xe8b21c, .5, .4), z = RWALL + 1.1;
+      // a car up on the lift
+      for (const s of [-2.2, 2.2]) box3(steel, X + 4 + s, 1.2, RWALL + 2.2, .3, 2.4, .3); for (const s of [-1.4, 1.4]) box3(yel, X + 4, 1.42, RWALL + 2.2 + s * .5, 4.6, .1, .3);
+      buildCar(X + 4, 0x2a5aa8, 'sedan', { y: 1.5, z: RWALL + 2.2 });
+      for (let k = 0; k < 3; k++) { box3(red, X - 6 + k * .9, .55, RWALL + .7, .8, 1.1, .6); for (let d0 = 0; d0 < 4; d0++) box3(mat(0x16161a, .5), X - 6 + k * .9, .25 + d0 * .24, RWALL + 1.01, .6, .02, .02); }
+      for (const tx of [-13, -11.8, 12.5]) for (let i = 0, n = 3 + (R() * 3 | 0); i < n; i++) { const t = new T.Mesh(G('wheel', () => new T.CylinderGeometry(.34, .34, .24, 14)), tyre); t.position.set(X + tx, .14 + i * .25, RWALL + .8); t.castShadow = true; world.add(t); }
+      for (const dx of [14.5, 15.2]) cyl3(pick([mat(0x1f4a8a, .5, .4), mat(0xa8282f, .5, .4)]), X + dx, .45, RWALL + .8, .3, .9);
+      box3(mat(0x5a4a3a, .8), X - 2, .9, RWALL + .6, 3, .1, .9); for (const s of [-1.3, 1.3]) box3(steel, X - 2 + s, .45, RWALL + .6, .1, .9, .8);
+      for (const lx of [-9, -1, 7, 14]) hangLamp(X + lx, 3.2, RWALL + 2.4, 0xfff0d8, 1.25, 0x2a2c32);
+      neonSign('TALLER', '#ff9a3a', X - 9, 4.6, .8, 4, { z: RWALL }); } },
+
+  disco: { donde: 'la discoteca', tile: 4, rough: .2, side: 0x0a0612, floorGlow: .7,
+    th: { bg: 0x040208, fog: [0x040208, 34, 90], hemi: [0x8a5aff, 0x0a0410, .32], key: [0xd0b0ff, .4], fill: [0xff3dd0, .3], rain: false,
+      env: ['#040208', '#2a0a4a', '#ff3dd0', '#0a2a4a', '#020104'], envGlow: [[2.8, .5, 2.4], [.5, 2.4, 2.8], [2.8, 2.2, .5], [1.6, .5, 2.8]] },
+    front: { wall: '#0e0a16', trim: '#ff3d7f', glow: '#ff5ad0', sign: ['DISCOTECA', '#ff3dd0'], awn: 0x1a0a2a, carpet: 0x5a0a3a, bulbs: true },
+    items: [['caja', -10, 2.3, 'batido'], ['botella', -4, -1.3], ['bate', 4.5, 2], ['caja', 10, -1.3, 'batido']],
+    floor(x){ const cols = ['#ff3dd0', '#3df2ff', '#ffd24a', '#b96bff', '#7dff6a', '#ff7a3d']; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = '#0a0a10'; x.fillRect(i * 128, j * 128, 128, 128);
+      const g = x.createRadialGradient(i * 128 + 64, j * 128 + 64, 6, i * 128 + 64, j * 128 + 64, 70); const c = pick(cols); g.addColorStop(0, c); g.addColorStop(1, 'rgba(10,10,16,.6)'); x.fillStyle = g; x.globalAlpha = rr(.35, .8); x.fillRect(i * 128 + 6, j * 128 + 6, 116, 116); x.globalAlpha = 1; } },
+    wall(d){ d.r(0, 0, 20, 14, '#0c0812'); for (let xx = 0; xx < 20; xx += .5) d.r(xx, 0, .02, 6, 'rgba(255,255,255,.04)');
+      for (const [px, col] of [[1, '#ff3dd0'], [6, '#3df2ff'], [11, '#b96bff'], [16, '#ffd24a']]) for (let k = 0; k < 3; k++) d.g(px, 1.2 + k * 1.3, 3, .06, col);
+      d.r(7.4, 1.2, 5.2, 2, '#16121e'); d.t('DJ', 10, 2.6, .6, '#3df2ff', true); d.t('SÁBADO', 10, 1.75, .35, '#ff3dd0', true); },
+    props(X){ const black = mat(0x0c0c10, .4, .3), mesh = mat(0x16161c, .9), z = RWALL + 1;
+      for (const sx of [-15, -13.6, 13.6, 15]) { box3(black, X + sx, .9, RWALL + .7, 1.2, 1.8, .9); for (const yy of [.5, 1.3]) { const c = cyl3(mesh, X + sx, yy, RWALL + 1.16, .38, .02, [Math.PI / 2, 0, 0]); } box3(black, X + sx, 2.4, RWALL + .7, 1.2, 1.1, .9); cyl3(mesh, X + sx, 2.4, RWALL + 1.16, .3, .02, [Math.PI / 2, 0, 0]); }
+      box3(black, X, .6, z, 4, 1.2, 1); box3(mat(0x2a2a34, .4, .6), X, 1.24, z, 3.6, .08, .8); for (const s of [-.9, .9]) cyl3(mat(0x111114, .3, .5), X + s, 1.3, z, .3, .04);
+      plane3(new T.MeshBasicMaterial({ color: new T.Color(1.6, .4, 1.4) }), X, .6, z + .51, 3.8, .08);
+      const ball = new T.Mesh(G('mball', () => new T.IcosahedronGeometry(.6, 1)), new T.MeshStandardMaterial({ color: 0xd8dce4, roughness: .05, metalness: 1, flatShading: true })); ball.position.set(X, 4.3, RWALL + 3); world.add(ball); cyl3(mat(0x111114, .5), X, 5.4, RWALL + 3, .01, 1.6);
+      for (let i = 0; i < 24; i++) halo(X + rr(-14, 14), rr(1, 5.5), RWALL + .1, pick([0xffffff, 0xff3dd0, 0x3df2ff]), .25, .25, .8);
+      const laser = c => new T.MeshBasicMaterial({ color: new T.Color(c).multiplyScalar(2), transparent: true, opacity: .45, depthWrite: false, blending: T.AdditiveBlending });
+      for (let i = 0; i < 8; i++) { const a = -1 + i * .28, l = box3(laser(pick([0x3df2ff, 0xff3dd0, 0x7dff6a])), X + Math.sin(a) * 3, 2.6, RWALL + .5 + Math.cos(a) * .2, .02, 6, .02, [0, 0, a]); l.castShadow = false; }
+      for (const [lx, c] of [[-9, 0xff3dd0], [-3, 0x3df2ff], [3, 0xb96bff], [9, 0xffd24a]]) lightAt(X + lx, 3.4, RWALL + 3, c, 1.3);
+      neonSign('DISCO', '#ff3dd0', X, 5.2, 1, 5, { z: RWALL }); } },
+
+  atico: { donde: 'el ático de la Torre Roja', tile: 4, rough: .12, side: 0x1a1414,
+    th: { bg: 0x04060c, fog: [0x04060c, 34, 90], hemi: [0xb0c8ff, 0x1a0e0a, .44], key: [0xffe8d0, .5], fill: [0xff3d5a, .22], rain: false,
+      env: ['#04060c', '#1a2a4a', '#ffd9a0', '#3a0c14', '#020306'], envGlow: [[2.6, 2.2, 1.6], [1.2, 1.6, 2.6], [2.6, .8, .8], [2.2, 2, 1.8]] },
+    front: { wall: '#1c2230', trim: '#c9a24a', glow: '#ffe2b0', sign: ['TORRE ROJA', '#ff3d5a'], awn: 0x8a1020, carpet: 0x8a1020 },
+    items: [['caja', -10, 2.3, 'batido'], ['caja', 10, -1.3, 'batido'], ['bate', -4, -1.3], ['tubo', 4.5, 2]],
+    floor(x){ x.fillStyle = '#1a1a1e'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#24242a' : '#141418'; x.fillRect(i * 128, j * 128, 128, 128); }
+      x.strokeStyle = 'rgba(220,220,230,.18)'; x.lineWidth = 1.5; for (let i = 0; i < 30; i++) { let px = R() * 512, py = R() * 512; x.beginPath(); x.moveTo(px, py); for (let k = 0; k < 5; k++) { px += rr(-40, 40); py += rr(-40, 40); x.lineTo(px, py); } x.stroke(); }
+      x.strokeStyle = 'rgba(201,162,74,.6)'; x.lineWidth = 2; for (let i = 0; i <= 512; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); } },
+    wall(d){ d.r(0, 0, 20, 14, '#2a1a14');
+      // the whole wall is glass: the city at night below
+      d.r(0, .6, 20, 6, '#04060e'); d.grad(0, .6, 20, 6, '#0e1e3a', '#04060e');
+      for (let px = 0; px < 20;) { const w = rr(.6, 1.6), h = rr(1, 4.6); d.r(px, .6, w, h, '#070a14'); for (let yy = .8; yy < .6 + h - .1; yy += .16) for (let xx = px + .06; xx < px + w - .08; xx += .14) if (R() < .3) d.g(xx, yy, .06, .08, pick(['#ffd9a0', '#cfe4ff', '#ffe9b0'])); px += w + rr(0, .3); }
+      for (let xx = 0; xx <= 20; xx += 2.5) d.r(xx - .05, .6, .1, 6, '#1a1210'); d.r(0, .55, 20, .1, '#c9a24a'); d.r(0, 0, 20, .55, '#3a2418'); d.grad(0, 6.6, 20, 7.4, '#020203', '#2a1a14'); },
+    props(X){ const wood = mat(0x3a1a10, .35), gold = mat(0xc9a24a, .3, .9), leather = mat(0x6a1018, .45), black = mat(0x0c0c10, .3, .4), z = RWALL + 1.2;
+      box3(wood, X + 2, .45, z, 4.4, .9, 1.4); box3(black, X + 2, .93, z, 4.6, .06, 1.6); box3(gold, X + 2, .6, z + .71, 4.2, .04, .02); box3(black, X + 1.2, 1.2, z - .2, .7, .45, .05); halo(X + 1.2, 1.2, z - .17, 0x9fd8ff, .7, .5, .4);
+      box3(leather, X + 2, .55, z - .9, .8, .1, .7); box3(leather, X + 2, 1.15, z - 1.2, .8, 1.1, .14);
+      for (const sx of [-9, -6.4]) { box3(leather, X + sx, .3, RWALL + .9, 2.2, .45, .9); box3(leather, X + sx, .7, RWALL + .5, 2.2, .7, .2); }
+      box3(black, X - 7.7, .25, RWALL + 2.2, 1.6, .06, .8); for (const px of [-14, 13]) { cyl3(gold, X + px, .6, RWALL + .7, .25, 1.2); sph3(mat(0x8a1020, .2, .4), X + px, 1.6, RWALL + .7, .35, 1.3); }
+      box3(mat(0x8a1020, .9), X, .006, RWALL + 3, 14, .012, 3);
+      for (const lx of [-8, 0, 8]) { cyl3(gold, X + lx, 5.4, RWALL + 2.5, .015, 1.8); const r = new T.Mesh(G('chand', () => new T.TorusGeometry(.7, .05, 8, 24)), gold); r.rotation.x = Math.PI / 2; r.position.set(X + lx, 4.5, RWALL + 2.5); world.add(r); halo(X + lx, 4.4, RWALL + 2.6, 0xffd9a0, 3, 2, .45); lightAt(X + lx, 3.8, RWALL + 3.2, 0xffd9a0, 1.2); }
+      neonSign('ROJO', '#ff3d5a', X + 2, 5.6, .8, 3, { z: RWALL + .1 }); } },
+});
+// bulb strings across a room, under the ceiling
+function bulbStringsRoom(X, pal){ const pts = [], colr = []; for (let k = 0; k < 3; k++) for (let i = 0; i <= 30; i++) { const u = i / 30, px = X - 15 + u * 30; pts.push(px, 4.4 - Math.sin(u * Math.PI * 3) * .3 - k * .1, RWALL + 1.5 + k * 1.2); const c = pal[i % pal.length]; colr.push(c[0], c[1], c[2]); }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pts, 3)); g.setAttribute('color', new T.Float32BufferAttribute(colr, 3));
+  const p = new T.Points(g, new T.PointsMaterial({ size: .5, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); p.frustumCulled = false; world.add(p);
+  for (let k = 0; k < 4; k++) lightAt(X - 12 + k * 8, 3.8, RWALL + 2.5, 0xffc080, .9); }
 
 function applyTheme(){
   scene.background.set(TH.bg); scene.fog.color.set(TH.fog[0]); scene.fog.near = TH.fog[1]; scene.fog.far = TH.fog[2];
@@ -1138,12 +1511,12 @@ function clearWorld(){
 function buildWorld(ix){
   clearWorld(); worldIx = ix; envKey = 's' + ix; TH = THEMES[LEVELS[ix].theme]; R = mulberry(TH.seed); applyTheme();
   buildSky(); buildGround();
-  if (TH.kind === 'poligono') buildWarehouses(); else if (TH.kind === 'desguace') buildYard(); else buildBuildings();
+  if (KIND_BUILD[TH.kind]) KIND_BUILD[TH.kind](); else if (TH.kind === 'poligono') buildWarehouses(); else if (TH.kind === 'desguace') buildYard(); else buildBuildings();
   try { buildEnv(); } catch (e) {}
   for (let X = -4; X < X1; X += TH.kind === 'desguace' ? 28 : 14) buildLamp(X);
   if (TH.kind === 'paseo') buildPaseo();
   const at = [8, 34.5, 60, 97], cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
-  at.forEach((X, i) => TH.prop === 'car' ? buildCar(X, cols[i], i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
+  at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
   buildVenue(DOOR_X, LEVELS[ix].room); buildRoom(LEVELS[ix].room);
 }
@@ -1196,6 +1569,12 @@ STYLES.tinta = Object.assign({}, STYLES.hero, { top: 0x16161a, pants: 0x84866f, 
 STYLES.lanza = Object.assign({}, STYLES.thug, { top: 0xd8b21c, pants: 0x343846, s: .98 });
 STYLES.atleta = Object.assign({}, STYLES.thug, { top: 0xc98f6b, pants: 0x16161c, head: 'bald', sleeve: 0, s: 1.02, bulk: 1.06 });
 STYLES.capo3 = Object.assign({}, STYLES.thug, { top: 0xeceaf0, pants: 0x1a1a20, hair: 0x4ab0ff, s: 1.12, bulk: 1.02 });
+STYLES.capo4 = Object.assign({}, STYLES.brute, { s: 1.25, bulk: 1.3, top: 0xe4e4de, pants: 0x1e2a3c, boots: 0xe6be1e });
+STYLES.capo5 = Object.assign({}, STYLES.thug, { s: 1.12, bulk: 1.1, top: 0xc98f6b, pants: 0xdc2828, head: 'bald', sleeve: 0 });
+STYLES.capo6 = Object.assign({}, STYLES.punk, { s: 1.02, bulk: .9, top: 0x16161a, pants: 0x16161a, hair: 0xa8182a });
+STYLES.capo7 = Object.assign({}, STYLES.brute, { s: 1.35, bulk: 1.4, top: 0x28468c, pants: 0x28468c });
+STYLES.capo8 = Object.assign({}, STYLES.brute, { s: 1.5, bulk: 1.55, top: 0x141418, pants: 0x141418, head: 'shades' });
+STYLES.capo9 = Object.assign({}, STYLES.boss, { s: 1.42, top: 0x96101e, pants: 0x96101e });
 STYLES.capo1 = Object.assign({}, STYLES.punk, { s: 1.1, bulk: 1, hair: 0xb96bff, top: 0x3a1d4a, pants: 0x18181e });
 STYLES.capo2 = Object.assign({}, STYLES.brute, { s: 1.42, bulk: 1.5, top: 0xb9825e, pants: 0x16161c });
 const THUG_TOPS = [0x6a45b0, 0x2f6fa8, 0x8a3a2a, 0x3f7a4a, 0x7a6a2a];
@@ -1330,6 +1709,14 @@ LOOKS.capo3 = Object.assign({}, LOOKS.thug, { tone: [1, .93, .9], hairColor: [.3
   z: Object.assign(paint([236, 234, 240], [1, 2, 3, 4, 5, 6, 16]), paint([26, 26, 32], [9, 10, 11, 15]), paint([12, 12, 14], [12, 13, 14]), paint([226, 103, 138], [7, 18])) });
 LOOKS.capo2 = Object.assign({}, LOOKS.brute, { tone: [.9, .78, .7], bulk: 1.3, tintZones: null,   // the gym's boss: bare torso, black shorts, blue wrist wraps
   z: Object.assign(paint([22, 22, 26], [9, 10, 15]), paint([16, 16, 18], [12, 13, 14]), paint([63, 143, 230], [7, 18])) });
+// the bosses of levels 5 to 10: the fishmonger in his apron and yellow boots, the lifeguard, the tattooist, the mechanic in overalls, the doorman in black, and Don Rojo in his red suit
+LOOKS.capo4 = Object.assign({}, LOOKS.brute, { tone: [.86, .74, .66], bulk: 1.22, tintZones: null, z: Object.assign(paint([228, 228, 222], [1, 2, 16]), paint([30, 42, 62], [9, 10, 11, 15]), paint([230, 190, 30], [12, 13, 14])) });
+LOOKS.capo5 = Object.assign({}, LOOKS.thug, { tone: [.82, .64, .52], gait: 'Jog', hairColor: [1.7, 1.35, .7], bulk: 1.12, tintZones: null, z: Object.assign(paint([220, 40, 40], [9, 10, 15]), paint([240, 200, 40], [7, 18])) });
+LOOKS.capo6 = Object.assign({}, LOOKS.punk, { hairColor: [1.6, .2, .3], hairGlow: 0x3a0610, tintZones: null, ink: { zones: [3, 4, 5, 6, 11], col: [30, 34, 44] },
+  z: Object.assign(paint([20, 20, 24], [2, 8]), paint([22, 22, 26], [9, 10, 15]), paint([12, 12, 14], [12, 13, 14]), paint([168, 24, 42], [7, 18])) });
+LOOKS.capo7 = Object.assign({}, LOOKS.brute, { tone: [.82, .7, .62], bulk: 1.3, tintZones: null, z: Object.assign(paint([40, 70, 140], [1, 2, 3, 16, 9, 10, 11, 15]), paint([16, 16, 18], [12, 13, 14]), paint([60, 50, 40], [8, 17])) });
+LOOKS.capo8 = Object.assign({}, LOOKS.brute, { tone: [.7, .58, .5], bulk: 1.38, shades: true, tintZones: null, z: Object.assign(paint([18, 18, 22], [1, 2, 3, 4, 5, 6, 16, 9, 10, 11, 15]), paint([8, 8, 10], [12, 13, 14]), paint([200, 200, 205], [7])) });
+LOOKS.capo9 = Object.assign({}, LOOKS.boss, { tintZones: null, z: Object.assign(paint([150, 16, 30], [2, 3, 4, 5, 6, 16, 10, 11, 15]), paint([236, 234, 230], [1]), paint([201, 162, 74], [7, 18, 9]), paint([8, 8, 10], [12, 13, 14]), paint([150, 16, 34], [8, 17])) });
 LOOKS.atleta = Object.assign({}, LOOKS.thug, { tone: [.98, .88, .82], gait: 'Jog', hairColor: [.2, .16, .13], bulk: 1.04, tintZones: [9, 10, 15],
   z: Object.assign(paint([24, 24, 30], [9, 10, 15]), paint([228, 228, 232], [12]), paint([30, 30, 36], [13, 14]), paint([20, 20, 24], [7, 18])) });
 
@@ -1529,6 +1916,8 @@ const EATK = {
 };
 EATK.lanza = EATK.thug;
 EATK.atleta = { dur: .62, hit: .28, hold: .12, wind: POSE.eWind, pose: POSE.cross, dmg: 8, range: 1.5, kb: 3, stun: .28, m: [['Punch_Cross', 0, .1, .2], ['Punch_Cross', .1, .267, .28], ['Punch_Cross', .267, 1, .62]] };
+EATK.capo4 = Object.assign({}, EATK.capo3, { dmg: 11 }); EATK.capo5 = Object.assign({}, EATK.punk, { dmg: 11, range: 1.8, kb: 4.2 }); EATK.capo6 = Object.assign({}, EATK.capo1, { dmg: 11 });
+EATK.capo7 = Object.assign({}, EATK.brute, { dmg: 17 }); EATK.capo8 = Object.assign({}, EATK.capo2, { dmg: 21 }); EATK.capo9 = Object.assign({}, EATK.boss, { dmg: 15 });
 const ATL_SHORTS = [0x16161c, 0x2a5ac2, 0xa8282f, 0x4a4f58, 0x1c7a4a];
 const DASH = { dmg: 18, kb: 8, launch: 6.5, down: true };
 const EDEF = {
@@ -1540,6 +1929,12 @@ const EDEF = {
   capo1: { hp: 180, speed: 3.4, pts: 2500, cd: [.35, .8], armor: 4, jefe: true, dash: true, nombre: 'La Navaja', arma: 'cuchillo' },
   capo3: { hp: 215, speed: 3.1, pts: 3000, cd: [.38, .85], armor: 4, jefe: true, dash: true, nombre: 'El Tijeras', arma: 'cuchillo' },
   capo2: { hp: 260, speed: 1.9, pts: 3500, cd: [.7, 1.3], armor: 5, jefe: true, dash: true, nombre: 'El Mulo' },
+  capo4: { hp: 280, speed: 2.6, pts: 4000, cd: [.45, .95], armor: 4, jefe: true, dash: true, nombre: 'El Pescadero', arma: 'cuchillo' },
+  capo5: { hp: 300, speed: 3.5, pts: 4500, cd: [.35, .8], armor: 4, jefe: true, dash: true, nombre: 'El Socorrista' },
+  capo6: { hp: 310, speed: 3.6, pts: 5000, cd: [.32, .75], armor: 4, jefe: true, dash: true, nombre: 'La Aguja', arma: 'cuchillo' },
+  capo7: { hp: 360, speed: 2.2, pts: 5500, cd: [.6, 1.2], armor: 5, jefe: true, dash: true, nombre: 'El Grasas', arma: 'tubo' },
+  capo8: { hp: 420, speed: 1.8, pts: 6000, cd: [.7, 1.3], armor: 6, jefe: true, dash: true, nombre: 'El Portero' },
+  capo9: { hp: 480, speed: 2.6, pts: 10000, cd: [.45, .95], armor: 5, jefe: true, dash: true, nombre: 'Don Rojo', arma: 'bate' },
   boss:  { hp: 300, speed: 2.25, pts: 5000, cd: [.6, 1.2], armor: 4, jefe: true, dash: true, nombre: 'El Chatarrero', arma: 'tubo' },
 };
 const kindOf = s => s.split(':')[0];
@@ -1651,6 +2046,36 @@ const LEVELS = [
     { x: 42, title: 'La prensa', waves: [['brute', 'brute', 'thug:bate', 'lanza'], ['thug', 'punk:cuchillo', 'thug:tubo', 'punk', 'brute']] },
     { x: 68, title: 'Montaña de chatarra', waves: [['brute', 'brute', 'punk', 'punk:cuchillo', 'lanza'], ['thug:bate', 'thug:tubo', 'punk', 'brute', 'punk', 'lanza']] },
     { x: ROOM_X, room: true, boss: true, title: 'Casino del Chatarrero', waves: [['thug:bate', 'punk:cuchillo', 'punk'], ['boss', 'lanza']] } ] },
+  { name: 'El puerto', theme: 4, room: 'lonja', armas: ['tubo', 'cuchillo', 'botella'], hp: 1.55, dmg: 1.45, spd: 1.15, eng: 3, zones: [
+    { x: 16, title: 'Los contenedores', waves: [['thug', 'thug:tubo', 'punk', 'lanza'], ['brute', 'punk:cuchillo', 'thug', 'thug']] },
+    { x: 42, title: 'La grúa', waves: [['punk', 'punk', 'thug:bate', 'lanza', 'thug'], ['brute', 'brute', 'punk:cuchillo', 'lanza']] },
+    { x: 68, title: 'El muelle', waves: [['thug:tubo', 'thug', 'punk', 'punk', 'lanza'], ['brute', 'atleta', 'thug:bate', 'punk:cuchillo', 'thug']] },
+    { x: ROOM_X, room: true, boss: true, title: 'La lonja', waves: [['thug:cuchillo', 'punk', 'thug', 'lanza'], ['capo4', 'punk:cuchillo', 'thug:tubo']] } ] },
+  { name: 'El paseo marítimo', theme: 5, room: 'chiringuito', armas: ['botella', 'bate', 'cuchillo'], hp: 1.62, dmg: 1.5, spd: 1.17, eng: 3, zones: [
+    { x: 16, title: 'La arena', waves: [['atleta', 'atleta', 'punk', 'lanza'], ['thug:bate', 'atleta', 'punk', 'punk:cuchillo']] },
+    { x: 42, title: 'Las palmeras', waves: [['punk', 'punk', 'atleta', 'lanza', 'lanza'], ['brute', 'atleta:tubo', 'thug', 'punk']] },
+    { x: 68, title: 'El espigón', waves: [['atleta', 'atleta', 'thug:bate', 'punk', 'lanza'], ['brute', 'brute', 'atleta', 'punk:cuchillo', 'lanza']] },
+    { x: ROOM_X, room: true, boss: true, title: 'Chiringuito Las Olas', waves: [['atleta', 'atleta:botella', 'punk', 'lanza'], ['capo5', 'atleta', 'atleta']] } ] },
+  { name: 'El mercado', theme: 6, room: 'tattoo', armas: ['cuchillo', 'botella', 'bate'], hp: 1.7, dmg: 1.56, spd: 1.19, eng: 3, zones: [
+    { x: 16, title: 'Los puestos', waves: [['thug', 'punk:cuchillo', 'thug:bate', 'punk', 'lanza'], ['brute', 'thug', 'punk', 'punk:cuchillo']] },
+    { x: 42, title: 'La plaza de abastos', waves: [['punk', 'punk', 'punk:cuchillo', 'lanza', 'thug'], ['brute', 'brute', 'thug:bate', 'lanza', 'atleta']] },
+    { x: 68, title: 'Los callejones', waves: [['thug:tubo', 'punk', 'punk:cuchillo', 'atleta', 'lanza', 'thug'], ['brute', 'brute', 'punk', 'punk:cuchillo', 'lanza']] },
+    { x: ROOM_X, room: true, boss: true, title: 'Estudio Aguja Negra', waves: [['punk:cuchillo', 'punk', 'punk', 'lanza'], ['capo6', 'punk:cuchillo', 'punk', 'lanza']] } ] },
+  { name: 'Las vías', theme: 7, room: 'taller', armas: ['tubo', 'bate'], hp: 1.78, dmg: 1.62, spd: 1.21, eng: 3, zones: [
+    { x: 16, title: 'La verja del tren', waves: [['thug:tubo', 'thug', 'punk', 'brute', 'lanza'], ['punk:cuchillo', 'punk', 'thug:bate', 'atleta', 'lanza']] },
+    { x: 42, title: 'Los vagones', waves: [['brute', 'brute', 'thug', 'punk', 'lanza'], ['thug:tubo', 'thug:bate', 'punk:cuchillo', 'atleta', 'brute']] },
+    { x: 68, title: 'Bajo el puente', waves: [['brute', 'thug:tubo', 'punk', 'punk', 'lanza', 'lanza'], ['brute', 'brute', 'atleta', 'punk:cuchillo', 'thug:bate']] },
+    { x: ROOM_X, room: true, boss: true, title: 'Taller El Grasas', waves: [['thug:tubo', 'thug:tubo', 'brute', 'lanza'], ['capo7', 'thug:tubo', 'punk', 'lanza']] } ] },
+  { name: 'La zona de copas', theme: 8, room: 'disco', armas: ['botella', 'bate', 'cuchillo'], hp: 1.86, dmg: 1.68, spd: 1.23, eng: 3, zones: [
+    { x: 16, title: 'Las terrazas', waves: [['punk', 'punk', 'thug:botella', 'lanza', 'atleta'], ['brute', 'thug:bate', 'punk:cuchillo', 'punk', 'lanza']] },
+    { x: 42, title: 'La cola', waves: [['brute', 'brute', 'thug', 'thug:botella', 'lanza'], ['atleta', 'atleta', 'punk:cuchillo', 'punk', 'brute', 'lanza']] },
+    { x: 68, title: 'La puerta de atrás', waves: [['thug:bate', 'thug:tubo', 'punk', 'punk', 'lanza', 'lanza'], ['brute', 'brute', 'brute', 'punk:cuchillo', 'atleta']] },
+    { x: ROOM_X, room: true, boss: true, title: 'Discoteca Ritmo', waves: [['brute', 'brute', 'punk:cuchillo', 'lanza'], ['capo8', 'brute', 'punk', 'lanza']] } ] },
+  { name: 'Las torres', theme: 9, room: 'atico', armas: ['bate', 'tubo', 'cuchillo'], hp: 1.95, dmg: 1.75, spd: 1.25, eng: 3, zones: [
+    { x: 16, title: 'La plaza', waves: [['thug:bate', 'thug', 'punk:cuchillo', 'atleta', 'lanza'], ['brute', 'brute', 'punk', 'thug:tubo', 'lanza']] },
+    { x: 42, title: 'El vestíbulo', waves: [['atleta', 'atleta', 'punk:cuchillo', 'punk', 'lanza', 'lanza'], ['brute', 'brute', 'thug:bate', 'thug:tubo', 'punk']] },
+    { x: 68, title: 'El aparcamiento', waves: [['brute', 'brute', 'atleta', 'punk:cuchillo', 'lanza', 'thug:bate'], ['brute', 'brute', 'brute', 'punk', 'punk:cuchillo', 'lanza']] },
+    { x: ROOM_X, room: true, boss: true, title: 'Ático de la Torre Roja', waves: [['capo1', 'capo3', 'lanza'], ['capo9', 'brute', 'lanza', 'lanza']] } ] },
 ];
 const CRATES = [[25.5, -1.5, 'arma'], [30, 1.9, 'batido'], [53.5, -1.2, 'batido'], [57.5, 2.1, 'arma'], [75, 1.5, 'arma'], [78.5, -1.6, 'batido']];
 // how hard the gang hits back: the first one is roughly the game as it was before
@@ -2050,7 +2475,7 @@ function renderSelect(){
       </button>${s1 ? '<em class="tagp t1">1P</em>' : ''}${s2 ? '<em class="tagp t2">2P</em>' : ''}
       ${wantTwo && !lock ? `<button type="button" class="pick2" data-k="${k}" data-p="1" aria-pressed="${s2}">Elegir 2P</button>` : ''}</div>`; }).join('');
   $('#selMode1').setAttribute('aria-pressed', !wantTwo); $('#selMode2').setAttribute('aria-pressed', wantTwo);
-  $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>Nivel ${i + 1}</button>`).join('');
+  $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" title="${l.name}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>${i + 1}</button>`).join(''); $('#selLvName').textContent = LEVELS[startLevel].name;
   $('#selDiff').innerHTML = DIFFS.map((d, i) => `<button type="button" data-d="${i}" aria-pressed="${i === diffIx}">${d.name}</button>`).join('');
   const padHint = padN ? 'Mando: ◀ ▶ luchador · ▲ ▼ nivel · L1 R1 dificultad · △ 1 o 2 jugadores · ✕ empezar.' + (wantTwo && padN < 2 ? ' Con un solo mando, el mando lo lleva el 2P.' : '') : '';
   $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD, J golpe, K patada, L especial, espacio salto. 2P: flechas, coma golpe, punto patada, guion especial, Mayús derecha salto (o 1 2 3 0 del numérico). También con dos mandos.')
@@ -2103,8 +2528,8 @@ function endGame(won, nw){
   mode = 'over'; hideAll(); ui.end.hidden = false; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing');
   salon.perdida = !won;
   if (SALON) { $('#btnAgain').hidden = true; $('#btnChange').hidden = true; const c = $('#endCoin'); c.hidden = false; c.textContent = won ? 'Echa otra moneda para volver a empezar.' : 'Echa otra moneda para continuar donde has caído.'; avisar({ tipo: 'casa-fin', puntos: score, gano: !!won }); }
-  $('#endEyebrow').textContent = won ? 'Barrio liberado' : 'Fin de la partida · Nivel ' + (levelIx + 1);
-  $('#endTitle').textContent = won ? 'El Chatarrero ha caído' : 'Te han tumbado';
+  $('#endEyebrow').textContent = won ? 'La ciudad es libre' : 'Fin de la partida · Nivel ' + (levelIx + 1);
+  $('#endTitle').textContent = won ? 'Don Rojo ha caído' : 'Te han tumbado';
   $('#stScore').textContent = score; $('#stTime').textContent = fmtTime(playT); $('#stCombo').textContent = bestCombo;
   listUnlocks($('#endUnlocks'), nw || []); if (nw && nw.length) sfx('unlock');
   $('#btnAgain').textContent = won ? 'Jugar otra vez' : 'Reintentar el nivel'; if (!SALON) $('#btnAgain').focus({ preventScroll: true });
