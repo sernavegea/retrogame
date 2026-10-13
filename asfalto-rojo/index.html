@@ -78,7 +78,8 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 #inSkip{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(10% + 10px);pointer-events:auto;padding:6px 14px;font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(10,8,18,.7);box-shadow:0 0 0 1px var(--mute)}
 #storyCap{position:absolute;left:0;right:0;bottom:22px;width:min(86%,720px);margin:0 auto;box-sizing:border-box;padding:8px 14px;text-align:center;font-family:var(--f-ui);font-style:italic;font-weight:700;font-size:clamp(15px,2vw,20px);line-height:1.25;color:#f1ecff;background:rgba(8,6,16,.72);border-left:4px solid var(--hot);pointer-events:none;animation:slide .3s ease-out}
 body:not(.playing) #storyCap{display:none}
-.touch #storyCap{bottom:auto;top:96px}
+.touch #storyCap{bottom:10px;left:150px;right:230px;width:auto;font-size:14px;padding:6px 10px}
+@media (max-width:600px){.touch #storyCap{left:8px;right:8px;bottom:6px;top:auto;font-size:13px}}
 .story{max-width:46ch;font-style:italic;color:var(--paper)}
 .score{right:16px;top:50px;align-items:flex-end;gap:0}
 .score span{font-size:13px;color:var(--mute);letter-spacing:.14em;white-space:nowrap}
@@ -228,10 +229,9 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
   background:rgba(11,10,20,.5);box-shadow:inset 0 0 0 3px currentColor}
 .pb.on{background:currentColor}
 .pb.on span{color:var(--ink)}
-#bA{right:0;bottom:0;width:90px;height:90px;color:var(--hot);font-size:18px}
-#bK{right:100px;bottom:2px;width:80px;height:80px;color:#ff9a3a;font-size:14px}
-#bJ{right:8px;bottom:100px;width:72px;height:72px;color:var(--cool)}
-#bS{right:92px;bottom:92px;width:64px;height:64px;color:var(--gold);font-size:13px}
+#bA{right:0;bottom:0;width:92px;height:92px;color:var(--hot);font-size:18px}
+#bJ{right:104px;bottom:6px;color:var(--cool)}
+#bS{right:34px;bottom:100px;width:66px;height:66px;color:var(--gold);font-size:13px}
 .pb span{color:var(--paper)}
 @media (orientation:portrait){
   .touch #view{flex:0 0 auto;height:min(58%,92vw)}
@@ -301,7 +301,6 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div id="btns">
       <button class="pb" id="bS" type="button" tabindex="-1"><span>Esp</span></button>
       <button class="pb" id="bJ" type="button" tabindex="-1"><span>Salto</span></button>
-      <button class="pb" id="bK" type="button" tabindex="-1"><span>Patada</span></button>
       <button class="pb" id="bA" type="button" tabindex="-1"><span>Golpe</span></button>
     </div>
   </div>
@@ -317,8 +316,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <dl class="keys">
         <dt>Moverse</dt><dd><span class="k"><kbd>WASD</kbd> o flechas.</span><span class="t">Joystick de la izquierda.</span></dd>
         <dt>Golpe</dt><dd><span class="k"><kbd>J</kbd> o <kbd>Z</kbd>.</span><span class="t">Botón rojo.</span> Tres seguidos acaban en gancho.</dd>
-        <dt>Patada</dt><dd><span class="k"><kbd>K</kbd> o <kbd>X</kbd>.</span><span class="t">Botón naranja.</span> Mézclala con el golpe: cada orden es un combo distinto.</dd>
-        <dt>Salto</dt><dd><span class="k">Espacio, <kbd>I</kbd> o <kbd>V</kbd>.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
+        <dt>Salto</dt><dd><span class="k">Espacio, <kbd>K</kbd> o <kbd>V</kbd>.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
         <dt>Especial</dt><dd><span class="k"><kbd>L</kbd> o <kbd>C</kbd>.</span><span class="t">Botón amarillo.</span> Molinete que golpea a los dos lados y gasta la barra azul. Al superar niveles ganas golpes nuevos.</dd>
       </dl>
       <div class="opts">
@@ -629,7 +627,7 @@ function buildBuildings(){
     const b = new T.Mesh(new T.BoxGeometry(w, h, 6), [side, side, roofM, roofM, facade(w, h), side]);
     b.position.set(bx + w / 2, h / 2, WALL_Z - 3); b.receiveShadow = true; world.add(b);
     const nm = names[i % names.length]; const sy = low ? rr(3.75, Math.max(3.8, h - 1)) : rr(3.9, 5.7);
-    if (Math.abs(bx + w / 2 - DOOR_X) > 7) neonSign(nm[0], nm[1], bx + w / 2 + rr(-.4, .4), sy, rr(.85, 1.15), w - .8);
+    if (Math.abs(bx + w / 2 - DOOR_X) > 7 && !sponsorAt(bx + w / 2, w / 2)) neonSign(nm[0], nm[1], bx + w / 2 + rr(-.4, .4), sy, rr(.85, 1.15), w - .8);
     if (low && R() < .6) { const tank = new T.Mesh(G('tank', () => new T.CylinderGeometry(.7, .7, 1.3, 10)), side); tank.position.set(bx + w * rr(.3, .7), h + .9, WALL_Z - 2.2); world.add(tank); }
     bx += w + (R() < .3 ? rr(1.3, 1.9) : 0); i++;
   }
@@ -721,7 +719,7 @@ function buildProps(){
       else { const b = new T.Mesh(G('bin', () => new T.CylinderGeometry(.3, .25, .85, 12)), binM); b.position.set(X, .58, z); b.castShadow = true; world.add(b); } }
     return; }
   for (let X = X0 + 3; X < X1; X += rr(4.5, 9)) {
-    const k = R(), z = WALL_Z + rr(.45, .9); if (Math.abs(X - DOOR_X) < 4.4) continue;
+    const k = R(), z = WALL_Z + rr(.45, .9); if (Math.abs(X - DOOR_X) < 4.4 || sponsorAt(X, 1)) continue;
     if (k < .4) { const b = new T.Mesh(G('bin', () => new T.CylinderGeometry(.3, .25, .85, 12)), binM); b.position.set(X, .58, z); b.castShadow = true; world.add(b); }
     else if (k < .7) { for (let i = 0, n = 1 + (R() * 3 | 0); i < n; i++) { const s = rr(.4, .65); const b = new T.Mesh(G('pbox', () => new T.BoxGeometry(1, 1, 1)), boxM); b.scale.setScalar(s); b.position.set(X + rr(-.5, .5), .16 + s / 2 + (i === 2 ? .5 : 0), z + rr(-.1, .2)); b.rotation.y = rr(-.5, .5); b.castShadow = true; world.add(b); } }
     else { const b = new T.Mesh(G('dump', () => new T.BoxGeometry(1.9, 1.15, .95)), dumpM); b.position.set(X, .74, z); b.castShadow = true; world.add(b); const l = new T.Mesh(G('dlid', () => new T.BoxGeometry(1.95, .07, 1)), G('lampMat', () => 0)); l.position.set(X, 1.35, z); world.add(l); }
@@ -1517,6 +1515,69 @@ function bulbStringsRoom(X, pal){ const pts = [], colr = []; for (let k = 0; k <
   const p = new T.Points(g, new T.PointsMaterial({ size: .5, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); p.frustumCulled = false; world.add(p);
   for (let k = 0; k < 4; k++) lightAt(X - 12 + k * 8, 3.8, RWALL + 2.5, 0xffc080, .9); }
 
+/* ---------- real shop fronts along the streets (sponsors) ----------
+   SPONSORS[level] lists the fronts drawn in that street: x is the centre, w the width; buildings behind keep their place,
+   but no neon sign, bin or parked car is put in front of a sponsor's window. */
+function stxt(d, s, X, Y, size, fill, o){
+  o = o || {}; const k = d.x; k.save(); k.translate(X * d.sx, d.Hp - Y * d.sy); if (o.skew) k.transform(1, 0, o.skew, 1, 0, 0); if (o.sy) k.scale(1, o.sy);
+  k.font = `${o.it ? 'italic ' : ''}${o.w || 700} ${Math.round(size * d.sy)}px ${o.f || "'Barlow Condensed','Arial Narrow',sans-serif"}`; k.textAlign = o.al || 'center'; k.textBaseline = 'middle';
+  if (o.ls) { try { k.letterSpacing = Math.round(o.ls * d.sx) + 'px'; } catch (_) {} }
+  if (o.max) { const mw = k.measureText(s).width; if (mw > o.max * d.sx) k.scale(o.max * d.sx / mw, 1); }
+  if (o.sh) { k.fillStyle = o.sh; k.fillText(s, .03 * d.sx, .03 * d.sy); } k.fillStyle = fill; k.fillText(s, 0, 0);
+  if (o.glow) { d.e.save(); d.e.setTransform(k.getTransform()); d.e.font = k.font; d.e.textAlign = k.textAlign; d.e.textBaseline = 'middle'; d.e.fillStyle = fill; d.e.globalAlpha = o.glow; d.e.fillText(s, 0, 0); d.e.restore(); }
+  k.restore();
+}
+function dosmaresLogo(d, cx, cy, s, ink, gold){   // the white lettering with a gold mountain range under it
+  stxt(d, 'DOSMARES', cx, cy + .2 * s, .62 * s, ink, { w: 500, ls: .05 * s, sy: 1.05, glow: .55, max: 4.7 * s, f: "'Futura','Century Gothic','Avenir Next','Barlow Condensed',sans-serif" });
+  stxt(d, 'Fotografía & Vídeo', cx + .55 * s, cy - .27 * s, .3 * s, gold, { w: 500, it: true, ls: .015 * s, glow: .45 });
+  const k = d.x, X = v => (cx + v * s) * d.sx, Y = v => d.Hp - (cy + v * s) * d.sy; k.fillStyle = gold; k.beginPath(); k.moveTo(X(-1.55), Y(-.5));
+  for (const [a, b] of [[-1.3, -.36], [-1.16, -.42], [-.98, -.22], [-.88, -.3], [-.7, -.12], [-.52, -.32], [-.36, -.38], [-.2, -.5]]) k.lineTo(X(a), Y(b)); k.closePath(); k.fill();
+  k.fillRect(X(-1.55), Y(-.5), (1.55 + 1.6) * s * d.sx, .025 * s * d.sy);
+}
+function buildDimFront(X){
+  const w = 10, h = 6.6, d = painter(1024, 676, w, h), band = [3.35, .95];
+  // brick above, a pale render wall at the left edge
+  d.r(0, 0, w, h, '#8e5442'); for (let y = 4.3, r = 0; y < h; y += .14, r++) for (let bx = (r % 2) * .13; bx < w; bx += .26) { d.r(bx, y, .245, .12, pick(['#9a5c48', '#8a4e3e', '#a3654e', '#94584a'])); }
+  d.r(0, 4.3, .5, h - 4.3, '#d9a882');
+  // ground floor: aluminium frames, glass with the lit shop behind
+  d.r(0, 0, w, 3.35, '#2a2c30'); d.r(0, 0, w, .12, '#9aa0a6');
+  const glass = (x0, x1) => { d.grad(x0, .2, x1 - x0, 3.05, '#3a3a44', '#16161c'); d.grad(x0 + .1, .2, x1 - x0 - .2, 2.4, '#9a7c58', '#2a2018'); d.e.globalAlpha = .3; d.e.fillStyle = '#a08060'; d.e.fillRect((x0 + .1) * d.sx, d.Hp - 2.6 * d.sy, (x1 - x0 - .2) * d.sx, 2.4 * d.sy); d.e.globalAlpha = 1; };
+  glass(.55, 4.2); glass(4.45, 5.55); glass(5.75, 9.7);
+  for (const fx of [.45, 4.2, 4.35, 5.55, 5.65, 9.7]) d.r(fx, .12, .1, 3.2, '#b6bcc2'); d.r(.45, 3.25, 9.35, .1, '#b6bcc2'); d.r(4.35, 2.55, 1.3, .07, '#b6bcc2');
+  // inside: counters, a bench, the postcard stand, a door handle
+  d.r(6.4, .2, 2.6, .85, '#8a6a48'); d.r(6.5, 1.05, 2.4, .05, '#c8b898'); d.r(1, .2, 1.7, .5, '#6a5038'); d.r(4.62, .95, .04, .6, '#202024');
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) d.g(9.05 + j * .28, .5 + i * .38, .24, .32, pick(['#d8604a', '#4a8ac8', '#e8c040', '#6ab060', '#e8e0d0']));
+  // the two posters in the windows
+  d.r(1.65, 1.15, 1.25, 1.55, '#0c0c14'); d.frame(1.68, 1.18, 1.19, 1.49, .05, '#3df2ff'); d.g(1.68, 1.18, 1.19, .04, '#ff3d7f');
+  stxt(d, 'DIMPRESIÓN', 2.27, 2.4, .2, '#f4f0ff', { w: 800 }); stxt(d, 'IMPRIMIMOS', 2.27, 2.05, .15, '#9fe8ff', { w: 700 }); stxt(d, 'LO QUE SEA', 2.27, 1.85, .15, '#9fe8ff', { w: 700 }); stxt(d, 'AQUÍ', 2.27, 1.45, .3, '#ff4a7a', { w: 800, glow: .9 });
+  d.r(6.5, 1.35, 1.45, 1.3, '#16121e'); d.frame(6.53, 1.38, 1.39, 1.24, .06, '#3dff7a');
+  stxt(d, 'DOSMARES', 7.22, 2.32, .2, '#f4f0e2', { w: 600 }); stxt(d, 'FOTOGRAFÍA · VÍDEO', 7.22, 2.03, .11, '#f0e090', { w: 700 }); stxt(d, 'AQUÍ', 7.22, 1.62, .3, '#ff6a8a', { w: 800, glow: .9 });
+  // the sign band: DIMPRESIÓN on cream, DOSMARES on grey
+  const [by, bh] = band; d.r(.3, by - .05, 9.5, bh + .1, '#1a1a1e');
+  d.grad(.35, by, 4.3, bh, '#f2ecd2', '#d8d0b0'); d.e.globalAlpha = .3; d.e.fillStyle = '#c8c0a0'; d.e.fillRect(.35 * d.sx, d.Hp - (by + bh) * d.sy, 4.3 * d.sx, bh * d.sy); d.e.globalAlpha = 1; d.r(4.65, by, 5.1, bh, '#5e6058'); d.grad(4.65, by, 5.1, bh, 'rgba(120,122,112,.9)', 'rgba(78,80,72,.9)');
+  d.e.globalAlpha = .12; d.e.fillStyle = '#80807a'; d.e.fillRect(4.65 * d.sx, d.Hp - (by + bh) * d.sy, 5.1 * d.sx, bh * d.sy); d.e.globalAlpha = 1;
+  stxt(d, 'DIMPRESIÓN', 2.5, by + bh / 2, .78, '#3c4c64', { w: 800, sy: 1.1, sh: 'rgba(0,0,0,.25)', ls: .02, max: 3.9 });
+  dosmaresLogo(d, 7.25, by + bh / 2 + .02, 1, '#f6f2e6', '#f2e29a');
+  const g = d.x.createLinearGradient(0, d.Hp - .9 * d.sy, 0, d.Hp); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); d.x.fillStyle = g; d.x.fillRect(0, d.Hp - .9 * d.sy, 1024, .9 * d.sy);
+  const side = mat(0x2a1c18, .9), b = new T.Mesh(new T.BoxGeometry(w, h, 4), [side, side, side, side, d.mat({ roughness: .7, emissiveIntensity: .8 }), side]); b.position.set(X, h / 2, WALL_Z - 1.86); b.receiveShadow = true; world.add(b);
+  // the balcony slab over the right half, the frame round the sign, and the two hanging signs
+  box3(mat(0x8a8478, .9), X + 2.6, 4.75, WALL_Z + .55, 5.6, .22, 1.1); for (const fy of [3.29, 4.36]) box3(mat(0x1a1a1e, .5, .4), X - .1, fy, WALL_Z + .2, 9.6, .07, .12);
+  const dosBox = board(.9, 1, (x, W, H) => { x.fillStyle = '#1a1a1e'; x.fillRect(0, 0, W, H); const g2 = x.createLinearGradient(0, 0, 0, H); g2.addColorStop(0, '#d8dad4'); g2.addColorStop(1, '#a8aaa2'); x.fillStyle = g2; x.fillRect(W * .06, H * .05, W * .88, H * .9);
+    x.fillStyle = '#f8f6ee'; x.font = `500 ${H * .14 | 0}px 'Futura','Century Gothic','Barlow Condensed',sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.strokeStyle = 'rgba(40,40,40,.35)'; x.lineWidth = 3; x.strokeText('DOSMARES', W / 2, H * .44); x.fillText('DOSMARES', W / 2, H * .44);
+    x.fillStyle = '#e8d070'; x.font = `italic 500 ${H * .07 | 0}px 'Barlow Condensed',sans-serif`; x.fillText('Fotografía & Vídeo', W * .56, H * .56); x.beginPath(); x.moveTo(W * .15, H * .6); x.lineTo(W * .26, H * .53); x.lineTo(W * .32, H * .57); x.lineTo(W * .4, H * .51); x.lineTo(W * .5, H * .6); x.fill(); }, .5);
+  const dimBoard = board(.75, 1, (x, W, H) => { x.fillStyle = '#efe6d0'; x.fillRect(0, 0, W, H); x.strokeStyle = '#3a3a40'; x.lineWidth = 6; x.strokeRect(3, 3, W - 6, H - 6); x.fillStyle = '#26324a'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = `800 ${H * .13 | 0}px 'Barlow Condensed',sans-serif`; x.fillText('DIMPRESION', W / 2, H * .13); x.font = `500 ${H * .072 | 0}px Georgia,serif`;
+    ['Fotocopias', 'Librería', 'Papelería', 'Foto-regalos', 'Cartelería', 'Impresión publicitaria'].forEach((s, i) => x.fillText(s, W / 2, H * (.3 + i * .11))); }, .35);
+  for (const [m, px, sw, sh] of [[dosBox, X + 4.6, .95, 1.05], [dimBoard, X - 4.55, .8, 1.05]]) { const s = new T.Group(); s.position.set(px, 3.65, WALL_Z + .62); s.rotation.y = px > X ? -.75 : .75;
+    const c = new T.Mesh(UB(), mat(0x1a1a1e, .5, .3)); c.scale.set(sw + .06, sh + .06, .1); s.add(c); for (const zz of [.056, -.056]) { const f = new T.Mesh(UP(), m); f.scale.set(sw, sh, 1); f.position.z = zz; if (zz < 0) f.rotation.y = Math.PI; s.add(f); } world.add(s);
+    box3(mat(0x1a1a1e, .5, .5), px + (px > X ? -.18 : .18), 4.2, WALL_Z + .3, .05, .05, .7); }
+  lightAt(X, 3.2, WALL_Z + 1.8, 0xffe4b8, .9);
+  halo(X, 3.9, WALL_Z + .3, 0xfff2d0, 9, 1.4, .08);
+  const pool = plane3(new T.MeshBasicMaterial({ map: glowTex, color: 0xffe0b0, transparent: true, opacity: .12, depthWrite: false, blending: T.AdditiveBlending }), X, .02, WALL_Z + 3.2, 10, 4.5, [-Math.PI / 2, 0, 0]);
+}
+const SPONSORS = { 0: [{ x: 4.4, w: 10, build: buildDimFront, nombre: 'Dimpresión · Dosmares' }] };
+const sponsorAt = (x, pad) => (SPONSORS[worldIx] || []).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
+
 function applyTheme(){
   scene.background.set(TH.bg); scene.fog.color.set(TH.fog[0]); scene.fog.near = TH.fog[1]; scene.fog.far = TH.fog[2];
   hemi.color.set(TH.hemi[0]); hemi.groundColor.set(TH.hemi[1]); hemi.intensity = TH.hemi[2]; key.color.set(TH.key[0]); key.intensity = TH.key[1]; fill.color.set(TH.fill[0]); fill.intensity = TH.fill[1];
@@ -1536,7 +1597,8 @@ function buildWorld(ix){
   try { buildEnv(); } catch (e) {}
   for (let X = -4; X < X1; X += TH.kind === 'desguace' ? 28 : 14) buildLamp(X);
   if (TH.kind === 'paseo') buildPaseo();
-  const at = [8, 34.5, 60, 97], cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
+  for (const s of SPONSORS[ix] || []) s.build(s.x);
+  const at = [8, 34.5, 60, 97].map(X => sponsorAt(X, 2.5) ? X + 9 : X), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
   at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
   buildVenue(DOOR_X, LEVELS[ix].room); buildRoom(LEVELS[ix].room);
@@ -2307,11 +2369,10 @@ function updatePlayer(p, dt){
       if (I.take('spc')) special(p);
       else if (I.take('jump')) { p.state = 'jump'; p.t = 0; p.air = false; p.vy = 8.8; p.y = .02; p.avx = I.x * spd * .98; p.avz = I.y * 2.2; p.set = new Set(); sfx('jump'); }
       else if (I.take('atk')) { p.holdT = 0; p.chain = null; startAtk(p, 'P'); }
-      else if (I.take('kick')) { p.chain = null; startAtk(p, 'K'); }
       else if (progress >= 2 && I.held.atk && !p.arma) { p.holdT += dt; if (p.holdT > .3) { p.state = 'charge'; p.t = 0; } } else p.holdT = 0;
       break; }
     case 'attack': { const a = p.atk;
-      if (I.take('atk')) p.buf = 'P'; else if (I.take('kick')) p.buf = 'K';
+      if (I.take('atk')) p.buf = 'P';
       if (a.yaw) p.spin = keyAt(a.yaw, p.t); else if (a.twist) p.spin = a.twist * Math.sin(Math.PI * Math.min(1, p.t / (a.dur * .85)));
       if (!p.done && p.t >= a.hit) { p.done = true; p.conn = strike(p, a); if (p.conn) { if (p.seq === 'W') wear(p); if (a.fin && a.nm) moveName(a.nm); } else if (!a.fin) sfx('whoosh'); }
       if (p.done && I.q.spc > 0) { I.take('spc'); if (special(p)) break; }
@@ -2480,7 +2541,7 @@ function news(from, to){ const out = [];
   for (const m of MOVES) if (m.need > from && m.need <= to) out.push(['Nuevo golpe', m.name, m.how]);
   for (const k of CHAR_ORDER) { const c = CHARS[k]; if (c.need > from && c.need <= to) out.push(['Nuevo luchador', c.name, c.tag + '. Elígelo en tu próxima partida.']); }
   return out; }
-function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada lateral', 'Golpe, Golpe, Patada. Manda lejos al rival.'], ['Barrido', 'Golpe, Patada. Lo tumba en el sitio.'], ['Patada giratoria', 'Patada, Patada, Patada. La tercera gira de espaldas y tumba.'], ['Gancho al cielo', 'Patada, Golpe. Lo levanta para rematarlo en el aire.'], ['Patada voladora', 'Golpe o Patada en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
+function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada voladora', 'Golpe en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
   for (const m of MOVES) rows.push([m.name, progress >= m.need ? m.how : 'Bloqueado. Supera el nivel ' + m.need + '.']);
   el.innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join(''); }
 
@@ -2499,7 +2560,7 @@ function renderSelect(){
   $('#selLevel').innerHTML = LEVELS.map((l, i) => `<button type="button" data-l="${i}" title="${l.name}" aria-pressed="${i === startLevel}"${i > progress ? ' disabled' : ''}>${i + 1}</button>`).join(''); $('#selLvName').textContent = LEVELS[startLevel].name;
   $('#selDiff').innerHTML = DIFFS.map((d, i) => `<button type="button" data-d="${i}" aria-pressed="${i === diffIx}">${d.name}</button>`).join('');
   const padHint = padN ? 'Mando: ◀ ▶ luchador · ▲ ▼ nivel · L1 R1 dificultad · △ 1 o 2 jugadores · ✕ empezar.' + (wantTwo && padN < 2 ? ' Con un solo mando, el mando lo lleva el 2P.' : '') : '';
-  $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD, J golpe, K patada, L especial, espacio salto. 2P: flechas, coma golpe, punto patada, guion especial, Mayús derecha salto (o 1 2 3 0 del numérico). También con dos mandos.')
+  $('#selHint').textContent = padHint || (wantTwo ? (coarse ? (SALON ? 'En el móvil, al 2P lo lleva un amigo a distancia: empieza la partida, pulsa «Dobles» y pásale el código. También vale un mando.' : 'En pantalla táctil solo se maneja el 1P: el 2P necesita un teclado o un mando.') : '1P: WASD, J golpe, L especial, espacio o K salto. 2P: flechas, coma golpe, guion especial, punto o Mayús derecha salto (o 1 3 0 del numérico). También con dos mandos.')
     : SALON ? 'Dobles a distancia: empieza la partida y pulsa «Dobles» (o «Invitar a dobles», debajo de la máquina). Tu amigo entra con el código.' : coarse ? '' : 'Un segundo jugador puede entrar en plena partida pulsando dos veces la tecla , o con otro mando.');
 }
 function openSelect(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'select'; backdrop(); renderSelect(); ui.select.hidden = false; $('#btnFight').focus({ preventScroll: true }); }
@@ -2562,9 +2623,9 @@ function toTitle(){ document.body.classList.remove('playing'); hideAll(); ui.hud
 
 /* ---------- input ---------- */
 const keys = {}, remote = [{}, {}];
-const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyK: 'kick', KeyX: 'kick', Space: 'jump', KeyI: 'jump', KeyV: 'jump', KeyL: 'spc', KeyC: 'spc' };
-const KP1 = { KeyJ: 'atk', KeyK: 'kick', Space: 'jump', KeyI: 'jump', KeyL: 'spc' };
-const KP2 = { Numpad1: 'atk', Numpad2: 'kick', Numpad3: 'spc', Numpad0: 'jump', NumpadEnter: 'jump', Comma: 'atk', Period: 'kick', Slash: 'spc', Minus: 'spc', ShiftRight: 'jump' };
+const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyX: 'atk', Space: 'jump', KeyK: 'jump', KeyI: 'jump', KeyV: 'jump', KeyL: 'spc', KeyC: 'spc' };
+const KP1 = { KeyJ: 'atk', KeyK: 'jump', Space: 'jump', KeyI: 'jump', KeyL: 'spc' };
+const KP2 = { Numpad1: 'atk', Numpad2: 'jump', Numpad3: 'spc', Numpad0: 'jump', NumpadEnter: 'jump', Comma: 'atk', Period: 'jump', Slash: 'spc', Minus: 'spc', ShiftRight: 'jump' };
 function pressFor(who, k, sure){
   if (mode !== 'play') return;
   if (who === 1 && players.length < 2) { if (sure || time - joinAsk < 3) joinP2(); else { joinAsk = time; banner('¿Entra el 2P?', 'Pulsa otra vez para unirte'); } return; }
@@ -2591,14 +2652,14 @@ stickEl.addEventListener('pointerdown', e => { e.preventDefault(); stick.id = e.
 stickEl.addEventListener('pointermove', e => { if (e.pointerId === stick.id) stickMove(e); });
 const stickEnd = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; } };
 stickEl.addEventListener('pointerup', stickEnd); stickEl.addEventListener('pointercancel', stickEnd);
-for (const [id, k] of [['bA', 'atk'], ['bK', 'kick'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
+for (const [id, k] of [['bA', 'atk'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
   b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); if (mode === 'play') inputs[0].press(k); });
   const up = () => { b.classList.remove('on'); inputs[0].release(k); }; b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   b.addEventListener('contextmenu', e => e.preventDefault()); }
 // A guest of the arcade page plays as 2P: the host forwards their pad as (player, button, pressed)
 function entrada(j, b, v){
   const who = j ? 1 : 0, on = !!v, dir = { 4: 'u', 5: 'd', 6: 'l', 7: 'r' }[b]; if (dir) { remote[who][dir] = on; return; }
-  const k = { 1: 'atk', 9: 'kick', 0: 'jump', 8: 'spc' }[b];
+  const k = { 1: 'atk', 0: 'jump', 8: 'spc' }[b];
   if (who === 1 && players.length < 2) { if (on && (k || b === 3)) pressFor(1, k || 'atk', true); return; }
   if (!k) return; if (on) pressFor(who, k, true); else inputs[who].release(k);
 }
@@ -2625,7 +2686,7 @@ function pollInputs(){
   pads.forEach((g, i) => { const who = twoP && pads.length < 2 ? 1 : Math.min(i, 1), pv = padPrev[g.index] || (padPrev[g.index] = {}), b = n => !!(g.buttons[n] && g.buttons[n].pressed);
     let gx = Math.abs(g.axes[0]) > .25 ? g.axes[0] : 0, gy = Math.abs(g.axes[1]) > .25 ? g.axes[1] : 0;
     if (b(14)) gx = -1; if (b(15)) gx = 1; if (b(12)) gy = -1; if (b(13)) gy = 1; ax[who][0] += gx; ax[who][1] += gy;
-    for (const [bi, k] of [[2, 'atk'], [3, 'kick'], [0, 'jump'], [1, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
+    for (const [bi, k] of [[2, 'atk'], [0, 'jump'], [1, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
     // menus with the pad: one new press or one new push of the stick is one step
     const dx = gx < -.5 ? -1 : gx > .5 ? 1 : 0, dy = gy < -.5 ? -1 : gy > .5 ? 1 : 0, ex = dx !== pv.dx ? dx : 0, ey = dy !== pv.dy ? dy : 0, hit = {}; pv.dx = dx; pv.dy = dy;
     for (const n of [0, 1, 2, 3, 4, 5, 9]) { const d = b(n); hit[n] = d && !pv['m' + n]; pv['m' + n] = d; }
@@ -2705,10 +2766,11 @@ const QUAL = [
   { n: 'Media', px: 1.7e6, sh: 1024, msaa: 2, lights: 4, post: true },
   { n: 'Baja', px: 1.05e6, sh: 512, msaa: 0, lights: 3, post: true },
   { n: 'Mínima', px: .6e6, sh: 0, msaa: 0, lights: 2, post: false },
+  { n: 'Ahorro', px: .3e6, sh: 0, msaa: 0, lights: 0, post: false },
 ];
-const perf = { auto: true, q: 0, ema: 1 / 60, t: 0, settle: 3, check: 0, locked: false, soft: false, gpu: '', meter: null, fps: 60 };
+const perf = { basic: false, auto: true, q: 0, ema: 1 / 60, t: 0, settle: 3, check: 0, locked: false, soft: false, gpu: '', meter: null, fps: 60 };
 try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); perf.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
-  perf.soft = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(perf.gpu); } catch (_) {}
+  perf.soft = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(perf.gpu); perf.basic = /basic render/i.test(perf.gpu); } catch (_) {}
 try { const v = localStorage.getItem('ar-q'); if (v !== null && v !== 'auto' && QUAL[+v]) { perf.auto = false; perf.q = +v; } } catch (_) {}
 if (perf.auto && perf.soft) perf.q = QUAL.length - 1;   // drawn without the graphics card: start at the bottom
 function applyQuality(){
@@ -2929,7 +2991,7 @@ function boot(){
   const ready = () => { pb.disabled = false; pb.textContent = 'Jugar'; if (SALON) { openSelect(); avisar({ tipo: 'ejs-inicio' }); } };
   loadAssets().then(() => { try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
     .catch(e => { console.warn('Modelos no disponibles, se usan los muñecos:', e && e.message); ASSET.ok = false; setPlayers(['hero']); attract(); ready(); });
-  new ResizeObserver(resize).observe(view); applyQuality(); if (perf.soft) $('#gpuHint').hidden = false;
+  new ResizeObserver(resize).observe(view); applyQuality(); if (perf.soft) { const g = $('#gpuHint'); g.hidden = false; if (perf.basic) g.textContent = 'Windows no tiene instalado el controlador de tu tarjeta gráfica y dibuja con el procesador, por eso el juego va lento. Instala el controlador de NVIDIA, AMD o Intel desde su web (o con Windows Update) y reinicia. Si es una máquina virtual, activa en ella la aceleración 3D o juega desde el equipo real.'; }
   if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("150px 'Bungee'")]).then(() => { for (const s of sources) if (s.redraw) s.redraw(); }).catch(() => {});
   canvas.addEventListener('webglcontextlost', e => e.preventDefault());
   requestAnimationFrame(t => { last = t; frame(t); });
@@ -2940,7 +3002,7 @@ window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ r
   get pickups(){ return pickups; }, get shots(){ return shots; }, get zona(){ return { zi, inRoom, awaiting, wave, envKey }; }, sala(){ zi = LV.zones.length - 1; zone = null; for (const e of enemies) disposeFighter(e); enemies = []; enterRoom(); }, dar(k, i){ const p = players[i || 0]; giveWeapon(p, k, WEAPONS[k].uses); }, diff(i){ diffIx = i; DF = DIFFS[i]; }, poner(spec, dx, dz){ const p = players[0], e = spawnEnemy(spec, p.x + dx, p.z + (dz || 0)); e.wait = 0; return e; },
   moneda, entrada, espejo, retratos: renderPortraits, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
   start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame.go = true; startGame(); startGame.go = false; },
-  get perf(){ return { q: perf.q, auto: perf.auto, soft: perf.soft, gpu: perf.gpu, pr: renderer.getPixelRatio(), fps: Math.round(perf.fps), locked: perf.locked, meter: perf.meter && perf.meter.textContent }; },
+  get perf(){ return { q: perf.q, auto: perf.auto, soft: perf.soft, basic: perf.basic, gpu: perf.gpu, pr: renderer.getPixelRatio(), fps: Math.round(perf.fps), locked: perf.locked, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, progs: renderer.info.programs.length, tex: renderer.info.memory.textures, geo: renderer.info.memory.geometries, meter: perf.meter && perf.meter.textContent }; },
   perfFeed(raw, n){ for (let i = 0; i < n; i++) perfTick(raw); },
   setQ(i){ perf.auto = i < 0; perf.q = i < 0 ? 0 : i; perf.locked = false; applyQuality(); },
   introAt(i, t){ if (!IN) playIntro(toTitle); if (IN.i !== i) introShot(i); IN.t = t; IN.T = t + 1; introStep(0); return { i: IN.i, cap: inEl.cap.textContent, card: inEl.card.hidden ? '' : inEl.card.textContent, title: !inEl.title.hidden }; },

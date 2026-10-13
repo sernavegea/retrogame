@@ -36,21 +36,17 @@ INSTALARLO COMO APP
   Archivos de la app: manifest.webmanifest, sw.js, iconos/ y fuentes/ (las tipografias viajan con el juego).
 
 CONTROLES
-  Un jugador:    WASD o flechas, J golpe, K patada, L especial, espacio salto (tambien Z X C y V). P pausa, M musica.
-  Dos jugadores: 1P con WASD, J K L y espacio; 2P con flechas, coma golpe, punto patada, guion especial y Mayus derecha salto
-                 (o 1 2 3 0 del teclado numerico). El 2P puede entrar en plena partida pulsando dos veces la coma, o con otro mando.
-  Mando (PS5, Xbox...): stick o cruceta, cuadrado golpe, triangulo patada, equis salto, circulo especial, Options pausa.
+  Un jugador:    WASD o flechas, J golpe, L especial, espacio o K salto (tambien Z X C y V). P pausa, M musica.
+  Dos jugadores: 1P con WASD, J K L y espacio; 2P con flechas, coma golpe, guion especial, punto o Mayus derecha salto
+                 (o 1 3 0 del teclado numerico). El 2P puede entrar en plena partida pulsando dos veces la coma, o con otro mando.
+  Mando (PS5, Xbox...): stick o cruceta, cuadrado golpe, equis salto, circulo especial, Options pausa.
   En los menus: izquierda/derecha luchador, arriba/abajo nivel, L1/R1 dificultad, triangulo 1 o 2 jugadores, equis empezar.
-  Tactil: joystick a la izquierda y cuatro botones a la derecha (golpe, patada, salto, especial).
+  Tactil: joystick a la izquierda y tres botones a la derecha (golpe, salto, especial).
 
-COMBOS (solo siguen si el golpe anterior acierta)
-  Golpe, Golpe, Golpe      Gancho
-  Golpe, Golpe, Patada     Patada lateral: manda lejos al rival
-  Golpe, Patada            Barrido: lo tumba en el sitio
-  Patada, Patada, Patada   Lateral, circular y la tercera girando de espaldas: patada giratoria, que tumba
-  Patada, Golpe            Gancho al cielo: lo levanta para rematarlo en el aire
-  En el aire, Golpe o Patada: patada voladora.   Especial quieto: molinete.
-  Embestida (nivel 1 superado): especial mientras te mueves.   Mazazo (nivel 2 superado): manten golpe y suelta.
+COMBOS
+  Golpe, Golpe, Golpe      Gancho que tumba (solo sigue si el golpe anterior acierta)
+  Manten Golpe y suelta    Mazazo (desde el nivel 2)
+  En el aire, Golpe: patada voladora.   Especial quieto: molinete.   Especial moviendote: embestida.
 
 ARCHIVOS
   index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
@@ -65,5 +61,5 @@ CREDITOS Y LICENCIAS
 CALIDAD Y RENDIMIENTO
   "Calidad: auto" (pantalla de inicio y pausa) baja la resolucion, las sombras y el brillo si el equipo no llega a 45 imagenes por segundo.
   Tambien se puede fijar a mano: alta, media, baja o minima. La tecla F muestra un contador de imagenes por segundo y la tarjeta grafica usada.
-  Si Chrome va lento en un PC bueno: Configuracion > Sistema > "Usar aceleracion grafica cuando este disponible" activado, y reiniciar Chrome.
+  Si va lento en un PC bueno, pulsa F: si pone "Microsoft Basic Render Driver" falta el controlador de la grafica en Windows (instalarlo desde NVIDIA, AMD o Intel); si pone "SwiftShader", activar en Chrome Configuracion > Sistema > "Usar aceleracion grafica".
   Con el modo de ahorro de energia de Chrome activo, el juego queda limitado a 30 imagenes por segundo.
