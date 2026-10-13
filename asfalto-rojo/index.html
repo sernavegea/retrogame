@@ -313,6 +313,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <p class="lede">Don Rojo y sus bandas cobran a cada negocio de la ciudad. Cuatro amigos del barrio dicen basta: diez niveles, bates y navajas por el suelo y un jefe esperando en cada local. A solas o a dobles.</p>
       <button class="cta" id="btnPlay" type="button">Jugar</button>
       <p class="credit" id="instHint" hidden></p>
+      <p class="credit" id="gpuHint" hidden style="color:var(--gold)">Tu navegador está dibujando el juego sin la tarjeta gráfica y por eso puede ir lento. En Chrome: Configuración › Sistema › activa «Usar aceleración gráfica cuando esté disponible» y reinicia el navegador.</p>
       <dl class="keys">
         <dt>Moverse</dt><dd><span class="k"><kbd>WASD</kbd> o flechas.</span><span class="t">Joystick de la izquierda.</span></dd>
         <dt>Golpe</dt><dd><span class="k"><kbd>J</kbd> o <kbd>Z</kbd>.</span><span class="t">Botón rojo.</span> Tres seguidos acaban en gancho.</dd>
@@ -323,6 +324,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <div class="opts">
         <button id="optFx" type="button" aria-pressed="true">Brillo de neón: sí</button>
         <button id="optMusic" type="button" aria-pressed="true">Música: sí</button>
+        <button id="optQ" type="button">Calidad: auto</button>
         <button id="btnStory" type="button">Ver la historia</button>
         <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
@@ -338,6 +340,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <div class="opts">
         <button id="optFx2" type="button" aria-pressed="true">Brillo de neón: sí</button>
         <button id="optMusic2" type="button" aria-pressed="true">Música: sí</button>
+        <button id="optQ2" type="button">Calidad: auto</button>
         <button id="btnQuit" type="button">Volver al inicio</button>
       </div>
     </div>
@@ -2576,6 +2579,7 @@ addEventListener('keydown', e => {
   if (mode === 'play') { if (m2) pressFor(1, m2); else if (m1) pressFor(0, m1); if (c === 'KeyP' || c === 'Escape') setPause(true); }
   else if (mode === 'pause' && (c === 'KeyP' || c === 'Escape')) setPause(false);
   if (c === 'KeyM') toggleMusic();
+  if (c === 'KeyF') toggleMeter();
 });
 addEventListener('keyup', e => { const c = e.code; keys[c] = false; if (KP2[c]) inputs[1].release(KP2[c]); const m = KSOLO[c] || KP1[c]; if (m) inputs[0].release(m); });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; for (const I of inputs) for (const k in I.held) I.held[k] = false; });
@@ -2641,7 +2645,7 @@ function label(){ for (const id of ['optFx', 'optFx2']) { const b = $('#' + id);
 function toggleMusic(){ snd.musicOn = !snd.musicOn; if (snd.mus) snd.mus.gain.value = snd.musicOn ? .3 : 0; label(); try { localStorage.setItem('ar-music', snd.musicOn ? '1' : '0'); } catch (_) {} }
 function toggleFx(){ if (!post.ok) return; post.on = !post.on; label(); try { localStorage.setItem('ar-fx', post.on ? '1' : '0'); } catch (_) {} }
 try { if (localStorage.getItem('ar-music') === '0') snd.musicOn = false; if (localStorage.getItem('ar-fx') === '0') post.on = false; } catch (_) {}
-$('#optFx').onclick = $('#optFx2').onclick = toggleFx;
+$('#optFx').onclick = $('#optFx2').onclick = toggleFx; $('#optQ').onclick = $('#optQ2').onclick = cycleQuality;
 $('#optMusic').onclick = $('#optMusic2').onclick = $('#btnMusic').onclick = toggleMusic;
 $('#inSkip').onclick = () => endIntro(); $('#btnStory').onclick = () => playIntro(toTitle);
 $('#btnPlay').onclick = openSelect; $('#btnFight').onclick = startGame; $('#btnAgain').onclick = again; $('#btnChange').onclick = openSelect; $('#btnNext').onclick = nextLevel;
@@ -2676,14 +2680,14 @@ function setupPost(){
 function sizePost(w, h){
   if (!post.ok) return;
   for (const k of ['scene', 'a1', 'b1', 'a2', 'b2', 'a3', 'b3']) if (post[k]) post[k].dispose();
-  post.scene = new T.WebGLMultisampleRenderTarget(w, h, { minFilter: T.LinearFilter, magFilter: T.LinearFilter, format: T.RGBAFormat, encoding: T.sRGBEncoding }); post.scene.samples = 4;
+  post.scene = new T.WebGLMultisampleRenderTarget(w, h, { minFilter: T.LinearFilter, magFilter: T.LinearFilter, format: T.RGBAFormat, encoding: T.sRGBEncoding }); post.scene.samples = QUAL[perf.q].msaa;
   const mk = d => new T.WebGLRenderTarget(Math.max(2, w >> d), Math.max(2, h >> d), { minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: false });
   post.a1 = mk(1); post.b1 = mk(1); post.a2 = mk(2); post.b2 = mk(2); post.a3 = mk(3); post.b3 = mk(3);
 }
 function pass(m, target){ post.quad.material = m; renderer.setRenderTarget(target); renderer.render(post.qs, post.qc); }
 function blur(src, tmp, dst){ const u = post.blur.uniforms; u.t.value = src.texture; u.d.value.set(1 / tmp.width, 0); pass(post.blur, tmp); u.t.value = tmp.texture; u.d.value.set(0, 1 / dst.height); pass(post.blur, dst); }
 function render(){
-  if (post.ok && post.on && post.scene) {
+  if (post.ok && post.on && post.scene && QUAL[perf.q].post) {
     renderer.setRenderTarget(post.scene); renderer.render(scene, camera);
     post.bright.uniforms.t.value = post.scene.texture; pass(post.bright, post.b1); blur(post.b1, post.a1, post.b1); blur(post.b1, post.b2, post.a2); blur(post.a2, post.b3, post.a3);
     const u = post.comp.uniforms; u.t.value = post.scene.texture; u.b1.value = post.b1.texture; u.b2.value = post.a2.texture; u.b3.value = post.a3.texture; u.time.value = time % 10;
@@ -2691,11 +2695,51 @@ function render(){
   } else { renderer.setRenderTarget(null); renderer.render(scene, camera); }
 }
 
+
+/* ---------- quality: how many pixels, shadows, lights and glow each frame costs ----------
+   px: pixels drawn per frame at most (a 4K screen is drawn at a lower resolution and scaled up); sh: shadow map size, 0 for none;
+   msaa: smoothing samples of the glow pass; lights: lamps and signs that cast real light. In automatic mode the game steps down
+   while it runs below 45 frames a second, and steps back if a step did not help (a browser capped at 30 on battery, say). */
+const QUAL = [
+  { n: 'Alta', px: 2.6e6, sh: 2048, msaa: 4, lights: 6, post: true },
+  { n: 'Media', px: 1.7e6, sh: 1024, msaa: 2, lights: 4, post: true },
+  { n: 'Baja', px: 1.05e6, sh: 512, msaa: 0, lights: 3, post: true },
+  { n: 'Mínima', px: .6e6, sh: 0, msaa: 0, lights: 2, post: false },
+];
+const perf = { auto: true, q: 0, ema: 1 / 60, t: 0, settle: 3, check: 0, locked: false, soft: false, gpu: '', meter: null, fps: 60 };
+try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); perf.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+  perf.soft = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(perf.gpu); } catch (_) {}
+try { const v = localStorage.getItem('ar-q'); if (v !== null && v !== 'auto' && QUAL[+v]) { perf.auto = false; perf.q = +v; } } catch (_) {}
+if (perf.auto && perf.soft) perf.q = QUAL.length - 1;   // drawn without the graphics card: start at the bottom
+function applyQuality(){
+  const Q = QUAL[perf.q], sh = Math.min(Q.sh, coarse ? 1024 : 2048);
+  key.castShadow = sh > 0; if (sh && key.shadow.mapSize.x !== sh) { key.shadow.mapSize.set(sh, sh); if (key.shadow.map) { key.shadow.map.dispose(); key.shadow.map = null; } }
+  pool.forEach((l, i) => { l.visible = i < Q.lights; }); resize(); qLabel();
+}
+function qLabel(){ for (const id of ['optQ', 'optQ2']) { const b = $('#' + id); if (b) b.textContent = 'Calidad: ' + (perf.auto ? 'auto (' + QUAL[perf.q].n.toLowerCase() + ')' : QUAL[perf.q].n.toLowerCase()); } }
+function cycleQuality(){   // auto → alta → media → baja → mínima → auto
+  if (perf.auto) { perf.auto = false; perf.q = 0; } else if (perf.q < QUAL.length - 1) perf.q++; else { perf.auto = true; perf.q = perf.soft ? QUAL.length - 1 : 0; perf.locked = false; perf.check = 0; perf.settle = 2; }
+  try { localStorage.setItem('ar-q', perf.auto ? 'auto' : String(perf.q)); } catch (_) {} applyQuality();
+}
+function perfTick(raw){
+  if (raw > 0 && raw < 1) perf.fps += (1 / raw - perf.fps) * .05;
+  if (perf.meter && (perf.n = (perf.n || 0) + 1) % 15 === 0) perf.meter.textContent = Math.round(perf.fps) + ' fps · ' + QUAL[perf.q].n + (perf.auto ? ' (auto)' : '') + ' · ' + renderer.getPixelRatio().toFixed(2) + 'x · ' + perf.gpu;
+  if (!perf.auto || perf.locked || mode === 'pause' || document.hidden || !(raw > 0)) return;
+  if (raw > .12) { perf.settle = 1.5; return; }   // a level being built, a tab switch: not a measure of anything
+  if (perf.settle > 0) { perf.settle -= raw; perf.ema = raw; return; }
+  perf.ema += (raw - perf.ema) * .04; perf.t += raw; if (perf.t < 2.5) return; perf.t = 0;
+  const fps = 1 / perf.ema;
+  if (perf.check) { if (fps < perf.check * 1.1) { perf.q--; perf.locked = true; applyQuality(); } perf.check = 0; return; }
+  if (fps < 45 && perf.q < QUAL.length - 1) { perf.check = fps; perf.q++; perf.settle = 1; applyQuality(); }
+}
+function toggleMeter(){ if (perf.meter) { perf.meter.remove(); perf.meter = null; return; }
+  perf.meter = document.createElement('div'); perf.meter.style.cssText = 'position:absolute;left:8px;bottom:8px;z-index:9;padding:3px 7px;font:12px/1.3 monospace;color:#7dff9a;background:rgba(0,0,0,.65);pointer-events:none;max-width:90%'; view.appendChild(perf.meter); perf.n = 14; perfTick(0); }
+
 /* ---------- resize, camera, ambience ---------- */
 const CAM_Y = 3.9, CAM_Z = 11.8, LOOK_Y = 1.75, CAM_D = Math.hypot(CAM_Z, CAM_Y - LOOK_Y), v2 = new T.Vector2();
 function resize(){
   const w = view.clientWidth, h = view.clientHeight; if (!w || !h) return;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.75 : 2)); renderer.setSize(w, h, false);
+  const dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1.75 : 2); renderer.setPixelRatio(Math.max(.5, Math.min(dpr, Math.sqrt(QUAL[perf.q].px / (w * h))))); renderer.setSize(w, h, false);
   camera.aspect = w / h; let fov = 38; const want = 6.3, vh = Math.tan(MU.degToRad(19)) * CAM_D;
   if (vh * camera.aspect < want) fov = Math.min(78, MU.radToDeg(2 * Math.atan(want / (CAM_D * camera.aspect))));
   camera.fov = fov; camera.updateProjectionMatrix(); halfW = Math.tan(MU.degToRad(fov / 2)) * CAM_D * camera.aspect;
@@ -2806,7 +2850,7 @@ function storyLine(s){ storyEl.textContent = s; storyEl.hidden = !s; storyT = s 
 let last = performance.now();
 function frame(now){
   requestAnimationFrame(frame);
-  const rdt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now; pollInputs();
+  const raw = (now - last) / 1000, rdt = Math.min(.05, Math.max(0, raw)); last = now; pollInputs();
   if (mode === 'play') {
     let dt = rdt; if (slowT > 0) { slowT -= rdt; dt *= .3; }
     if (hitStop > 0) { hitStop -= rdt; dt = 0; }
@@ -2824,7 +2868,7 @@ function frame(now){
   const rings = mode === 'play' || mode === 'win' || mode === 'pause';
   for (const p of players) if (p.ring) { p.ring.visible = rings && !p.out; p.ring.position.set(p.x, .022, p.z); }
   if (mode !== 'pause') { updateFx(rdt); ambience(rdt); }
-  updateCamera(rdt); render();
+  updateCamera(rdt); render(); perfTick(raw);
   // the guest's mirror is drawn right after the 3D frame; if copying it turns out slow on this device, every other frame
   if (mirror && (mirror.ms < 7 || (mirror.n++ & 1))) { const t0 = performance.now(); drawMirror(); mirror.ms += (performance.now() - t0 - mirror.ms) * .1; }
 }
@@ -2885,7 +2929,7 @@ function boot(){
   const ready = () => { pb.disabled = false; pb.textContent = 'Jugar'; if (SALON) { openSelect(); avisar({ tipo: 'ejs-inicio' }); } };
   loadAssets().then(() => { try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
     .catch(e => { console.warn('Modelos no disponibles, se usan los muñecos:', e && e.message); ASSET.ok = false; setPlayers(['hero']); attract(); ready(); });
-  new ResizeObserver(resize).observe(view); resize();
+  new ResizeObserver(resize).observe(view); applyQuality(); if (perf.soft) $('#gpuHint').hidden = false;
   if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("150px 'Bungee'")]).then(() => { for (const s of sources) if (s.redraw) s.redraw(); }).catch(() => {});
   canvas.addEventListener('webglcontextlost', e => e.preventDefault());
   requestAnimationFrame(t => { last = t; frame(t); });
@@ -2896,6 +2940,9 @@ window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ r
   get pickups(){ return pickups; }, get shots(){ return shots; }, get zona(){ return { zi, inRoom, awaiting, wave, envKey }; }, sala(){ zi = LV.zones.length - 1; zone = null; for (const e of enemies) disposeFighter(e); enemies = []; enterRoom(); }, dar(k, i){ const p = players[i || 0]; giveWeapon(p, k, WEAPONS[k].uses); }, diff(i){ diffIx = i; DF = DIFFS[i]; }, poner(spec, dx, dz){ const p = players[0], e = spawnEnemy(spec, p.x + dx, p.z + (dz || 0)); e.wait = 0; return e; },
   moneda, entrada, espejo, retratos: renderPortraits, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },
   start(chars, level, prog){ if (prog !== undefined) progress = prog; picks = [chars[0], chars[1] || 'hero']; wantTwo = chars.length > 1; startLevel = level || 0; startGame.go = true; startGame(); startGame.go = false; },
+  get perf(){ return { q: perf.q, auto: perf.auto, soft: perf.soft, gpu: perf.gpu, pr: renderer.getPixelRatio(), fps: Math.round(perf.fps), locked: perf.locked, meter: perf.meter && perf.meter.textContent }; },
+  perfFeed(raw, n){ for (let i = 0; i < n; i++) perfTick(raw); },
+  setQ(i){ perf.auto = i < 0; perf.q = i < 0 ? 0 : i; perf.locked = false; applyQuality(); },
   introAt(i, t){ if (!IN) playIntro(toTitle); if (IN.i !== i) introShot(i); IN.t = t; IN.T = t + 1; introStep(0); return { i: IN.i, cap: inEl.cap.textContent, card: inEl.card.hidden ? '' : inEl.card.textContent, title: !inEl.title.hidden }; },
   sim(sec, fn){ for (let i = 0, n = sec * 60; i < n && mode === 'play'; i++) { if (trans) { if (!trans.done) trans.fn(); trans = null; fadeEl.style.opacity = 0; } if (fn) fn(i, inputs[0], players[0], enemies, inputs[1], players[1]); if (hitStop > 0) hitStop = 0; step(1 / 60); updateCamera(1 / 60);
     for (const I of inputs) if (!I.keep) for (const k in I.held) I.held[k] = false; } },

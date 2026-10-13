@@ -61,3 +61,9 @@ ARCHIVOS
 CREDITOS Y LICENCIAS
   Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
   Motor 3D: three.js, licencia MIT. https://threejs.org
+
+CALIDAD Y RENDIMIENTO
+  "Calidad: auto" (pantalla de inicio y pausa) baja la resolucion, las sombras y el brillo si el equipo no llega a 45 imagenes por segundo.
+  Tambien se puede fijar a mano: alta, media, baja o minima. La tecla F muestra un contador de imagenes por segundo y la tarjeta grafica usada.
+  Si Chrome va lento en un PC bueno: Configuracion > Sistema > "Usar aceleracion grafica cuando este disponible" activado, y reiniciar Chrome.
+  Con el modo de ahorro de energia de Chrome activo, el juego queda limitado a 30 imagenes por segundo.
