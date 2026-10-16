@@ -324,6 +324,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
         <button id="optMusic" type="button" aria-pressed="true">Música: sí</button>
         <button id="optQ" type="button">Calidad: auto</button>
         <button id="btnStory" type="button">Ver la historia</button>
+        <button id="btnAds" type="button">Anúnciate en el juego</button>
         <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
       <p class="credit">Personajes y animaciones: Quaternius (CC0).</p>
@@ -356,7 +357,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       </div>
       <ul class="unlocks" id="endUnlocks" hidden></ul>
       <button class="cta" id="btnAgain" type="button">Otra vez</button>
-      <div class="opts"><button id="btnChange" type="button">Cambiar de luchador</button></div>
+      <div class="opts"><button id="btnChange" type="button">Cambiar de luchador</button><button id="btnAds2" type="button">Anúnciate en el juego</button></div>
       <p class="lede" id="endCoin" hidden></p>
     </div>
   </div>
@@ -1576,7 +1577,26 @@ function buildDimFront(X){
   const pool = plane3(new T.MeshBasicMaterial({ map: glowTex, color: 0xffe0b0, transparent: true, opacity: .12, depthWrite: false, blending: T.AdditiveBlending }), X, .02, WALL_Z + 3.2, 10, 4.5, [-Math.PI / 2, 0, 0]);
 }
 const SPONSORS = { 0: [{ x: 4.4, w: 10, build: buildDimFront, nombre: 'Dimpresión · Dosmares' }] };
-const sponsorAt = (x, pad) => (SPONSORS[worldIx] || []).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
+// a lit billboard in every street that has no sponsor there yet: the space is for sale and says how to buy it
+const ADS_URL = 'https://sernavegea.github.io/retrogame/anunciate/', ADS_TEL = '607 296 712';
+function buildAdBoard(X){
+  const w = 5.2, h = 2.6, y0 = 1.45, z = WALL_Z + .62, d = painter(1024, 512, w, h);
+  d.r(0, 0, w, h, '#0e0c16'); d.grad(.08, .08, w - .16, h - .16, '#221a34', '#0e0c16');
+  d.frame(.14, .14, w - .28, h - .28, .05, '#ffc83a'); d.e.globalAlpha = .9; d.e.fillStyle = '#ffc83a'; for (const [x, y, ww, hh] of [[.09, .09, w - .18, .05], [.09, h - .14, w - .18, .05], [.09, .09, .05, h - .18], [w - .14, .09, .05, h - .18]]) d.e.fillRect(x * d.sx, d.Hp - (y + hh) * d.sy, ww * d.sx, hh * d.sy); d.e.globalAlpha = 1;
+  stxt(d, 'ESTE ESPACIO', w / 2, 2.05, .4, '#f4f0ff', { f: FONT_D, w: 400, glow: .7, max: w - .6 });
+  stxt(d, 'PUEDE SER TUYO', w / 2, 1.6, .4, '#ff2d55', { f: FONT_D, w: 400, glow: .9, max: w - .6 });
+  stxt(d, 'Anuncia tu negocio dentro del juego', w / 2, 1.13, .26, '#e8e2ff', { w: 700, glow: .4, max: w - .6 });
+  d.circ(.62, .62, .13, '#25d366', true); stxt(d, 'WhatsApp ' + ADS_TEL, w / 2 + .15, .62, .32, '#ffc83a', { w: 800, glow: .8, max: w - 1.2 });
+  stxt(d, 'sernavegea.github.io/retrogame/anunciate', w / 2, .3, .15, '#a59fc4', { w: 600, glow: .3 });
+  const steel = mat(0x2a2c34, .5, .6), back = mat(0x15141c, .8);
+  const b = new T.Mesh(new T.BoxGeometry(w, h, .14), [back, back, back, back, d.mat({ roughness: .5, emissiveIntensity: 1 }), back]); b.position.set(X, y0 + h / 2, z); b.castShadow = true; world.add(b);
+  for (const s of [-1.6, 1.6]) box3(steel, X + s, y0 / 2, z - .02, .12, y0, .12);
+  box3(steel, X, y0 + h + .12, z + .25, w * .7, .05, .05); for (const s of [-1.3, 1.3]) { box3(steel, X + s, y0 + h + .18, z + .45, .32, .1, .2); halo(X + s, y0 + h + .05, z + .55, 0xfff0d0, 1.6, 1, .45); }
+  lightAt(X, y0 + h * .6, z + 1.6, 0xffe4b8, .8); halo(X, y0 + h / 2, z + .2, 0xffc83a, w * 1.3, h * 1.4, .1);
+}
+const AD_BOARDS = [{ x: 30, w: 5.2, build: buildAdBoard, nombre: 'Espacio libre' }];
+const sponsorsFor = ix => (SPONSORS[ix] || []).concat(AD_BOARDS.filter(a => !(SPONSORS[ix] || []).some(s => Math.abs(s.x - a.x) < (s.w + a.w) / 2)));
+const sponsorAt = (x, pad) => sponsorsFor(worldIx).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
 
 function applyTheme(){
   scene.background.set(TH.bg); scene.fog.color.set(TH.fog[0]); scene.fog.near = TH.fog[1]; scene.fog.far = TH.fog[2];
@@ -1597,7 +1617,7 @@ function buildWorld(ix){
   try { buildEnv(); } catch (e) {}
   for (let X = -4; X < X1; X += TH.kind === 'desguace' ? 28 : 14) buildLamp(X);
   if (TH.kind === 'paseo') buildPaseo();
-  for (const s of SPONSORS[ix] || []) s.build(s.x);
+  for (const s of sponsorsFor(ix)) s.build(s.x);
   const at = [8, 34.5, 60, 97].map(X => sponsorAt(X, 2.5) ? X + 9 : X), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
   at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
@@ -2709,6 +2729,7 @@ try { if (localStorage.getItem('ar-music') === '0') snd.musicOn = false; if (loc
 $('#optFx').onclick = $('#optFx2').onclick = toggleFx; $('#optQ').onclick = $('#optQ2').onclick = cycleQuality;
 $('#optMusic').onclick = $('#optMusic2').onclick = $('#btnMusic').onclick = toggleMusic;
 $('#inSkip').onclick = () => endIntro(); $('#btnStory').onclick = () => playIntro(toTitle);
+$('#btnAds').onclick = $('#btnAds2').onclick = () => { try { window.open(ADS_URL, '_blank', 'noopener'); } catch (_) { location.href = ADS_URL; } };
 $('#btnPlay').onclick = openSelect; $('#btnFight').onclick = startGame; $('#btnAgain').onclick = again; $('#btnChange').onclick = openSelect; $('#btnNext').onclick = nextLevel;
 $('#selMode1').onclick = () => { wantTwo = false; renderSelect(); }; $('#selMode2').onclick = () => { wantTwo = true; if (picks[1] === picks[0]) picks[1] = CHAR_ORDER.find(k => k !== picks[0] && unlockedChar(k)) || picks[0]; renderSelect(); };
 $('#roster').onclick = e => { const b = e.target.closest('[data-k]'); if (!b || b.disabled) return; const k = b.dataset.k, p = b.dataset.p; picks[+p] = k; renderSelect(); const again = $(`#roster [data-k="${k}"][data-p="${p}"]`); if (again) again.focus({ preventScroll: true }); };
