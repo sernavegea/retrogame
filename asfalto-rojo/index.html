@@ -627,7 +627,7 @@ function buildBuildings(){
     const w = Math.round(rr(5.4, 9) * 2) / 2, low = R() < TH.low, h = low ? rr(5, 6.3) : rr(8.6, 13);
     const b = new T.Mesh(new T.BoxGeometry(w, h, 6), [side, side, roofM, roofM, facade(w, h), side]);
     b.position.set(bx + w / 2, h / 2, WALL_Z - 3); b.receiveShadow = true; world.add(b);
-    const nm = names[i % names.length]; const sy = low ? rr(3.75, Math.max(3.8, h - 1)) : rr(3.9, 5.7);
+    const nm = i % 5 === 3 ? ['TU ANUNCIO AQUÍ', '#ffc83a'] : names[i % names.length]; const sy = low ? rr(3.75, Math.max(3.8, h - 1)) : rr(3.9, 5.7);
     if (Math.abs(bx + w / 2 - DOOR_X) > 7 && !sponsorAt(bx + w / 2, w / 2)) neonSign(nm[0], nm[1], bx + w / 2 + rr(-.4, .4), sy, rr(.85, 1.15), w - .8);
     if (low && R() < .6) { const tank = new T.Mesh(G('tank', () => new T.CylinderGeometry(.7, .7, 1.3, 10)), side); tank.position.set(bx + w * rr(.3, .7), h + .9, WALL_Z - 2.2); world.add(tank); }
     bx += w + (R() < .3 ? rr(1.3, 1.9) : 0); i++;
@@ -934,14 +934,14 @@ function buildYard(){
   for (const X of [26, 74, 112]) { box3(steel, X, 7.5, WALL_Z - 6, .6, 15, .6); box3(steel, X + 3.2, 14.6, WALL_Z - 6, 10, .45, .45); box3(steel, X - 1.6, 14.6, WALL_Z - 6, 2.4, .9, .9);
     box3(dark, X + 7, 11.4, WALL_Z - 6, .06, 6.2, .06); cyl3(dark, X + 7, 8.2, WALL_Z - 6, 1, .35); box3(pick(wm), X + 7, 7.6, WALL_Z - 6, 3.4, .6, 1.5, [0, .3, .12]);
     const b = halo(X, 15.3, WALL_Z - 5.6, 0xff2233, 1.6, 1.6, .7); flickers.push({ s: { k: 1 }, parts: [[b.material, .7]], t: rr(0, 3) }); }
-  for (const X of [11, 31, 52, 73]) buildFire(X, WALL_Z + 1.45);
+  for (const X of [11, 31, 52, 73]) if (!sponsorAt(X, .8)) buildFire(X, WALL_Z + 1.45);
 }
 
 /* ---------- the centre: trees, benches, festoon lights and kiosks ---------- */
 function buildPaseo(){
   const stone = mat(0x6a6670, .8), bark = mat(0x3a2a22, .9), leaf = [mat(0x1f5a44, .9), mat(0x2a6a3a, .9), mat(0x245a5a, .9)], wood = mat(0x7a5232, .7), iron = mat(0x1c1c24, .5, .6);
   const z = WALL_Z + 1.75, pts = [], colr = [], wire = [], pal = [[1, .82, .5], [1, .5, .7], [.5, .9, 1], [1, .95, .8]];
-  for (let X = 3; X < X1; X += 14) { if (Math.abs(X - DOOR_X) < 6) continue;
+  for (let X = 3; X < X1; X += 14) { if (Math.abs(X - DOOR_X) < 6 || sponsorAt(X, 1.8)) continue;
     box3(stone, X, .4, z, 1.1, .5, 1.1); cyl3(bark, X, 1.75, z, .09, 2.3);
     for (let i = 0; i < 4; i++) sph3(pick(leaf), X + rr(-.5, .5), 3.3 + rr(-.3, .6), z + rr(-.4, .4), rr(.75, 1.1), rr(.8, 1));
     for (let i = 0; i < 26; i++) { const a = R() * 6.28, r = rr(.5, 1.3); pts.push(X + Math.cos(a) * r, 3.4 + rr(-.8, 1), z + Math.sin(a) * r * .8 + .5); colr.push(1, .95, .8); }
@@ -1145,7 +1145,7 @@ function buildRoom(kind){
   const wall = new T.Mesh(new T.PlaneGeometry(W, 14), wm); wall.position.set(X, 7, RWALL); wall.receiveShadow = true; world.add(wall);
   const sm = mat(D.side, .9); for (const s of [-1, 1]) plane3(sm, X + s * W / 2, 7, RWALL + 8, 16, 14, [0, -s * Math.PI / 2, 0]);
   box3(mat(0x0c0a10, .8), X, .09, RWALL + .04, W, .18, .08);
-  D.props(X);
+  D.props(X); buildRoomAd(X, kind);
 }
 
 /* ---------- levels 5 to 10: six more streets ---------- */
@@ -1231,7 +1231,7 @@ function buildPuerto(){
 }
 function propsPuerto(){
   const iron = mat(0x1c1e22, .5, .6), rope = mat(0xc8b48a, .9), crate = mat(0x2a6aa8, .6), crate2 = mat(0xd8d4cc, .6), ice = mat(0xe8f4ff, .2);
-  for (let X = X0 + 3; X < X1; X += rr(4.5, 7)) { if (Math.abs(X - DOOR_X) < 5) continue; const k = R(), z = WALL_Z + rr(.55, .9);
+  for (let X = X0 + 3; X < X1; X += rr(4.5, 7)) { if (Math.abs(X - DOOR_X) < 5 || sponsorAt(X, .8)) continue; const k = R(), z = WALL_Z + rr(.55, .9);
     if (k < .4) { cyl3(iron, X, .45, z, .2, .6); sph3(iron, X, .78, z, .24, .55); const r = new T.Mesh(G('ropeT', () => new T.TorusGeometry(.32, .05, 6, 16)), rope); r.rotation.x = Math.PI / 2; r.position.set(X + .1, .22, z + .25); world.add(r); }
     else if (k < .8) for (let i = 0, n = 2 + (R() * 4 | 0); i < n; i++) { box3(i % 2 ? crate : crate2, X + (i % 2) * .62, .3 + (i / 2 | 0) * .34, z, .58, .32, .42); if (i < 2) box3(ice, X + (i % 2) * .62, .48, z, .5, .04, .36); }
     else { const b = new T.Mesh(G('lifebuoy', () => new T.TorusGeometry(.32, .09, 8, 16)), mat(0xe8621c, .6)); b.position.set(X, 1.2, WALL_Z + .2); world.add(b); cyl3(iron, X, .7, WALL_Z + .12, .04, 1.4); } }
@@ -1260,11 +1260,11 @@ function buildPlaya(){
   const wood = mat(0x4a3a2a, .9); box3(wood, 112, .2, WALL_Z - 30, 3, .3, 40); for (let z = WALL_Z - 12; z > WALL_Z - 50; z -= 4) { for (const s of [-1.3, 1.3]) box3(wood, 112 + s, -.6, z, .25, 1.8, .25); halo(112 + 1.4, 1.6, z, 0xffd9a0, 1.2, 1.2, .6); }
   const hill = new T.Mesh(new T.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(0x10142e, 1)); hill.scale.set(60, 9, 14); hill.position.set(-20, -1.2, -80); world.add(hill);
   for (const [bx, bz] of [[30, -40], [58, -55], [96, -62]]) { box3(mat(0xe8e4dc, .6), bx, -.9, bz, 3, .6, 1.1); cyl3(mat(0xe8e4dc, .5), bx, 1.3, bz, .04, 4); halo(bx, 3.4, bz, 0xff4a3a, .8, .8, .7); }
-  for (let X = X0 + 4; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 6) continue; palm(X, WALL_Z + 1.3, rr(5.2, 6.8), rr(-1, 1)); }
+  for (let X = X0 + 4; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 6 || sponsorAt(X, 2.6)) continue; palm(X, WALL_Z + 1.3, rr(5.2, 6.8), rr(-1, 1)); }
 }
 function propsPlaya(){
   const wood = mat(0x7a5232, .7), iron = mat(0x1c1c24, .5, .6), bin = mat(0x2a6a8a, .6, .3), cloth = [mat(0xff6a5a, .8), mat(0x2a8a8a, .8), mat(0xffd24a, .8), mat(0xf4f0e8, .8)];
-  for (let X = X0 + 6; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 5) continue; const k = R(), z = WALL_Z + .8;
+  for (let X = X0 + 6; X < X1; X += rr(8, 11)) { if (Math.abs(X - DOOR_X) < 5 || sponsorAt(X, 1.4)) continue; const k = R(), z = WALL_Z + .8;
     if (k < .5) { box3(wood, X, .62, z, 1.7, .07, .45); box3(wood, X, .95, z - .22, 1.7, .4, .06, [.18, 0, 0]); for (const s of [-.7, .7]) box3(iron, X + s, .38, z, .06, .45, .4); }
     else if (k < .75) { const b = new T.Mesh(G('bin', () => new T.CylinderGeometry(.3, .25, .85, 12)), bin); b.position.set(X, .58, z); b.castShadow = true; world.add(b); }
     else { cyl3(iron, X, 1.4, z, .03, 2.5); const pr = new T.Mesh(G('parasol', () => new T.ConeGeometry(1.15, .5, 10)), pick(cloth)); pr.position.set(X, 2.6, z); pr.castShadow = true; world.add(pr); } }
@@ -1278,7 +1278,7 @@ function buildStalls(){
   const pole = mat(0x2a2a30, .5, .6), table = mat(0x7a5a3a, .8), crateM = mat(0x8a6a44, .9), N = 900, fruit = new T.InstancedMesh(US(), new T.MeshStandardMaterial({ roughness: .55 }), N), d = new T.Object3D(), c = new T.Color(); let n = 0;
   const stripes = [['#c2283a', '#f4f0e8'], ['#2a7a4a', '#f4f0e8'], ['#2a5aa8', '#f4f0e8'], ['#e8a21c', '#f4f0e8']].map(p => board(2, 1, (x, W, H) => { for (let i = 0; i < 8; i++) { x.fillStyle = p[i % 2]; x.fillRect(i * W / 8, 0, W / 8 + 1, H); } x.fillStyle = 'rgba(0,0,0,.15)'; x.fillRect(0, H * .8, W, H * .2); }));
   const cols = [[0xd8281c, 0xe84a2a], [0xff9a1a, 0xffb43a], [0xf0d02a, 0xe8c01a], [0x5aa82a, 0x3a8a2a], [0x6a1a5a, 0x8a2a6a], [0xe8e0c0, 0xd8c8a0]];
-  for (let X = X0 + 5; X < X1; X += rr(6.5, 8.5)) { if (Math.abs(X - DOOR_X) < 6.5) continue; const z = WALL_Z + 1.05;
+  for (let X = X0 + 5; X < X1; X += rr(6.5, 8.5)) { if (Math.abs(X - DOOR_X) < 6.5 || sponsorAt(X, 1.8)) continue; const z = WALL_Z + 1.05;
     for (const s of [-1.5, 1.5]) for (const dz of [-.55, .55]) cyl3(pole, X + s, 1.15, z + dz, .03, 2.3);
     box3(pick(stripes), X, 2.42, z + .1, 3.4, .06, 1.7, [.16, 0, 0]); box3(table, X, .78, z, 3.1, .08, 1); for (const s of [-1.4, 1.4]) box3(table, X + s, .4, z, .08, .78, .9);
     for (let i = 0; i < 4; i++) { const cx = X - 1.12 + i * .75, col = pick(cols); box3(crateM, cx, .9, z, .68, .18, .8, [-.22, 0, 0]);
@@ -1366,7 +1366,7 @@ function buildTorres(){
 }
 function propsTorres(){
   const stone = mat(0x6a6e78, .5, .2), bush = mat(0x1f4a34, .9), steel = mat(0x8a8e98, .25, .9);
-  for (let X = X0 + 4; X < X1; X += rr(6, 9)) { if (Math.abs(X - DOOR_X) < 5.5) continue; const z = WALL_Z + .9;
+  for (let X = X0 + 4; X < X1; X += rr(6, 9)) { if (Math.abs(X - DOOR_X) < 5.5 || sponsorAt(X, 1.3)) continue; const z = WALL_Z + .9;
     if (R() < .6) { box3(stone, X, .45, z, 2.4, .6, .9); sph3(bush, X - .5, .9, z, .55, .7); sph3(bush, X + .5, .92, z, .5, .7); }
     else for (let k = 0; k < 3; k++) { cyl3(steel, X + k * .9, .55, z + .4, .1, .8); sph3(steel, X + k * .9, .96, z + .4, .1); } }
 }
@@ -1525,7 +1525,7 @@ function stxt(d, s, X, Y, size, fill, o){
   if (o.ls) { try { k.letterSpacing = Math.round(o.ls * d.sx) + 'px'; } catch (_) {} }
   if (o.max) { const mw = k.measureText(s).width; if (mw > o.max * d.sx) k.scale(o.max * d.sx / mw, 1); }
   if (o.sh) { k.fillStyle = o.sh; k.fillText(s, .03 * d.sx, .03 * d.sy); } k.fillStyle = fill; k.fillText(s, 0, 0);
-  if (o.glow) { d.e.save(); d.e.setTransform(k.getTransform()); d.e.font = k.font; d.e.textAlign = k.textAlign; d.e.textBaseline = 'middle'; d.e.fillStyle = fill; d.e.globalAlpha = o.glow; d.e.fillText(s, 0, 0); d.e.restore(); }
+  if (o.glow) { d.e.save(); d.e.setTransform(k.getTransform()); d.e.font = k.font; try { d.e.letterSpacing = k.letterSpacing || '0px'; } catch (_) {} d.e.textAlign = k.textAlign; d.e.textBaseline = 'middle'; d.e.fillStyle = fill; d.e.globalAlpha = o.glow; d.e.fillText(s, 0, 0); d.e.restore(); }
   k.restore();
 }
 function dosmaresLogo(d, cx, cy, s, ink, gold){   // the white lettering with a gold mountain range under it
@@ -1535,6 +1535,7 @@ function dosmaresLogo(d, cx, cy, s, ink, gold){   // the white lettering with a 
   for (const [a, b] of [[-1.3, -.36], [-1.16, -.42], [-.98, -.22], [-.88, -.3], [-.7, -.12], [-.52, -.32], [-.36, -.38], [-.2, -.5]]) k.lineTo(X(a), Y(b)); k.closePath(); k.fill();
   k.fillRect(X(-1.55), Y(-.5), (1.55 + 1.6) * s * d.sx, .025 * s * d.sy);
 }
+function hiBoard(w, h, draw, glow){ const [c, x] = cv(512, Math.round(512 * h / w)); draw(x, c.width, c.height); const t = tex(c); return new T.MeshStandardMaterial(glow ? { map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: glow, roughness: .6 } : { map: t, roughness: .7 }); }
 function buildDimFront(X){
   const w = 10, h = 6.6, d = painter(1024, 676, w, h), band = [3.35, .95];
   // brick above, a pale render wall at the left edge
@@ -1561,12 +1562,19 @@ function buildDimFront(X){
   dosmaresLogo(d, 7.25, by + bh / 2 + .02, 1, '#f6f2e6', '#f2e29a');
   const g = d.x.createLinearGradient(0, d.Hp - .9 * d.sy, 0, d.Hp); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); d.x.fillStyle = g; d.x.fillRect(0, d.Hp - .9 * d.sy, 1024, .9 * d.sy);
   const side = mat(0x2a1c18, .9), b = new T.Mesh(new T.BoxGeometry(w, h, 4), [side, side, side, side, d.mat({ roughness: .7, emissiveIntensity: .8 }), side]); b.position.set(X, h / 2, WALL_Z - 1.86); b.receiveShadow = true; world.add(b);
+  // the sign band again, on its own texture at four times the detail, laid just in front of the wall so the lettering stays sharp
+  const bd = painter(2048, 228, 9.5, 1.05); bd.r(0, 0, 9.5, 1.05, '#1a1a1e');
+  bd.grad(.05, .05, 4.3, .95, '#f2ecd2', '#d8d0b0'); bd.e.globalAlpha = .3; bd.e.fillStyle = '#c8c0a0'; bd.e.fillRect(.05 * bd.sx, bd.Hp - 1 * bd.sy, 4.3 * bd.sx, .95 * bd.sy); bd.e.globalAlpha = 1;
+  bd.r(4.35, .05, 5.1, .95, '#5e6058'); bd.grad(4.35, .05, 5.1, .95, 'rgba(120,122,112,.9)', 'rgba(78,80,72,.9)'); bd.e.globalAlpha = .12; bd.e.fillStyle = '#80807a'; bd.e.fillRect(4.35 * bd.sx, bd.Hp - 1 * bd.sy, 5.1 * bd.sx, .95 * bd.sy); bd.e.globalAlpha = 1;
+  stxt(bd, 'DIMPRESIÓN', 2.2, .525, .78, '#3c4c64', { w: 800, sy: 1.1, sh: 'rgba(0,0,0,.25)', ls: .02, max: 3.9 });
+  dosmaresLogo(bd, 6.95, .545, 1, '#f6f2e6', '#f2e29a');
+  plane3(bd.mat({ roughness: .6, emissiveIntensity: .8 }), X - w / 2 + .3 + 4.75, band[0] - .05 + .525, WALL_Z + .16, 9.5, 1.05);
   // the balcony slab over the right half, the frame round the sign, and the two hanging signs
   box3(mat(0x8a8478, .9), X + 2.6, 4.75, WALL_Z + .55, 5.6, .22, 1.1); for (const fy of [3.29, 4.36]) box3(mat(0x1a1a1e, .5, .4), X - .1, fy, WALL_Z + .2, 9.6, .07, .12);
-  const dosBox = board(.9, 1, (x, W, H) => { x.fillStyle = '#1a1a1e'; x.fillRect(0, 0, W, H); const g2 = x.createLinearGradient(0, 0, 0, H); g2.addColorStop(0, '#d8dad4'); g2.addColorStop(1, '#a8aaa2'); x.fillStyle = g2; x.fillRect(W * .06, H * .05, W * .88, H * .9);
+  const dosBox = hiBoard(.9, 1, (x, W, H) => { x.fillStyle = '#1a1a1e'; x.fillRect(0, 0, W, H); const g2 = x.createLinearGradient(0, 0, 0, H); g2.addColorStop(0, '#d8dad4'); g2.addColorStop(1, '#a8aaa2'); x.fillStyle = g2; x.fillRect(W * .06, H * .05, W * .88, H * .9);
     x.fillStyle = '#f8f6ee'; x.font = `500 ${H * .14 | 0}px 'Futura','Century Gothic','Barlow Condensed',sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.strokeStyle = 'rgba(40,40,40,.35)'; x.lineWidth = 3; x.strokeText('DOSMARES', W / 2, H * .44); x.fillText('DOSMARES', W / 2, H * .44);
     x.fillStyle = '#e8d070'; x.font = `italic 500 ${H * .07 | 0}px 'Barlow Condensed',sans-serif`; x.fillText('Fotografía & Vídeo', W * .56, H * .56); x.beginPath(); x.moveTo(W * .15, H * .6); x.lineTo(W * .26, H * .53); x.lineTo(W * .32, H * .57); x.lineTo(W * .4, H * .51); x.lineTo(W * .5, H * .6); x.fill(); }, .5);
-  const dimBoard = board(.75, 1, (x, W, H) => { x.fillStyle = '#efe6d0'; x.fillRect(0, 0, W, H); x.strokeStyle = '#3a3a40'; x.lineWidth = 6; x.strokeRect(3, 3, W - 6, H - 6); x.fillStyle = '#26324a'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const dimBoard = hiBoard(.75, 1, (x, W, H) => { x.fillStyle = '#efe6d0'; x.fillRect(0, 0, W, H); x.strokeStyle = '#3a3a40'; x.lineWidth = 6; x.strokeRect(3, 3, W - 6, H - 6); x.fillStyle = '#26324a'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.font = `800 ${H * .13 | 0}px 'Barlow Condensed',sans-serif`; x.fillText('DIMPRESION', W / 2, H * .13); x.font = `500 ${H * .072 | 0}px Georgia,serif`;
     ['Fotocopias', 'Librería', 'Papelería', 'Foto-regalos', 'Cartelería', 'Impresión publicitaria'].forEach((s, i) => x.fillText(s, W / 2, H * (.3 + i * .11))); }, .35);
   for (const [m, px, sw, sh] of [[dosBox, X + 4.6, .95, 1.05], [dimBoard, X - 4.55, .8, 1.05]]) { const s = new T.Group(); s.position.set(px, 3.65, WALL_Z + .62); s.rotation.y = px > X ? -.75 : .75;
@@ -1579,22 +1587,33 @@ function buildDimFront(X){
 const SPONSORS = { 0: [{ x: 4.4, w: 10, build: buildDimFront, nombre: 'Dimpresión · Dosmares' }] };
 // a lit billboard in every street that has no sponsor there yet: the space is for sale and says how to buy it
 const ADS_URL = 'https://sernavegea.github.io/retrogame/anunciate/', ADS_TEL = '607 296 712';
-function buildAdBoard(X){
-  const w = 5.2, h = 2.6, y0 = 1.45, z = WALL_Z + .62, d = painter(1024, 512, w, h);
+const AD_TEXTS = [['ESTE ESPACIO', 'PUEDE SER TUYO', 'Anuncia tu negocio dentro del juego'], ['TU MARCA', 'AQUÍ', 'Fachadas, vallas, locales y vehículos'], ['¿TIENES UN', 'NEGOCIO?', 'Aparece en Asfalto Rojo']];
+function adPanel(d, w, h, t){
   d.r(0, 0, w, h, '#0e0c16'); d.grad(.08, .08, w - .16, h - .16, '#221a34', '#0e0c16');
   d.frame(.14, .14, w - .28, h - .28, .05, '#ffc83a'); d.e.globalAlpha = .9; d.e.fillStyle = '#ffc83a'; for (const [x, y, ww, hh] of [[.09, .09, w - .18, .05], [.09, h - .14, w - .18, .05], [.09, .09, .05, h - .18], [w - .14, .09, .05, h - .18]]) d.e.fillRect(x * d.sx, d.Hp - (y + hh) * d.sy, ww * d.sx, hh * d.sy); d.e.globalAlpha = 1;
-  stxt(d, 'ESTE ESPACIO', w / 2, 2.05, .4, '#f4f0ff', { f: FONT_D, w: 400, glow: .7, max: w - .6 });
-  stxt(d, 'PUEDE SER TUYO', w / 2, 1.6, .4, '#ff2d55', { f: FONT_D, w: 400, glow: .9, max: w - .6 });
-  stxt(d, 'Anuncia tu negocio dentro del juego', w / 2, 1.13, .26, '#e8e2ff', { w: 700, glow: .4, max: w - .6 });
-  d.circ(.62, .62, .13, '#25d366', true); stxt(d, 'WhatsApp ' + ADS_TEL, w / 2 + .15, .62, .32, '#ffc83a', { w: 800, glow: .8, max: w - 1.2 });
-  stxt(d, 'sernavegea.github.io/retrogame/anunciate', w / 2, .3, .15, '#a59fc4', { w: 600, glow: .3 });
+  const k = h / 2.6;
+  stxt(d, t[0], w / 2, 2.05 * k, .4 * k, '#f4f0ff', { f: FONT_D, w: 400, glow: .7, max: w - .6 });
+  stxt(d, t[1], w / 2, 1.6 * k, .4 * k, '#ff2d55', { f: FONT_D, w: 400, glow: .9, max: w - .6 });
+  stxt(d, t[2], w / 2, 1.13 * k, .26 * k, '#e8e2ff', { w: 700, glow: .4, max: w - .6 });
+  d.circ(w * .12, .62 * k, .13 * k, '#25d366', true); stxt(d, 'WhatsApp ' + ADS_TEL, w / 2 + .15 * k, .62 * k, .32 * k, '#ffc83a', { w: 800, glow: .8, max: w - 1.2 * k });
+  stxt(d, 'sernavegea.github.io/retrogame/anunciate', w / 2, .3 * k, .15 * k, '#a59fc4', { w: 600, glow: .3, max: w - .4 });
+}
+function buildAdBoard(X, s){
+  const w = 5.2, h = 2.6, y0 = 1.45, z = WALL_Z + .62, d = painter(1536, 768, w, h); adPanel(d, w, h, AD_TEXTS[(s && s.v) || 0]);
   const steel = mat(0x2a2c34, .5, .6), back = mat(0x15141c, .8);
   const b = new T.Mesh(new T.BoxGeometry(w, h, .14), [back, back, back, back, d.mat({ roughness: .5, emissiveIntensity: 1 }), back]); b.position.set(X, y0 + h / 2, z); b.castShadow = true; world.add(b);
-  for (const s of [-1.6, 1.6]) box3(steel, X + s, y0 / 2, z - .02, .12, y0, .12);
-  box3(steel, X, y0 + h + .12, z + .25, w * .7, .05, .05); for (const s of [-1.3, 1.3]) { box3(steel, X + s, y0 + h + .18, z + .45, .32, .1, .2); halo(X + s, y0 + h + .05, z + .55, 0xfff0d0, 1.6, 1, .45); }
+  for (const sx of [-1.6, 1.6]) box3(steel, X + sx, y0 / 2, z - .02, .12, y0, .12);
+  box3(steel, X, y0 + h + .12, z + .25, w * .7, .05, .05); for (const sx of [-1.3, 1.3]) { box3(steel, X + sx, y0 + h + .18, z + .45, .32, .1, .2); halo(X + sx, y0 + h + .05, z + .55, 0xfff0d0, 1.6, 1, .45); }
   lightAt(X, y0 + h * .6, z + 1.6, 0xffe4b8, .8); halo(X, y0 + h / 2, z + .2, 0xffc83a, w * 1.3, h * 1.4, .1);
 }
-const AD_BOARDS = [{ x: 30, w: 5.2, build: buildAdBoard, nombre: 'Espacio libre' }];
+// inside every boss room: a lit sign on the back wall, clear of the furniture
+function buildRoomAd(X, kind){
+  if (kind === 'gym') return;   // SoulBody is already a real sponsor's own gym
+  const w = 2.9, h = 1.45, px = X + (kind === 'chiringuito' ? -17.6 : 17), d = painter(1024, 512, w, h); adPanel(d, w, h, ['ESTE LOCAL', 'PUEDE SER EL TUYO', 'La pelea final, en tu negocio']);
+  const b = new T.Mesh(new T.BoxGeometry(w, h, .08), [mat(0x15141c, .8), mat(0x15141c, .8), mat(0x15141c, .8), mat(0x15141c, .8), d.mat({ roughness: .5, emissiveIntensity: 1 }), mat(0x15141c, .8)]); b.position.set(px, 2.55, RWALL + .2); world.add(b);
+  halo(px, 2.55, RWALL + .3, 0xffc83a, w * 1.4, h * 1.6, .12); lightAt(px, 2.4, RWALL + 1.6, 0xffe4b8, .7);
+}
+const AD_BOARDS = [{ x: 31, w: 5.2, v: 0, build: buildAdBoard, nombre: 'Espacio libre' }, { x: 57, w: 5.2, v: 1, build: buildAdBoard, nombre: 'Espacio libre' }, { x: 73, w: 5.2, v: 2, build: buildAdBoard, nombre: 'Espacio libre' }];
 const sponsorsFor = ix => (SPONSORS[ix] || []).concat(AD_BOARDS.filter(a => !(SPONSORS[ix] || []).some(s => Math.abs(s.x - a.x) < (s.w + a.w) / 2)));
 const sponsorAt = (x, pad) => sponsorsFor(worldIx).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
 
@@ -1617,7 +1636,7 @@ function buildWorld(ix){
   try { buildEnv(); } catch (e) {}
   for (let X = -4; X < X1; X += TH.kind === 'desguace' ? 28 : 14) buildLamp(X);
   if (TH.kind === 'paseo') buildPaseo();
-  for (const s of sponsorsFor(ix)) s.build(s.x);
+  for (const s of sponsorsFor(ix)) s.build(s.x, s);
   const at = [8, 34.5, 60, 97].map(X => sponsorAt(X, 2.5) ? X + 9 : X), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
   at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
