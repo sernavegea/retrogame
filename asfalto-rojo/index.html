@@ -3300,10 +3300,37 @@ function netLib(){
   return new Promise((ok, ko) => { const go = l => { if (!l.length) return ko(new Error('peerjs')); const s = document.createElement('script'); s.src = l[0];
     s.onload = () => window.Peer ? ok() : go(l.slice(1)); s.onerror = () => { s.remove(); go(l.slice(1)); }; document.head.appendChild(s); }; go(NET_LIBS); });
 }
-function netOpts(){   // ?peer=host:port points at a signalling server of our own (tests); otherwise PeerJS's public one and its relay
+// How two phones reach each other. On the same wifi they talk directly; on mobile data the operator usually blocks that,
+// and the game goes through a relay (TURN). NET_TURN: an account of our own at metered.ca as 'appname|apikey' (20 GB a month free);
+// empty, the shared free relay of the Open Relay project (same company) is used, signed here with its public secret.
+const NET_TURN = '';
+// HMAC-SHA1 by hand: crypto.subtle is missing outside secure pages, and this has to work everywhere the game opens
+function sha1(m){
+  const l = m.length, n = ((l + 8 >> 6) + 1) * 16, w = new Uint32Array(n), W = new Uint32Array(80); let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476, h4 = 0xc3d2e1f0;
+  for (let i = 0; i < l; i++) w[i >> 2] |= m[i] << (24 - (i & 3) * 8); w[l >> 2] |= 0x80 << (24 - (l & 3) * 8); w[n - 1] = l * 8;
+  const rl = (x, c) => x << c | x >>> (32 - c);
+  for (let i = 0; i < n; i += 16) { let a = h0, b = h1, c = h2, d = h3, e = h4;
+    for (let j = 0; j < 80; j++) { W[j] = j < 16 ? w[i + j] : rl(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16], 1);
+      const f = j < 20 ? (b & c | ~b & d) + 0x5a827999 : j < 40 ? (b ^ c ^ d) + 0x6ed9eba1 : j < 60 ? (b & c | b & d | c & d) + 0x8f1bbcdc : (b ^ c ^ d) + 0xca62c1d6;
+      const t = rl(a, 5) + f + e + W[j] | 0; e = d; d = c; c = rl(b, 30); b = a; a = t; }
+    h0 = h0 + a | 0; h1 = h1 + b | 0; h2 = h2 + c | 0; h3 = h3 + d | 0; h4 = h4 + e | 0; }
+  const o = new Uint8Array(20); [h0, h1, h2, h3, h4].forEach((h, i) => { for (let k = 0; k < 4; k++) o[i * 4 + k] = h >>> (24 - k * 8) & 255; }); return o;
+}
+function hmacSha1(key, msg){ if (key.length > 64) key = sha1(key); const k = new Uint8Array(64); k.set(key); const ip = new Uint8Array(64 + msg.length), op = new Uint8Array(84);
+  for (let i = 0; i < 64; i++) { ip[i] = k[i] ^ 0x36; op[i] = k[i] ^ 0x5c; } ip.set(msg, 64); op.set(sha1(ip), 64); return sha1(op); }
+async function netIce(){
+  const ice = [{ urls: 'stun:stun.l.google.com:19302' }];
+  if (NET_TURN) try { const [app, key] = NET_TURN.split('|'), r = await fetch('https://' + app + '.metered.live/api/v1/turn/credentials?apiKey=' + key), l = await r.json(); if (Array.isArray(l) && l.length) return ice.concat(l); } catch (_) {}
+  try { const te = new TextEncoder(), user = (Math.floor(Date.now() / 1000) + 2 * 86400) + ':asfaltorojo', h = 'staticauth.openrelay.metered.ca';
+    const cred = btoa(String.fromCharCode(...hmacSha1(te.encode('openrelayprojectsecret'), te.encode(user))));
+    ice.push({ urls: 'stun:' + h + ':80' }, { urls: ['turn:' + h + ':80', 'turn:' + h + ':80?transport=tcp', 'turn:' + h + ':443', 'turns:' + h + ':443?transport=tcp'], username: user, credential: cred }); } catch (_) {}
+  ice.push({ urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' });
+  return ice;
+}
+async function netOpts(){   // ?peer=host:port points at a signalling server of our own (tests); otherwise PeerJS's public one
   let q = null; try { q = new URLSearchParams(location.search).get('peer'); } catch (_) {}
-  if (q) { const [h, port] = q.split(':'); return { host: h, port: +port || 9000, path: '/', secure: false, debug: 0, config: { iceServers: [] } }; }
-  return { debug: 0 };
+  if (q) { const [h, port] = q.split(':'); return { host: h, port: +port || 9000, path: '/', secure: false, debug: 0, config: { iceServers: /[?&]ice=1/.test(location.search) ? await netIce() : [] } }; }
+  return { debug: 0, config: { iceServers: await netIce(), sdpSemantics: 'unified-plan' } };
 }
 const netErr = e => { const t = e && e.type; return t === 'peer-unavailable' ? 'No hay ninguna sala con ese código. Revisa las letras o pide uno nuevo.' : t === 'browser-incompatible' ? 'Este navegador no permite jugar en red.' :
   t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' ? 'No se llega al servidor de salas. Comprueba que tienes internet.' : 'Algo ha fallado en la conexión (' + (t || 'error') + ').'; };
@@ -3321,7 +3348,7 @@ async function netCreate(){
   audioInit(); netReset(); netMsg('Creando la sala…'); $('#netCreate').disabled = true;
   try { await netLib(); } catch (e) { $('#netCreate').disabled = false; return netMsg('No se ha podido cargar el juego en red. Comprueba que tienes internet.'); }
   const code = Array.from(crypto.getRandomValues(new Uint8Array(4)), b => NET_ABC[b % NET_ABC.length]).join('');
-  let peer; try { peer = new Peer(NET_PREFIX + code, netOpts()); } catch (e) { $('#netCreate').disabled = false; return netMsg(netErr(e)); }
+  const opts = await netOpts(); let peer; try { peer = new Peer(NET_PREFIX + code, opts); } catch (e) { $('#netCreate').disabled = false; return netMsg(netErr(e)); }
   NET.peer = peer;
   peer.on('open', () => { if (NET.peer !== peer) return; $('#netCreate').disabled = false;
     Object.assign(NET, { on: true, host: true, client: false, code, slot: 0, conns: [null], lobby: { slots: [{ char: unlockedChar(picks[0]) ? picks[0] : 'hero' }], lv: Math.min(startLevel, progress, LEVELS.length - 1), diff: diffIx, prog: progress, you: 0 } });
@@ -3336,8 +3363,9 @@ async function netJoin(code){
   if (code.length !== 4) return netMsg('El código tiene cuatro letras o números.');
   audioInit(); netReset(); netMsg('Conectando con la sala ' + code + '…'); $('#netJoinB').disabled = true;
   try { await netLib(); } catch (e) { $('#netJoinB').disabled = false; return netMsg('No se ha podido cargar el juego en red. Comprueba que tienes internet.'); }
-  let peer; try { peer = new Peer(NET_PREFIX + 'j' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => NET_ABC[b % NET_ABC.length]).join(''), netOpts()); } catch (e) { $('#netJoinB').disabled = false; return netMsg(netErr(e)); }
-  NET.peer = peer; const t0 = setTimeout(() => { if (NET.peer === peer && !NET.lobby && !NET.me) { netReset(); $('#netJoinB').disabled = false; netMsg('No contesta nadie. Comprobad los dos la conexión y el código.'); } }, 15000);
+  const opts = await netOpts(); let peer; try { peer = new Peer(NET_PREFIX + 'j' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => NET_ABC[b % NET_ABC.length]).join(''), opts); } catch (e) { $('#netJoinB').disabled = false; return netMsg(netErr(e)); }
+  NET.peer = peer; const t0 = setTimeout(() => { if (NET.peer === peer && !NET.lobby && !NET.me) { const met = !!NET.conn; netReset(); $('#netJoinB').disabled = false;
+    netMsg(met ? 'La sala existe, pero los móviles no consiguen conectarse entre sí. Pasa con algunas redes de datos: probad con wifi, o que cree la sala el que tenga wifi.' : 'No contesta nadie. Comprobad los dos la conexión y el código.'); } }, 25000);
   peer.on('open', () => { if (NET.peer !== peer) return;
     const c = peer.connect(NET_PREFIX + code, { reliable: true, serialization: 'json' });
     Object.assign(NET, { on: true, client: true, host: false, conn: c, code });
