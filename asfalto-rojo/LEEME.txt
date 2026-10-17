@@ -25,9 +25,23 @@ QUE TRAE
   Tres dificultades: Facil, Normal y Dificil. En Normal y Dificil los enemigos bloquean y los jefes se enfurecen a media vida.
   4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
-  Dos jugadores en el mismo teclado o con mandos, y a distancia con "Invitar a dobles" del salon
-  (en el movil, el boton "Dobles" de la barra de arriba). En pantalla tactil solo se maneja el 1P.
+  En red, de 2 a 4 jugadores, cada uno en su movil (ver JUGAR EN RED).
+  Dos jugadores en el mismo teclado o con mandos (en el ordenador), y a distancia con "Invitar a dobles" del salon.
   El progreso se guarda en el navegador de cada jugador.
+
+JUGAR EN RED (2 a 4 moviles)
+  Uno pulsa "Jugar en red" > "Crear sala" y le sale un codigo de 4 letras y un QR. Los demas pulsan "Jugar en red",
+  escriben el codigo y "Unirse"; quien no tenga la app puede escanear el QR y jugar desde el navegador (misma partida).
+  En la sala cada uno elige luchador (se pueden repetir; el repetido sale con otro color). El anfitrion elige nivel y
+  dificultad y pulsa "Empezar". Los luchadores que se pueden elegir y los niveles son los que tenga desbloqueados el anfitrion.
+  Cada movil dibuja la partida entera con su propia calidad: por la red no viaja video, solo posiciones y golpes
+  (unos 20 KB por segundo por jugador). El anfitrion lleva a los enemigos, las oleadas y los puntos.
+  Con mas jugadores salen mas enemigos y aguantan mas.
+  Si alguien pierde la conexion, su luchador se retira y la partida sigue; puede volver a entrar con el mismo codigo
+  mientras quede sitio. Si el anfitrion sale o se le corta, la partida termina para todos.
+  El menu de pausa no para la partida en red. Si el anfitrion bloquea el movil o cambia de app, la partida se congela para todos.
+  La conexion es directa entre moviles (WebRTC). Para encontrarse usan el servidor publico y gratuito de PeerJS (0.peerjs.com)
+  y, si la red movil no deja conexion directa, su servidor de reenvio. Hace falta internet; con wifi va mejor que con datos.
 
 INSTALARLO COMO APP
   iPhone / iPad: abre  .../asfalto-rojo/  en Safari, pulsa Compartir y elige "Anadir a pantalla de inicio".
@@ -51,12 +65,13 @@ COMBOS
 ARCHIVOS
   index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
   models.js     cuerpos 3D, animaciones y texturas. Incluye las texturas de los cuatro luchadores con las caras de las fotos de referencia.
-  lib/          three.js r128 y sus cargadores de modelos.
+  lib/          three.js r128 y sus cargadores de modelos; peerjs.min.js para jugar en red.
   portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
 
 CREDITOS Y LICENCIAS
   Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
   Motor 3D: three.js, licencia MIT. https://threejs.org
+  Juego en red: PeerJS, licencia MIT. https://peerjs.com   Codigos QR: qrcode-generator (Kazuhiko Arase), licencia MIT.
 
 CALIDAD Y RENDIMIENTO
   "Calidad: auto" (pantalla de inicio y pausa) baja la resolucion, las sombras y el brillo si el equipo no llega a 45 imagenes por segundo.
