@@ -8,13 +8,13 @@ Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con s
 HISTORIA
   Don Rojo y sus bandas cobran a cada negocio de la ciudad; al que no paga, se lo cierran a golpes.
   Nico, Chispa, Vera y Tinta, cuatro amigos del barrio, deciden plantarse. Cada jefe que cae suelta el nombre
-  del siguiente, de la Navaja del Bar La Luna hasta Don Rojo, en lo alto de la Torre Roja.
+  del siguiente, de la Navaja en Dobletinta hasta Don Rojo, en lo alto de la Torre Roja.
   La primera partida desde el nivel 1 empieza con una intro (se salta con cualquier boton); se puede volver a ver
   con "Ver la historia" en la pantalla de inicio. Cada nivel abre con una frase de la historia y la cuenta sigue al superarlo.
 
 QUE TRAE
   10 niveles, cada uno con su calle y su local, donde espera el jefe:
-    1 El barrio (bar)                 6 El paseo maritimo (chiringuito)
+    1 El barrio (Dobletinta)          6 El paseo maritimo (chiringuito)
     2 El centro (peluqueria)          7 El mercado (estudio de tatuajes)
     3 El poligono (SoulBody)          8 Las vias (taller)
     4 El desguace (casino)            9 La zona de copas (discoteca)
@@ -25,6 +25,11 @@ QUE TRAE
   Tres dificultades: Facil, Normal y Dificil. En Normal y Dificil los enemigos bloquean y los jefes se enfurecen a media vida.
   4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
+  Blue: al pasarse el juego entero se desbloquea Blue, una chihuahua negra que acompana al 1P en todos los niveles.
+  Cada vez que sale el ataque especial, corre a por el enemigo mas cercano y le muerde dos veces. No se le puede hacer dano.
+  Se lleva o se deja en la pantalla de elegir luchador ("Con Blue" / "Sin Blue") y en la sala de juego en red.
+  Locales reales: la fachada de Dimpresion / Dosmares (nivel 1, al principio) y Dobletinta (nivel 1: la fachada es la puerta
+  del jefe y la pelea final es dentro, con el mural del estudio, a partir de las fotos del local).
   En red, de 2 a 4 jugadores, cada uno en su movil (ver JUGAR EN RED).
   Dos jugadores en el mismo teclado o con mandos (en el ordenador), y a distancia con "Invitar a dobles" del salon.
   El progreso se guarda en el navegador de cada jugador.
