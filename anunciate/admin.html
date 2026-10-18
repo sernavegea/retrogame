@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Espacios de Asfalto Rojo · administración</title>
+<link rel="icon" type="image/png" href="../asfalto-rojo/iconos/icono-32.png">
+<style>
+@font-face{font-family:'Bungee';src:url('../asfalto-rojo/fuentes/bungee-400.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Barlow Condensed';font-weight:500;src:url('../asfalto-rojo/fuentes/barlow-condensed-500-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Barlow Condensed';font-weight:700;src:url('../asfalto-rojo/fuentes/barlow-condensed-700-normal.woff2') format('woff2');font-display:swap}
+:root{--ink:#0b0a14;--ink2:#15131f;--ink3:#1e1b2c;--line:#3a3552;--paper:#f1ecff;--mute:#a59fc4;--hot:#ff2d55;--gold:#ffc83a;--cool:#27e0ff;--ok:#25d366;--res:#ff9a3a;
+  --fd:'Bungee','Impact','Arial Black',sans-serif;--fu:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif}
+*{box-sizing:border-box}
+html{background:var(--ink);color:var(--paper);font:500 18px/1.35 var(--fu);-webkit-text-size-adjust:100%}
+body{margin:0}
+.wrap{width:min(1180px,100% - 24px);margin:0 auto;padding:14px 0 120px}
+h1{font-family:var(--fd);font-weight:400;font-size:clamp(24px,4vw,34px);margin:6px 0 4px}h1 span{color:var(--hot)}
+h2{font-family:var(--fd);font-weight:400;font-size:20px;margin:0 0 10px}
+p{margin:0}
+.mute{color:var(--mute)}
+a{color:var(--cool)}
+.box{background:var(--ink2);border-radius:6px;padding:16px;box-shadow:0 0 0 1px rgba(255,255,255,.07);margin-top:14px}
+button,.btn{font:700 17px/1 var(--fu);letter-spacing:.03em;border:0;border-radius:4px;padding:10px 14px;cursor:pointer;color:var(--ink);background:var(--gold);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button.ghost{background:var(--ink3);color:var(--paper);box-shadow:0 0 0 1px var(--line)}
+button.hot{background:var(--hot);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+input,select{font:500 17px/1.2 var(--fu);color:var(--paper);background:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:8px 9px;width:100%;min-width:0}
+input:focus,select:focus{outline:2px solid var(--cool);outline-offset:1px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:15px;color:var(--mute)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--ink3);border-radius:5px;padding:10px 12px}
+.stat b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1.1}
+.stat span{color:var(--mute);font-size:15px}
+.stat.libre b{color:var(--gold)}.stat.res b{color:var(--res)}.stat.ocu b{color:var(--ok)}
+table.pr{border-collapse:collapse;width:100%}
+table.pr th,table.pr td{padding:6px 6px;text-align:left;border-bottom:1px solid #2a2640}
+table.pr th{font-size:15px;color:var(--mute)}
+table.pr input{max-width:120px}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--ink2);border-radius:6px;padding:12px;box-shadow:0 0 0 1px rgba(255,255,255,.07);border-left:5px solid var(--gold);display:grid;grid-template-columns:110px 1fr;gap:10px}
+.card.reservado{border-left-color:var(--res)}.card.ocupado{border-left-color:var(--ok)}.card.dirty{box-shadow:0 0 0 2px var(--cool)}
+.card .th{width:110px;aspect-ratio:3/2;background:#05040a center/cover no-repeat;border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:13px;text-align:center;padding:4px}
+.card h3{margin:0;font-family:var(--fd);font-weight:400;font-size:20px}.card h3 small{font-family:var(--fu);font-weight:700;font-size:15px;color:var(--mute);margin-left:6px}
+.card .wh{font-size:14px;color:var(--mute);margin:2px 0 6px}
+.card .f2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.card .f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}
+.card .acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.card .acts button{font-size:15px;padding:7px 10px}
+.fijo{grid-column:1/-1;font-size:14px;color:var(--cool)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,10,20,.96);border-top:1px solid var(--line);padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;z-index:5}
+.bar p{font-weight:700}
+.msg{margin-top:8px;font-weight:700}.msg.err{color:#ff8aa0}.msg.ok{color:var(--ok)}
+dialog{background:var(--ink2);color:var(--paper);border:0;border-radius:8px;box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.7);padding:16px;width:min(760px,100% - 20px)}
+dialog::backdrop{background:rgba(5,4,10,.75)}
+.crop{position:relative;width:100%;background:#000;border-radius:4px;overflow:hidden;touch-action:none;cursor:grab}
+.crop canvas{display:block;width:100%;height:auto}
+details summary{cursor:pointer;font-weight:700}
+ol{margin:8px 0 0;padding-left:22px}ol li{margin:4px 0}
+code{background:var(--ink3);padding:1px 5px;border-radius:3px}
+@media (max-width:760px){.filters{grid-template-columns:1fr 1fr}.list{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Espacios de Asfalto <span>Rojo</span></h1>
+  <p class="mute">Solo para ti: aquí ves los espacios, pones precios y subes los anuncios. Lo que publiques se ve en la <a href="./#plano">página de anunciantes</a> y en el juego en uno o dos minutos.</p>
+
+  <div class="box" id="acceso">
+    <h2>Conexión con GitHub</h2>
+    <p id="accState" class="mute">Sin conectar: puedes mirar y preparar cambios, pero para publicarlos hace falta la clave.</p>
+    <div class="row" style="margin-top:10px"><label style="flex:1 1 320px">Clave de GitHub (fine-grained token)<input id="token" type="password" autocomplete="off" placeholder="github_pat_…"></label><button id="saveTok">Guardar y conectar</button><button class="ghost" id="forget">Olvidar la clave</button></div>
+    <details style="margin-top:10px"><summary>Cómo sacar la clave (una sola vez)</summary>
+      <ol>
+        <li>En GitHub, entra en tu foto › <b>Settings</b> › <b>Developer settings</b> › <b>Personal access tokens</b> › <b>Fine-grained tokens</b> › <b>Generate new token</b>.</li>
+        <li>Nombre: «Anuncios Asfalto Rojo». Caducidad: la que quieras (por ejemplo, 1 año).</li>
+        <li><b>Repository access</b>: «Only select repositories» y elige <code>sernavegea/retrogame</code>.</li>
+        <li><b>Permissions › Repository permissions › Contents</b>: «Read and write». Nada más.</li>
+        <li>Pulsa <b>Generate token</b>, copia la clave (empieza por <code>github_pat_</code>) y pégala aquí arriba.</li>
+      </ol>
+      <p class="mute" style="margin-top:6px">La clave se guarda solo en este navegador. No la compartas: con ella se puede cambiar tu web. Si la pierdes o crees que la ha visto alguien, bórrala en GitHub y crea otra.</p></details>
+    <p class="msg" id="accMsg"></p>
+  </div>
+
+  <div class="box"><h2>Resumen</h2><div class="stats" id="stats"></div></div>
+
+  <div class="box"><h2>Precios por tipo de espacio</h2>
+    <p class="mute" style="margin-bottom:8px">En euros. Lo que dejes vacío sale en la web como «pregúntanos». Cada espacio puede tener además un precio propio.</p>
+    <table class="pr" id="prices"></table></div>
+
+  <div class="box"><h2>Espacios</h2>
+    <div class="filters">
+      <label>Nivel<select id="fLv"><option value="">Todos</option></select></label>
+      <label>Tipo<select id="fTipo"><option value="">Todos</option></select></label>
+      <label>Estado<select id="fEst"><option value="">Todos</option><option value="libre">Libre</option><option value="reservado">Reservado</option><option value="ocupado">Ocupado</option><option value="caducado">Caducados</option></select></label>
+      <label>Buscar<input id="fQ" placeholder="Número o negocio"></label>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<div class="bar"><p id="dirty">Sin cambios.</p><div class="row"><button class="ghost" id="dl">Descargar anuncios.json</button><button class="hot" id="publish" disabled>Publicar cambios</button></div></div>
+
+<dialog id="dlg">
+  <h2 id="dlgT">Imagen</h2>
+  <p class="mute" id="dlgS" style="margin-bottom:8px"></p>
+  <div class="crop" id="crop"><canvas id="cv"></canvas></div>
+  <div class="row" style="margin-top:10px">
+    <label style="flex:1 1 200px">Tamaño<input id="zoom" type="range" min="100" max="300" value="100"></label>
+    <label style="flex:0 0 auto">Encaje<select id="fit"><option value="cover">Llenar el hueco</option><option value="contain">Entera, con fondo</option></select></label>
+  </div>
+  <p class="mute" style="font-size:15px;margin-top:6px">Arrastra la imagen para elegir qué parte se ve. Así es como queda en el juego.</p>
+  <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="ghost" id="dlgNo">Cancelar</button><button id="dlgOk">Usar esta imagen</button></div>
+</dialog>
+
+<script src="../anuncios/espacios.js"></script>
+<script>
+(function(){
+  'use strict';
+  const E = window.ESPACIOS, OWNER = 'sernavegea', REPO = 'retrogame', PATH = 'anuncios/anuncios.json', API = 'https://api.github.com/repos/' + OWNER + '/' + REPO;
+  const $ = id => document.getElementById(id), hoy = new Date().toISOString().slice(0, 10);
+  let data = E.inicial(), sha = null, branch = 'main', token = '', pending = {}, removed = [], dirty = false;
+  try { token = localStorage.getItem('ar-admin-token') || ''; } catch (_) {}
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const b64 = s => btoa(unescape(encodeURIComponent(s))), unb64 = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+  const eur = n => n ? (Math.round(n * 100) / 100).toLocaleString('es-ES') + ' €' : '';
+  const gh = (url, opt) => fetch(url.startsWith('http') ? url : API + url, Object.assign({ cache: 'no-store' }, opt || {}, { headers: Object.assign({ Accept: 'application/vnd.github+json' }, token ? { Authorization: 'Bearer ' + token } : {}, (opt && opt.headers) || {}) }));
+  const msg = (t, k) => { const m = $('accMsg'); m.textContent = t || ''; m.className = 'msg ' + (k || ''); };
+  const est = s => { const e = data.espacios[s.id] || { estado: 'libre' }; return e.estado === 'ocupado' && e.hasta && e.hasta < hoy ? 'caducado' : e.estado || 'libre'; };
+
+  async function load(){
+    if (token) {
+      try { const r = await gh(''); if (r.status === 401) { msg('La clave no vale (caducada o mal copiada).', 'err'); token = ''; }
+        else if (!r.ok) msg('GitHub no deja ver el repositorio (' + r.status + '). Revisa que la clave es para sernavegea/retrogame.', 'err');
+        else { const j = await r.json(); branch = j.default_branch || 'main'; } } catch (e) { msg('No se llega a GitHub. Revisa la conexión.', 'err'); }
+    }
+    if (token) {
+      const r = await gh('/contents/' + PATH + '?ref=' + branch);
+      if (r.ok) { const j = await r.json(); sha = j.sha; data = JSON.parse(unb64(j.content)); }
+      else if (r.status === 404) { sha = null; data = E.inicial(); msg('Todavía no hay anuncios publicados: al publicar se crea el archivo.', ''); }
+      $('accState').textContent = 'Conectado a ' + OWNER + '/' + REPO + ' (rama ' + branch + '). Puedes publicar.';
+    } else {
+      try { const r = await fetch('../' + PATH + '?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) data = await r.json(); } catch (_) {}
+      $('accState').textContent = 'Sin conectar: puedes mirar y preparar cambios, pero para publicarlos hace falta la clave.';
+    }
+    data.precios = data.precios || {}; for (const k in E.TIPOS) data.precios[k] = data.precios[k] || {};
+    for (const s of E.lista) if (!data.espacios[s.id]) data.espacios[s.id] = s.fijo ? { estado: 'ocupado', negocio: s.fijo } : { estado: 'libre' };
+    pending = {}; removed = []; setDirty(false); render();
+  }
+  function setDirty(v){ dirty = v; $('publish').disabled = !v || !token; const n = Object.keys(pending).length;
+    $('dirty').textContent = v ? 'Hay cambios sin publicar' + (n ? ' (' + n + ' imagen' + (n > 1 ? 'es' : '') + ' nueva' + (n > 1 ? 's' : '') + ')' : '') + (token ? '.' : '. Conecta la clave para publicar, o descarga el archivo.') : 'Sin cambios.'; }
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  function stats(){
+    const c = { libre: 0, reservado: 0, ocupado: 0, caducado: 0 }, porTipo = {}; let mes = 0;
+    for (const s of E.lista) { const st = est(s); c[st]++; if (st === 'libre' || st === 'caducado') porTipo[s.tipo] = (porTipo[s.tipo] || 0) + 1;
+      if (st === 'ocupado' && !s.fijo) { const e = data.espacios[s.id], p = e.precio && e.precio.mes ? e.precio : data.precios[s.tipo] || {}; mes += +p.mes || 0; } }
+    $('stats').innerHTML = `<div class="stat libre"><b>${c.libre + c.caducado}</b><span>libres de ${E.lista.length}</span></div><div class="stat res"><b>${c.reservado}</b><span>reservados</span></div><div class="stat ocu"><b>${c.ocupado}</b><span>ocupados</span></div>` +
+      (c.caducado ? `<div class="stat"><b style="color:var(--hot)">${c.caducado}</b><span>caducados (ya no salen)</span></div>` : '') +
+      Object.keys(E.TIPOS).map(k => `<div class="stat"><b>${porTipo[k] || 0}</b><span>${E.TIPOS[k].nombre.toLowerCase()} libres</span></div>`).join('') +
+      `<div class="stat"><b>${eur(mes) || '0 €'}</b><span>al mes por lo ocupado</span></div>`;
+  }
+  function prices(){
+    $('prices').innerHTML = '<tr><th>Tipo</th><th>1 mes</th><th>6 meses</th><th>1 año</th></tr>' + Object.keys(E.TIPOS).map(k => { const p = data.precios[k];
+      return `<tr><td>${E.TIPOS[k].nombre}</td>` + ['mes', 'semestre', 'anio'].map(f => `<td><input type="number" min="0" step="1" inputmode="decimal" data-pt="${k}" data-pf="${f}" value="${p[f] || ''}"></td>`).join('') + '</tr>'; }).join('');
+  }
+  function card(s){
+    const e = data.espacios[s.id], st = est(s), img = pending[s.id] ? pending[s.id].url : e.imagen ? (/^(https?:|data:)/.test(e.imagen) ? e.imagen : '../anuncios/' + e.imagen) : '', p = e.precio || {};
+    return `<div class="card ${st === 'caducado' ? 'libre' : st}${pending[s.id] ? ' dirty' : ''}" data-id="${s.id}">
+      <div><div class="th" style="${img ? `background-image:url('${img}')` : ''}">${img ? '' : 'Sin imagen'}</div></div>
+      <div><h3>${s.id}<small>${E.TIPOS[s.tipo].nombre}</small></h3><p class="wh">Nivel ${s.nivel} · ${E.NIVELES[s.nivel - 1]} · ${s.donde}</p>
+        <div class="f2"><label>Estado<select data-k="estado"><option value="libre"${e.estado === 'libre' ? ' selected' : ''}>Libre</option><option value="reservado"${e.estado === 'reservado' ? ' selected' : ''}>Reservado</option><option value="ocupado"${e.estado === 'ocupado' ? ' selected' : ''}>Ocupado</option></select></label>
+          <label>Hasta${st === 'caducado' ? ' <span style="color:var(--hot)">· caducado</span>' : ''}<input type="date" data-k="hasta" value="${e.hasta || ''}"></label></div>
+        <label style="margin-top:6px">Negocio <span class="mute" style="font-weight:500">(se ve en la web)</span><input data-k="negocio" value="${(e.negocio || '').replace(/"/g, '&quot;')}"></label>
+        <div class="f3">${['mes', 'semestre', 'anio'].map((f, i) => `<label>${['Precio mes', '6 meses', '1 año'][i]}<input type="number" min="0" data-pk="${f}" value="${p[f] || ''}" placeholder="${data.precios[s.tipo][f] || ''}"></label>`).join('')}</div>
+      </div>
+      ${s.fijo ? `<p class="fijo">Hecho a medida en el juego (${s.fijo}). Si lo pones libre, en el juego sale el cartel de espacio libre.</p>` : ''}
+      <div class="acts">${s.fijo ? '' : `<button type="button" data-a="img">${img ? 'Cambiar imagen' : 'Subir imagen'}</button>${img ? '<button type="button" class="ghost" data-a="noimg">Quitar imagen</button>' : ''}`}<a class="btn ghost" style="background:var(--ink3);color:var(--paper);font-size:15px;padding:7px 10px" href="./#${s.id}" target="_blank" rel="noopener">Ver en el plano</a></div>
+    </div>`;
+  }
+  function list(){
+    const lv = $('fLv').value, tp = $('fTipo').value, es = $('fEst').value, q = $('fQ').value.trim().toLowerCase();
+    const L = E.lista.filter(s => (!lv || s.nivel === +lv) && (!tp || s.tipo === tp) && (!es || est(s) === es) && (!q || s.id.includes(q) || (data.espacios[s.id].negocio || '').toLowerCase().includes(q)));
+    $('list').innerHTML = L.length ? L.map(card).join('') : '<p class="mute">Ningún espacio con esos filtros.</p>';
+  }
+  function render(){ stats(); prices(); list(); }
+  $('fLv').innerHTML += E.NIVELES.map((n, i) => `<option value="${i + 1}">${i + 1} · ${n}</option>`).join('');
+  $('fTipo').innerHTML += Object.keys(E.TIPOS).map(k => `<option value="${k}">${E.TIPOS[k].nombre}</option>`).join('');
+  for (const id of ['fLv', 'fTipo', 'fEst']) $(id).onchange = list; $('fQ').oninput = list;
+
+  // editing
+  $('prices').addEventListener('input', ev => { const i = ev.target; if (!i.dataset.pt) return; const v = parseFloat(i.value); if (v > 0) data.precios[i.dataset.pt][i.dataset.pf] = v; else delete data.precios[i.dataset.pt][i.dataset.pf]; setDirty(true); stats(); });
+  $('list').addEventListener('change', ev => { const c = ev.target.closest('.card'); if (!c) return; const e = data.espacios[c.dataset.id], i = ev.target;
+    if (i.dataset.k) { const v = i.value.trim(); if (v) e[i.dataset.k] = v; else delete e[i.dataset.k];
+      if (i.dataset.k === 'estado' && v === 'libre') { for (const k of ['negocio', 'hasta']) delete e[k]; if (e.imagen) { removed.push(e.imagen); delete e.imagen; } delete pending[c.dataset.id]; } }
+    if (i.dataset.pk) { e.precio = e.precio || {}; const v = parseFloat(i.value); if (v > 0) e.precio[i.dataset.pk] = v; else delete e.precio[i.dataset.pk]; if (!Object.keys(e.precio).length) delete e.precio; }
+    setDirty(true); stats(); if (i.dataset.k === 'estado' || i.dataset.k === 'hasta') { const y = scrollY; list(); scrollTo(0, y); } });
+  $('list').addEventListener('click', ev => { const b = ev.target.closest('[data-a]'); if (!b) return; const id = b.closest('.card').dataset.id, e = data.espacios[id];
+    if (b.dataset.a === 'noimg') { if (e.imagen) removed.push(e.imagen); delete e.imagen; delete pending[id]; setDirty(true); const y = scrollY; list(); scrollTo(0, y); return; }
+    const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => f.files[0] && cropper(id, f.files[0]); f.click(); });
+
+  // cutting the picture to the exact shape of the space
+  let C = null;
+  function cropper(id, file){
+    const s = E.porId(id), T = E.TIPOS[s.tipo], img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { C = { id, s, T, img, z: 1, ox: 0, oy: 0 }; const cv = $('cv'); cv.width = T.ancho; cv.height = T.alto;
+      $('dlgT').textContent = 'Imagen para el ' + id + ' · ' + T.nombre; $('dlgS').textContent = T.pide + ' Se guarda a ' + T.ancho + '×' + T.alto + ' píxeles.'; $('zoom').value = 100; $('fit').value = 'cover'; draw(); $('dlg').showModal(); };
+    img.onerror = () => alert('No se ha podido abrir esa imagen.'); img.src = url;
+  }
+  function draw(){
+    const cv = $('cv'), x = cv.getContext('2d'), { img, T } = C, W = T.ancho, H = T.alto, cover = $('fit').value === 'cover';
+    const base = cover ? Math.max(W / img.width, H / img.height) : Math.min(W / img.width, H / img.height), k = base * C.z, iw = img.width * k, ih = img.height * k;
+    const mx = Math.max(0, (iw - W) / 2), my = Math.max(0, (ih - H) / 2); C.ox = Math.max(-mx, Math.min(mx, C.ox)); C.oy = Math.max(-my, Math.min(my, C.oy));
+    x.fillStyle = '#0e0c16'; x.fillRect(0, 0, W, H);
+    if (!cover) { x.save(); x.filter = 'blur(28px) brightness(.55)'; const kb = Math.max(W / img.width, H / img.height); x.drawImage(img, (W - img.width * kb) / 2, (H - img.height * kb) / 2, img.width * kb, img.height * kb); x.restore(); }
+    x.drawImage(img, (W - iw) / 2 + C.ox, (H - ih) / 2 + C.oy, iw, ih);
+  }
+  $('zoom').oninput = () => { C.z = $('zoom').value / 100; draw(); }; $('fit').onchange = () => { C.ox = C.oy = 0; draw(); };
+  { let drag = null; const el = $('crop');
+    el.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ox: C.ox, oy: C.oy }; el.setPointerCapture(e.pointerId); });
+    el.addEventListener('pointermove', e => { if (!drag) return; const k = C.T.ancho / el.clientWidth; C.ox = drag.ox + (e.clientX - drag.x) * k; C.oy = drag.oy + (e.clientY - drag.y) * k; draw(); });
+    el.addEventListener('pointerup', () => { drag = null; }); el.addEventListener('pointercancel', () => { drag = null; }); }
+  $('dlgNo').onclick = () => $('dlg').close();
+  $('dlgOk').onclick = () => { const url = $('cv').toDataURL('image/jpeg', .86), e = data.espacios[C.id];
+    pending[C.id] = { url }; if (e.estado === 'libre') e.estado = 'ocupado'; $('dlg').close(); setDirty(true); const y = scrollY; render(); scrollTo(0, y); };
+
+  // publishing: the pictures first, then the list that points at them
+  async function put(path, content, message, s){ const r = await gh('/contents/' + path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ message, content, branch }, s ? { sha: s } : {})) });
+    if (!r.ok) { const t = await r.text(); throw new Error(r.status + ' ' + (r.status === 409 || r.status === 422 ? 'alguien ha cambiado el archivo a la vez' : t.slice(0, 120))); } return r.json(); }
+  $('publish').onclick = async () => {
+    if (!token) return; const b = $('publish'); b.disabled = true; b.textContent = 'Publicando…'; msg('');
+    try {
+      const stamp = Date.now().toString(36);
+      for (const id of Object.keys(pending)) { const e = data.espacios[id], path = 'anuncios/img/' + id + '-' + stamp + '.jpg';
+        await put(path, pending[id].url.split(',')[1], 'Anuncio ' + id + ': imagen' + (e.negocio ? ' de ' + e.negocio : ''));
+        if (e.imagen) removed.push(e.imagen); e.imagen = 'img/' + id + '-' + stamp + '.jpg'; }
+      data.actualizado = new Date().toISOString(); data.version = 1;
+      const out = clone(data); const j = await put(PATH, b64(JSON.stringify(out, null, 1)), 'Anuncios: cambios desde la página de administración', sha); sha = j.content.sha;
+      for (const old of removed) { try { const r = await gh('/contents/anuncios/' + old + '?ref=' + branch); if (r.ok) { const f = await r.json(); await gh('/contents/anuncios/' + old, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Anuncios: quitar imagen antigua', sha: f.sha, branch }) }); } } catch (_) {} }
+      pending = {}; removed = []; setDirty(false); render(); msg('Publicado. En uno o dos minutos se ve en la web y en el juego (en la app, al volver a abrirla con internet).', 'ok');
+    } catch (e) { msg('No se ha podido publicar: ' + e.message + '. Pulsa «Guardar y conectar» para recargar y vuelve a probar.', 'err'); setDirty(true); }
+    b.textContent = 'Publicar cambios'; b.disabled = !dirty; window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  $('dl').onclick = () => { const out = clone(data); for (const id in pending) out.espacios[id].imagen = pending[id].url; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })); a.download = 'anuncios.json'; a.click(); };
+  $('saveTok').onclick = () => { token = $('token').value.trim() || token; try { localStorage.setItem('ar-admin-token', token); } catch (_) {} $('token').value = ''; msg('Conectando…'); load(); };
+  $('forget').onclick = () => { token = ''; try { localStorage.removeItem('ar-admin-token'); } catch (_) {} msg('Clave olvidada en este navegador.'); load(); };
+  load();
+})();
+</script>
+</body>
+</html>

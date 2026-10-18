@@ -80,6 +80,42 @@ summary{cursor:pointer;font-weight:700;font-size:21px}
 details p{margin:10px 0 0;color:#d6d0ee}
 footer{padding:30px 0 44px;color:var(--mute);font-size:16px;border-top:1px solid rgba(255,255,255,.07)}
 footer a{color:var(--mute)}
+.pick-top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 20px;margin-bottom:14px}
+.count{font-weight:700;font-size:20px}.count b{font-family:var(--fd);font-weight:400;color:var(--gold);font-size:28px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--mute);font-size:16px}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.lvtabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.lvtabs button{font:700 16px/1 var(--fu);letter-spacing:.04em;color:var(--paper);background:var(--ink3);border:1px solid #3a3552;border-radius:3px;padding:8px 10px;cursor:pointer}
+.lvtabs button[aria-pressed="true"]{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.lvtabs button small{display:block;font-weight:500;font-size:12px;opacity:.8;margin-top:2px}
+.lvname{margin:0 0 10px;font-size:21px;font-weight:700}.lvname span{color:var(--mute);font-weight:500}
+.pano{position:relative;overflow-x:auto;overflow-y:hidden;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.08);background:#05040a;-webkit-overflow-scrolling:touch;scrollbar-color:#3a3552 transparent}
+.pano-in{position:relative;height:260px;aspect-ratio:8/1}
+.pano-in img{display:block;width:100%;height:100%}
+.mk{position:absolute;transform:translate(-50%,-50%);min-width:42px;height:42px;padding:0 8px;border-radius:21px;border:3px solid #0b0a14;font:400 16px/36px var(--fd);color:var(--ink);background:var(--gold);cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.6)}
+.mk.reservado{background:#ff9a3a}.mk.ocupado{background:#8a849e;color:#1e1b2c}
+.mk[aria-pressed="true"]{outline:3px solid #fff;outline-offset:2px;z-index:2}
+.mk.libre{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(255,200,58,.25),0 3px 10px rgba(0,0,0,.6)}}
+.hint{color:var(--mute);font-size:15px;margin:8px 0 0}
+.lvbottom{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+.room{position:relative;margin:0;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.room img{display:block;width:100%;height:auto}
+.room figcaption{position:absolute;left:0;right:0;bottom:0;padding:8px 12px;background:linear-gradient(transparent,rgba(5,4,10,.85));font-weight:700}
+.room .mk{left:50%;top:45%}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
+.slot{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--ink2);border:1px solid #2c2840;border-left:4px solid var(--gold);border-radius:4px;padding:8px 10px;color:var(--paper);font:500 15px/1.25 var(--fu);cursor:pointer}
+.slot b{font-family:var(--fd);font-weight:400;font-size:18px}
+.slot.reservado{border-left-color:#ff9a3a}.slot.ocupado{border-left-color:#8a849e;opacity:.75}
+.slot[aria-pressed="true"]{border-color:var(--gold);background:var(--ink3)}
+.detail{background:var(--ink2);border-radius:6px;padding:18px 20px;box-shadow:0 0 0 1px rgba(255,255,255,.07)}
+.detail h3{margin:0;font-family:var(--fd);font-weight:400;font-size:30px;line-height:1}.detail h3 span{color:var(--gold)}
+.detail .st{display:inline-block;margin:8px 0 4px;font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:3px;background:var(--gold);color:var(--ink)}
+.detail .st.reservado{background:#ff9a3a}.detail .st.ocupado{background:#8a849e}
+.detail p{margin:6px 0 0;color:#d6d0ee}
+.prices{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}.prices div{background:var(--ink3);padding:8px 12px;border-radius:4px;text-align:center;min-width:92px}
+.prices b{display:block;font-family:var(--fd);font-weight:400;font-size:22px;color:var(--gold)}.prices span{font-size:14px;color:var(--mute)}
+.detail .btn{margin-top:14px}
+@media (max-width:820px){.lvbottom{grid-template-columns:1fr}.pano-in{height:210px}}
 @media (max-width:820px){.hero{grid-template-columns:1fr}.steps,.plans{grid-template-columns:1fr}.spaces{grid-template-columns:1fr}form{grid-template-columns:1fr;padding:18px}}
 @media (prefers-reduced-motion:no-preference){.btn{transition:transform .08s}}
 </style>
@@ -97,7 +133,7 @@ footer a{color:var(--mute)}
       <h1>Tu negocio, <em>dentro de un videojuego</em></h1>
       <p class="lede">Asfalto Rojo es un juego de lucha callejera en 3D para móvil y ordenador. Sus calles están llenas de fachadas, vallas, locales y vehículos, y cualquiera de ellos puede llevar tu marca.</p>
       <div class="ctas">
-        <a class="btn main" href="#registro">Quiero anunciarme</a>
+        <a class="btn main" href="#plano">Ver espacios libres</a>
         <a class="btn wa" id="heroWa" href="https://wa.me/34607296712">Escribir por WhatsApp</a>
       </div>
     </div>
@@ -109,7 +145,7 @@ footer a{color:var(--mute)}
     <h2>Cómo funciona</h2>
     <p class="sub">No necesitas saber nada de videojuegos: nos mandas una foto o tu logo y nosotros lo ponemos en el juego.</p>
     <div class="steps">
-      <div class="step"><b>Eliges el espacio</b><p>Una fachada en la calle, una valla, el local donde espera el jefe del nivel o un vehículo rotulado.</p></div>
+      <div class="step"><b>Eliges el espacio</b><p>En el <a href="#plano">plano</a> de cada nivel: una fachada en la calle, una valla o el local donde espera el jefe. Cada uno tiene su número.</p></div>
       <div class="step"><b>Nos mandas tu imagen</b><p>Una foto de tu fachada o tu logotipo. Lo adaptamos al estilo del juego y te enseñamos cómo queda antes de nada.</p></div>
       <div class="step"><b>Sale en el juego</b><p>Tu negocio aparece para todos los jugadores durante el tiempo contratado: un mes, seis meses o un año.</p></div>
     </div>
@@ -122,10 +158,25 @@ footer a{color:var(--mute)}
       <div class="space"><img src="img/fachada.jpg" alt="Tienda con su rótulo y su escaparate en la calle del juego" loading="lazy"><div><span>Fachada en la calle</span><b>Tu tienda tal como es</b><p>Redibujamos tu fachada real, con su rótulo y su escaparate, a pie de calle donde pasan los jugadores.</p></div></div>
       <div class="space"><img src="img/gimnasio-sala.jpg" alt="Interior de un gimnasio real donde se libra la pelea final del nivel" loading="lazy"><div><span>Local del jefe · el más visto</span><b>La pelea final, en tu local</b><p>Cada nivel acaba dentro de un local. Si es el tuyo, el combate más importante del nivel se libra entre tus paredes.</p></div></div>
       <div class="space"><img src="img/valla.jpg" alt="Valla publicitaria iluminada en la calle del juego" loading="lazy"><div><span>Valla publicitaria</span><b>Tu anuncio, iluminado</b><p>Una valla con tu cartel en mitad de la calle. La forma más sencilla de empezar.</p></div></div>
-      <div class="space"><img src="img/coches.jpg" alt="Coches y furgonetas aparcados en las calles del juego" loading="lazy"><div><span>Vehículos y objetos</span><b>Furgonetas, coches, cajas</b><p>Vehículos rotulados con tu marca aparcados en la calle, contenedores, cajas y carteles del escenario.</p></div></div>
+      <div class="space"><img src="img/coches.jpg" alt="Coches y furgonetas aparcados en las calles del juego" loading="lazy"><div><span>Vehículos y objetos · próximamente</span><b>Furgonetas, coches, cajas</b><p>Vehículos rotulados con tu marca aparcados en la calle, contenedores, cajas y carteles del escenario.</p></div></div>
     </div>
   </section>
 
+
+  <section id="plano">
+    <h2>Elige tu sitio</h2>
+    <p class="sub">Este es el plano real de cada nivel, tal como se ve en el juego. Cada espacio lleva su número: toca uno libre para ver qué es, cuánto cuesta y pedirlo.</p>
+    <div class="pick-top"><p class="count" id="count">Cargando espacios…</p>
+      <p class="legend"><span><i style="background:var(--gold)"></i>Libre</span><span><i style="background:#ff9a3a"></i>Reservado</span><span><i style="background:#8a849e"></i>Ocupado</span></p></div>
+    <div class="lvtabs" id="lvtabs" role="group" aria-label="Nivel"></div>
+    <p class="lvname" id="lvname"></p>
+    <div class="pano" id="pano"><div class="pano-in" id="panoIn"><img id="panoImg" alt="" width="3200" height="400"></div></div>
+    <p class="hint">En el móvil, desliza el plano a los lados. Los números del 1 al 6 están en la calle; el 7 es el local del final, donde está el jefe.</p>
+    <div class="lvbottom">
+      <div><figure class="room" id="room"><img id="roomImg" alt="" width="1200" height="400"><figcaption id="roomCap"></figcaption></figure><div class="slots" id="slots"></div></div>
+      <div class="detail" id="detail" aria-live="polite"></div>
+    </div>
+  </section>
   <section>
     <h2>Precios</h2>
     <p class="sub">Se paga por meses. Cuanto más tiempo, más barato sale cada mes. El precio depende del espacio: los locales del final de cada nivel son los más vistos.</p>
@@ -134,6 +185,7 @@ footer a{color:var(--mute)}
       <div class="plan best"><b>6 meses</b><p>Tu marca durante una temporada entera.</p><span class="off">Con descuento</span></div>
       <div class="plan"><b>1 año</b><p>El mejor precio por mes y tu espacio reservado.</p><span class="off">Máximo descuento</span></div>
     </div>
+    <div id="priceTable"></div>
     <p class="note">Pregúntanos sin compromiso: te decimos qué espacios quedan libres y el precio de cada uno.</p>
   </section>
 
@@ -147,6 +199,7 @@ footer a{color:var(--mute)}
       <label>Correo electrónico <small>opcional</small><input name="email" type="email" autocomplete="email"></label>
       <label>Sector <small>tienda, restaurante, gimnasio…</small><input name="sector"></label>
       <label>Localidad <small>opcional</small><input name="localidad" autocomplete="address-level2"></label>
+      <label>Número de espacio <small>del plano, por ejemplo 3-05</small><input name="numero" id="fNum" placeholder="Si aún no lo sabes, déjalo en blanco"></label>
       <label>Espacio que te interesa
         <select name="espacio"><option>No lo sé, aconsejadme</option><option>Fachada en la calle</option><option>Local del jefe (final de nivel)</option><option>Valla publicitaria</option><option>Vehículo u objeto rotulado</option></select></label>
       <label>Tiempo
@@ -187,10 +240,63 @@ footer a{color:var(--mute)}
     if (!f.elements.ok.checked) { err.textContent = 'Marca la casilla de privacidad para poder enviarlo.'; return; }
     var t = ['*Quiero anunciarme en Asfalto Rojo*', '', 'Negocio: ' + v('negocio'), 'Contacto: ' + v('contacto'), 'Teléfono: ' + v('tel')];
     if (v('email')) t.push('Correo: ' + v('email')); if (v('sector')) t.push('Sector: ' + v('sector')); if (v('localidad')) t.push('Localidad: ' + v('localidad'));
-    t.push('Espacio: ' + v('espacio'), 'Tiempo: ' + v('tiempo')); if (v('mensaje')) t.push('', v('mensaje'));
+    if (v('numero')) t.push('Número de espacio: ' + v('numero')); t.push('Espacio: ' + v('espacio'), 'Tiempo: ' + v('tiempo')); if (v('mensaje')) t.push('', v('mensaje'));
     var url = wa(t.join('\n')); ok.hidden = false;
     var w = window.open(url, '_blank'); if (!w) location.href = url;
   });
+})();
+</script>
+<script src="../anuncios/espacios.js"></script>
+<script>
+(function(){
+  var E = window.ESPACIOS; if (!E) return;
+  var $ = function(id){ return document.getElementById(id); }, data = E.inicial(), lv = 1, sel = null;
+  var hoy = new Date().toISOString().slice(0, 10);
+  var estado = function(s){ var e = data.espacios[s.id] || { estado: 'libre' }; if (e.estado === 'ocupado' && !E.activo(e, hoy)) return 'libre'; return e.estado || 'libre'; };
+  var eur = function(n){ return n ? (Math.round(n * 100) / 100).toLocaleString('es-ES') + ' €' : ''; };
+  var precio = function(s){ var e = data.espacios[s.id] || {}, p = e.precio && (e.precio.mes || e.precio.semestre || e.precio.anio) ? e.precio : (data.precios || {})[s.tipo] || {}; return p; };
+  // where the number sits on the plan: x along the street, y the height of that kind of space (the plan shows 12.5 m, from -1.75 to 10.75)
+  var Y = { fachada: 3.3, valla: 2.75, jefe: 2.6 }, X0 = -2, LARGO = 100;
+  function counts(){ var libres = 0, total = 0, porTipo = {}; E.lista.forEach(function(s){ total++; var st = estado(s); if (st === 'libre') { libres++; porTipo[s.tipo] = (porTipo[s.tipo] || 0) + 1; } });
+    $('count').innerHTML = 'Quedan <b>' + libres + '</b> espacios libres de ' + total + ' <span style="color:var(--mute);font-weight:500;font-size:16px">(' + Object.keys(E.TIPOS).map(function(k){ return (porTipo[k] || 0) + ' ' + E.TIPOS[k].nombre.toLowerCase().replace('fachada en la calle', 'fachadas').replace('valla publicitaria', 'vallas').replace('local del jefe', 'locales del jefe'); }).join(', ') + ')</span>'; }
+  function tabs(){ $('lvtabs').innerHTML = E.NIVELES.map(function(n, i){ var libres = E.lista.filter(function(s){ return s.nivel === i + 1 && estado(s) === 'libre'; }).length;
+    return '<button type="button" data-l="' + (i + 1) + '" aria-pressed="' + (lv === i + 1) + '">Nivel ' + (i + 1) + '<small>' + libres + ' libres</small></button>'; }).join(''); }
+  function mk(s){ var st = estado(s), e = data.espacios[s.id] || {}; return '<button type="button" class="mk ' + st + '" data-id="' + s.id + '" aria-pressed="' + (sel === s.id) + '" title="' + s.id + ' · ' + E.TIPOS[s.tipo].nombre + (st === 'ocupado' && e.negocio ? ' · ' + e.negocio : st === 'libre' ? ' · libre' : ' · reservado') + '"' +
+    (s.tipo === 'jefe' ? '' : ' style="left:' + ((s.x - X0) / LARGO * 100).toFixed(2) + '%;top:' + ((10.75 - Y[s.tipo]) / 12.5 * 100).toFixed(1) + '%"') + '>' + s.id.split('-')[1] + '</button>'; }
+  function level(){
+    var L = E.lista.filter(function(s){ return s.nivel === lv; }), J = L.filter(function(s){ return s.tipo === 'jefe'; })[0];
+    $('lvname').innerHTML = 'Nivel ' + lv + ' · ' + E.NIVELES[lv - 1] + ' <span>· acaba en ' + E.LOCALES[lv - 1] + '</span>';
+    $('panoImg').src = 'plano/nivel-' + lv + '.jpg'; $('panoImg').alt = 'La calle del nivel ' + lv + ', ' + E.NIVELES[lv - 1] + ', con los espacios numerados';
+    $('panoIn').querySelectorAll('.mk').forEach(function(b){ b.remove(); }); $('panoIn').insertAdjacentHTML('beforeend', L.filter(function(s){ return s.tipo !== 'jefe'; }).map(mk).join(''));
+    $('roomImg').src = 'plano/local-' + lv + '.jpg'; $('roomImg').alt = 'Dentro de ' + E.LOCALES[lv - 1] + ', donde se pelea contra el jefe del nivel ' + lv;
+    $('room').querySelectorAll('.mk').forEach(function(b){ b.remove(); }); $('room').insertAdjacentHTML('beforeend', mk(J)); $('roomCap').textContent = '7 · Local del jefe: ' + E.LOCALES[lv - 1];
+    $('slots').innerHTML = L.map(function(s){ var st = estado(s), e = data.espacios[s.id] || {}; return '<button type="button" class="slot ' + st + '" data-id="' + s.id + '" aria-pressed="' + (sel === s.id) + '"><b>' + s.id + '</b>' + E.TIPOS[s.tipo].nombre + '<span style="color:' + (st === 'libre' ? 'var(--gold)' : st === 'reservado' ? '#ff9a3a' : 'var(--mute)') + '">' + (st === 'ocupado' ? (e.negocio || 'Ocupado') : st === 'reservado' ? 'Reservado' : 'Libre') + '</span></button>'; }).join('');
+    if (!sel || E.porId(sel).nivel !== lv) { var f = L.filter(function(s){ return estado(s) === 'libre'; })[0] || L[0]; sel = f.id; }
+    detail(); mark();
+  }
+  function mark(){ document.querySelectorAll('[data-id]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.id === sel); }); }
+  function detail(){
+    var s = E.porId(sel), st = estado(s), e = data.espacios[s.id] || {}, T = E.TIPOS[s.tipo], p = precio(s), h = '';
+    h += '<h3><span>' + s.id + '</span> · ' + T.nombre + '</h3><span class="st ' + st + '">' + (st === 'ocupado' ? 'Ocupado' : st === 'reservado' ? 'Reservado' : 'Libre') + '</span>';
+    h += '<p>Nivel ' + s.nivel + ', ' + E.NIVELES[s.nivel - 1] + '. ' + s.donde + '.</p>';
+    if (st === 'ocupado') h += '<p>Ahora mismo está aquí <b>' + (e.negocio || 'un anunciante') + '</b>' + (e.hasta ? ', hasta el ' + e.hasta.split('-').reverse().join('/') : '') + '. Si te interesa para después, pregúntanos.</p>';
+    if (st === 'reservado') h += '<p>Alguien lo está mirando. Si te interesa, escríbenos y te decimos si se queda libre.</p>';
+    h += '<p><b>Qué necesitamos:</b> ' + T.pide + '</p>';
+    if (p.mes || p.semestre || p.anio) h += '<div class="prices">' + (p.mes ? '<div><b>' + eur(p.mes) + '</b><span>1 mes</span></div>' : '') + (p.semestre ? '<div><b>' + eur(p.semestre) + '</b><span>6 meses</span></div>' : '') + (p.anio ? '<div><b>' + eur(p.anio) + '</b><span>1 año</span></div>' : '') + '</div>';
+    else h += '<p><b>Precio:</b> pregúntanos, te lo decimos al momento.</p>';
+    h += '<a class="btn ' + (st === 'ocupado' ? 'main' : 'wa') + '" href="#registro" id="pickBtn">' + (st === 'libre' ? 'Quiero el ' + s.id : 'Preguntar por el ' + s.id) + '</a>';
+    $('detail').innerHTML = h;
+    $('pickBtn').onclick = function(){ var f = document.getElementById('f'); f.elements.numero.value = s.id + ' · ' + T.nombre + ' (nivel ' + s.nivel + ', ' + E.NIVELES[s.nivel - 1] + ')';
+      var o = { fachada: 'Fachada en la calle', valla: 'Valla publicitaria', jefe: 'Local del jefe (final de nivel)' }[s.tipo]; Array.prototype.forEach.call(f.elements.espacio.options, function(op){ if (op.text === o) f.elements.espacio.value = op.value; }); };
+  }
+  function prices(){ var P = data.precios || {}, rows = Object.keys(E.TIPOS).filter(function(k){ var p = P[k] || {}; return p.mes || p.semestre || p.anio; });
+    $('priceTable').innerHTML = rows.length ? '<div class="prices" style="justify-content:center">' + rows.map(function(k){ var p = P[k]; return '<div><span>' + E.TIPOS[k].nombre + '</span><b>' + (p.mes ? eur(p.mes) + '/mes' : '') + '</b><span>' + [p.semestre ? '6 meses: ' + eur(p.semestre) : '', p.anio ? '1 año: ' + eur(p.anio) : ''].filter(Boolean).join(' · ') + '</span></div>'; }).join('') + '</div>' : ''; }
+  function all(){ counts(); tabs(); level(); prices(); }
+  document.addEventListener('click', function(ev){ var b = ev.target.closest('[data-id]'); if (b) { sel = b.dataset.id; detail(); mark(); if (b.classList.contains('slot') && innerWidth < 820) $('detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    var t = ev.target.closest('#lvtabs [data-l]'); if (t) { lv = +t.dataset.l; sel = null; tabs(); level(); } });
+  var q = (location.hash.match(/^#(\d+)-(\d\d)$/) || []); if (q[1] && E.porId(q[1] + '-' + q[2])) { lv = +q[1]; sel = q[1] + '-' + q[2]; }
+  all();
+  fetch('../anuncios/anuncios.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ if (j && j.espacios) { data = j; all(); } }).catch(function(){});
 })();
 </script>
 </body>

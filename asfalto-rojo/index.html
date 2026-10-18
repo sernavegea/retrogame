@@ -1098,7 +1098,7 @@ function buildSoulFront(X){
   lightAt(X - 3.6, 4.8, WALL_Z + 2.4, 0xdfeaff, 1.25); lightAt(X + 4, 4.8, WALL_Z + 2.4, 0xdfeaff, 1.25); buildCar(X - 5.6, 0xe9e9ee, 'hatch'); buildCar(X + 6.3, 0xe2e4e8, 'van');
 }
 function buildVenue(X, kind){
-  const V = ROOMS[kind].front; if (V.build) V.build(X); else genericFront(X, V);
+  const V = ROOMS[kind].front, J = jefeSlot(worldIx); if (J && J.on && !J.fijo) buildImgFront(X, J, 7.6, 5.7); else if (V.build) V.build(X); else genericFront(X, V);
   lightAt(X, 2.5, WALL_Z + 1.8, V.glow, 1.5); halo(X, 1.5, WALL_Z + .5, V.glow, 3.4, 3.6, .28);
   const pool = plane3(new T.MeshBasicMaterial({ map: glowTex, color: V.glow, transparent: true, opacity: .16, depthWrite: false, blending: T.AdditiveBlending }), X, .02, WALL_Z + 3.6, 6, 5, [-Math.PI / 2, 0, 0]);
   // chevrons on the ground that light up when it is time to go in
@@ -1603,6 +1603,44 @@ function bulbStringsRoom(X, pal){ const pts = [], colr = []; for (let k = 0; k <
   const p = new T.Points(g, new T.PointsMaterial({ size: .5, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); p.frustumCulled = false; world.add(p);
   for (let k = 0; k < 4; k++) lightAt(X - 12 + k * 8, 3.8, RWALL + 2.5, 0xffc080, .9); }
 
+/* Catálogo de espacios publicitarios de Asfalto Rojo.
+   Lo usan el juego (dónde va cada espacio), la página de anunciantes (el plano) y la de administración.
+   El número de un espacio es «nivel-espacio»: 3-05 es el quinto espacio del nivel 3, contando de izquierda a derecha.
+   Lo que cambia (libre u ocupado, el negocio, la imagen, la fecha de fin y los precios) no está aquí sino en anuncios/anuncios.json. */
+var ESPACIOS = (function(){
+  var NIVELES = ['El barrio', 'El centro', 'El polígono', 'El desguace', 'El puerto', 'El paseo marítimo', 'El mercado', 'Las vías', 'La zona de copas', 'Las torres'];
+  var LOCALES = ['Dobletinta', 'Peluquería Tijeras', 'SoulBody', 'Casino del Chatarrero', 'La lonja', 'Chiringuito Las Olas', 'Estudio Aguja Negra', 'Taller El Grasas', 'Discoteca Ritmo', 'Ático de la Torre Roja'];
+  var TIPOS = {
+    fachada: { nombre: 'Fachada en la calle', ancho: 1200, alto: 800, pide: 'Foto de frente de la fachada, en horizontal (3:2).' },
+    valla: { nombre: 'Valla publicitaria', ancho: 1200, alto: 600, pide: 'Cartel o logotipo en horizontal (2:1).' },
+    jefe: { nombre: 'Local del jefe', ancho: 1200, alto: 900, pide: 'Foto de frente de la fachada (4:3). Dentro del local se ve la misma imagen en un cartel.' }
+  };
+  // posición en metros a lo largo de la calle (x) y ancho (w); el local del jefe es la puerta del final y la sala de dentro
+  var SITIOS = [
+    { n: 1, tipo: 'fachada', x: 4.4, w: 10, donde: 'La primera fachada, justo donde empieza el nivel' },
+    { n: 2, tipo: 'fachada', x: 18, w: 9, donde: 'Fachada en la primera pelea' },
+    { n: 3, tipo: 'valla', x: 31, w: 5.2, donde: 'Valla de la primera pelea' },
+    { n: 4, tipo: 'fachada', x: 44, w: 9, donde: 'Fachada en la segunda pelea' },
+    { n: 5, tipo: 'valla', x: 57, w: 5.2, donde: 'Valla entre la segunda y la tercera pelea' },
+    { n: 6, tipo: 'valla', x: 73, w: 5.2, donde: 'Valla de la tercera pelea, antes del local' },
+    { n: 7, tipo: 'jefe', x: 86, w: 8, donde: 'La puerta del final y la sala de la pelea contra el jefe' }
+  ];
+  // los que ya están hechos a mano en el juego, a partir de fotos
+  var FIJOS = { '1-01': 'Dimpresión · Dosmares', '1-07': 'Dobletinta', '3-07': 'SoulBody' };
+  var lista = [];
+  NIVELES.forEach(function(nombre, i){ SITIOS.forEach(function(s){
+    var id = (i + 1) + '-' + (s.n < 10 ? '0' : '') + s.n;
+    lista.push({ id: id, nivel: i + 1, nombreNivel: nombre, n: s.n, tipo: s.tipo, x: s.x, w: s.w, donde: s.tipo === 'jefe' ? LOCALES[i] + ': ' + s.donde.toLowerCase() : s.donde, fijo: FIJOS[id] || '' });
+  }); });
+  // el estado de partida, antes de que haya un anuncios.json publicado
+  function inicial(){ var e = {}; lista.forEach(function(s){ e[s.id] = s.fijo ? { estado: 'ocupado', negocio: s.fijo } : { estado: 'libre' }; });
+    return { version: 1, actualizado: '', precios: { fachada: {}, valla: {}, jefe: {} }, espacios: e }; }
+  // ¿se ve en el juego ahora? ocupado y sin fecha de fin pasada
+  function activo(e, hoy){ return !!e && e.estado === 'ocupado' && (!e.hasta || e.hasta >= (hoy || new Date().toISOString().slice(0, 10))); }
+  return { NIVELES: NIVELES, LOCALES: LOCALES, TIPOS: TIPOS, lista: lista, inicial: inicial, activo: activo, porId: function(id){ for (var i = 0; i < lista.length; i++) if (lista[i].id === id) return lista[i]; return null; } };
+})();
+if (typeof window !== 'undefined') window.ESPACIOS = ESPACIOS;
+
 /* ---------- real shop fronts along the streets (sponsors) ----------
    SPONSORS[level] lists the fronts drawn in that street: x is the centre, w the width; buildings behind keep their place,
    but no neon sign, bin or parked car is put in front of a sponsor's window. */
@@ -1671,11 +1709,19 @@ function buildDimFront(X){
   halo(X, 3.9, WALL_Z + .3, 0xfff2d0, 9, 1.4, .08);
   const pool = plane3(new T.MeshBasicMaterial({ map: glowTex, color: 0xffe0b0, transparent: true, opacity: .12, depthWrite: false, blending: T.AdditiveBlending }), X, .02, WALL_Z + 3.2, 10, 4.5, [-Math.PI / 2, 0, 0]);
 }
-const SPONSORS = { 0: [{ x: 4.4, w: 10, build: buildDimFront, nombre: 'Dimpresión · Dosmares' }] };
-// a lit billboard in every street that has no sponsor there yet: the space is for sale and says how to buy it
-const ADS_URL = 'https://sernavegea.github.io/retrogame/anunciate/', ADS_TEL = '607 296 712';
-const AD_TEXTS = [['ESTE ESPACIO', 'PUEDE SER TUYO', 'Anuncia tu negocio dentro del juego'], ['TU MARCA', 'AQUÍ', 'Fachadas, vallas, locales y vehículos'], ['¿TIENES UN', 'NEGOCIO?', 'Aparece en Asfalto Rojo']];
-function adPanel(d, w, h, t){
+/* ---------- the advertising spaces: numbered, for sale, filled from anuncios/anuncios.json ----------
+   Where each space is comes from ESPACIOS (espacios.js); what is in it (free, taken, the business, its picture, until when)
+   comes from the published anuncios.json, which the admin page updates. Free spaces show their number in the game. */
+const ADS_URL = 'https://sernavegea.github.io/retrogame/anunciate/', ADS_TEL = '607 296 712', ANUN_URL = 'https://sernavegea.github.io/retrogame/anuncios/';
+let ANUN = ESPACIOS.inicial(), anunDirty = false, slotCache = {};
+try { const c = JSON.parse(localStorage.getItem('ar-anuncios') || 'null'); if (c && c.espacios) ANUN = c; } catch (_) {}
+function setAnuncios(j){ if (!j || !j.espacios) return false; const same = JSON.stringify(j.espacios) === JSON.stringify(ANUN.espacios); ANUN = j; try { localStorage.setItem('ar-anuncios', JSON.stringify(j)); } catch (_) {} if (!same) { slotCache = {}; anunDirty = true; } return !same; }
+function slotsFor(ix){
+  if (slotCache[ix]) return slotCache[ix];
+  return slotCache[ix] = ESPACIOS.lista.filter(s => s.nivel === ix + 1).map(s => { const e = (ANUN.espacios || {})[s.id] || { estado: 'libre' }; return Object.assign({}, s, { e, on: ESPACIOS.activo(e) }); });
+}
+const AD_TEXTS = [['ESTE ESPACIO', 'PUEDE SER TUYO', 'Anuncia tu negocio dentro del juego'], ['TU MARCA', 'AQUÍ', 'Fachadas, vallas y locales'], ['¿TIENES UN', 'NEGOCIO?', 'Aparece en Asfalto Rojo']];
+function adPanel(d, w, h, t, id){
   d.r(0, 0, w, h, '#0e0c16'); d.grad(.08, .08, w - .16, h - .16, '#221a34', '#0e0c16');
   d.frame(.14, .14, w - .28, h - .28, .05, '#ffc83a'); d.e.globalAlpha = .9; d.e.fillStyle = '#ffc83a'; for (const [x, y, ww, hh] of [[.09, .09, w - .18, .05], [.09, h - .14, w - .18, .05], [.09, .09, .05, h - .18], [w - .14, .09, .05, h - .18]]) d.e.fillRect(x * d.sx, d.Hp - (y + hh) * d.sy, ww * d.sx, hh * d.sy); d.e.globalAlpha = 1;
   const k = h / 2.6;
@@ -1683,26 +1729,66 @@ function adPanel(d, w, h, t){
   stxt(d, t[1], w / 2, 1.6 * k, .4 * k, '#ff2d55', { f: FONT_D, w: 400, glow: .9, max: w - .6 });
   stxt(d, t[2], w / 2, 1.13 * k, .26 * k, '#e8e2ff', { w: 700, glow: .4, max: w - .6 });
   d.circ(w * .12, .62 * k, .13 * k, '#25d366', true); stxt(d, 'WhatsApp ' + ADS_TEL, w / 2 + .15 * k, .62 * k, .32 * k, '#ffc83a', { w: 800, glow: .8, max: w - 1.2 * k });
-  stxt(d, 'sernavegea.github.io/retrogame/anunciate', w / 2, .3 * k, .15 * k, '#a59fc4', { w: 600, glow: .3, max: w - .4 });
+  stxt(d, (id ? 'ESPACIO ' + id + ' · ' : '') + 'sernavegea.github.io/retrogame/anunciate', w / 2, .3 * k, .15 * k, '#a59fc4', { w: 600, glow: .3, max: w - .4 });
+  if (id) { d.g(.22, h - .62 * k, 1.05 * k, .36 * k, '#ffc83a'); stxt(d, id, .22 + .525 * k, h - .44 * k, .27 * k, '#0e0c16', { f: FONT_D, w: 400 }); }
+}
+// an advertiser's picture: drawn the moment it arrives; until then (or with no connection) the business's name on a dark panel
+function anunSrc(e){ return /^(https?:|data:|blob:)/.test(e.imagen) ? e.imagen : ANUN_URL + e.imagen; }
+function anunMat(s, W, H, glow){
+  const [c, x] = cv(W, H), t = tex(c), m = new T.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: glow, roughness: .6 });
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a2438'); g.addColorStop(1, '#0e0c16'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#f4f0ff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `400 ${H * .16 | 0}px ${FONT_D}`; const nm = (s.e.negocio || 'Tu negocio').toUpperCase(), mw = x.measureText(nm).width;
+  x.save(); x.translate(W / 2, H / 2); if (mw > W * .86) x.scale(W * .86 / mw, 1); x.fillText(nm, 0, 0); x.restore(); t.needsUpdate = true;
+  if (s.e.imagen) { const i = new Image(); i.crossOrigin = 'anonymous';
+    i.onload = () => { const k = Math.max(W / i.width, H / i.height), iw = i.width * k, ih = i.height * k; x.clearRect(0, 0, W, H); x.drawImage(i, (W - iw) / 2, (H - ih) / 2, iw, ih); t.needsUpdate = true; }; i.src = anunSrc(s.e); }
+  return m;
+}
+// a taken street front: the advertiser's photo on a building of its own, lit like the others
+function buildImgFront(X, s, wO, hO){
+  const w = wO || s.w, h = hO || 6.2, side = mat(0x1c1a22, .9), front = anunMat(s, 1200, Math.round(1200 * h / w), .42);
+  const b = new T.Mesh(new T.BoxGeometry(w, h, 4), [side, side, side, side, front, side]); b.position.set(X, h / 2, WALL_Z - 1.86); b.receiveShadow = true; world.add(b);
+  box3(mat(0x101014, .6), X, h + .08, WALL_Z - 1.86, w + .2, .16, 4.1);
+  lightAt(X, 3.6, WALL_Z + 1.8, 0xfff0d8, .9); halo(X, h * .55, WALL_Z + .3, 0xfff0dc, w * .9, h * .7, .06);
+}
+// a free street front: a vinyl banner across the building (or, where there are no buildings, a sign on two posts) with its number
+function buildFreeFront(X, s){
+  const open = !!TH.open, w = open ? 3.6 : Math.min(s.w - 1.6, 6.6), h = open ? 1.7 : 1.25;
+  const m = board(w, h, (x, W, H) => { x.fillStyle = '#f4efe2'; x.fillRect(0, 0, W, H); x.fillStyle = '#ff2d55'; x.fillRect(0, 0, W, H * .1); x.fillRect(0, H * .9, W, H * .1);
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#16121e';
+    const line = (t, y, px, f) => { x.font = f.replace('PX', px | 0); const mw = x.measureText(t).width; x.save(); x.translate(W / 2, y); if (mw > W * .92) x.scale(W * .92 / mw, 1); x.fillText(t, 0, 0); x.restore(); };
+    line(open ? 'ESPACIO LIBRE' : 'SE ALQUILA ESTA FACHADA', H * (open ? .26 : .32), H * (open ? .17 : .24), "400 PXpx 'Bungee','Impact',sans-serif");
+    x.fillStyle = '#c4122f'; line('Espacio ' + s.id + ' · tu negocio aquí', H * (open ? .5 : .64), H * (open ? .12 : .2), "800 PXpx 'Barlow Condensed',sans-serif");
+    if (open) { x.fillStyle = '#16121e'; line('WhatsApp ' + ADS_TEL, H * .72, H * .12, "800 PXpx 'Barlow Condensed',sans-serif"); } }, .45);
+  if (open) { const steel = mat(0x3a3c44, .5, .6); for (const sx of [-1.4, 1.4]) box3(steel, X + sx, .9, WALL_Z + 1, .09, 1.8, .09); plane3(m, X, 2.3, WALL_Z + 1.06, w, h); }
+  else { plane3(m, X, 3.25, WALL_Z + .12, w, h); const rope = mat(0x2a2a2e, .6); for (const sx of [-1, 1]) box3(rope, X + sx * (w / 2 + .12), 3.25 + h / 2 - .05, WALL_Z + .1, .26, .03, .03); }
 }
 function buildAdBoard(X, s){
-  const w = 5.2, h = 2.6, y0 = 1.45, z = WALL_Z + .62, d = painter(1536, 768, w, h); adPanel(d, w, h, AD_TEXTS[(s && s.v) || 0]);
+  const w = 5.2, h = 2.6, y0 = 1.45, z = WALL_Z + .62;
+  let face; if (s.on) face = anunMat(s, 1200, 600, .95); else { const d = painter(1536, 768, w, h); adPanel(d, w, h, AD_TEXTS[(s.n || 0) % AD_TEXTS.length], s.id); face = d.mat({ roughness: .5, emissiveIntensity: 1 }); }
   const steel = mat(0x2a2c34, .5, .6), back = mat(0x15141c, .8);
-  const b = new T.Mesh(new T.BoxGeometry(w, h, .14), [back, back, back, back, d.mat({ roughness: .5, emissiveIntensity: 1 }), back]); b.position.set(X, y0 + h / 2, z); b.castShadow = true; world.add(b);
+  const b = new T.Mesh(new T.BoxGeometry(w, h, .14), [back, back, back, back, face, back]); b.position.set(X, y0 + h / 2, z); b.castShadow = true; world.add(b);
   for (const sx of [-1.6, 1.6]) box3(steel, X + sx, y0 / 2, z - .02, .12, y0, .12);
   box3(steel, X, y0 + h + .12, z + .25, w * .7, .05, .05); for (const sx of [-1.3, 1.3]) { box3(steel, X + sx, y0 + h + .18, z + .45, .32, .1, .2); halo(X + sx, y0 + h + .05, z + .55, 0xfff0d0, 1.6, 1, .45); }
   lightAt(X, y0 + h * .6, z + 1.6, 0xffe4b8, .8); halo(X, y0 + h / 2, z + .2, 0xffc83a, w * 1.3, h * 1.4, .1);
 }
-// inside every boss room: a lit sign on the back wall, clear of the furniture
+const jefeSlot = ix => slotsFor(ix).find(s => s.tipo === 'jefe');
+// inside every boss room: the advertiser's picture, or a lit sign saying the place is for sale
 function buildRoomAd(X, kind){
-  if (kind === 'gym') return;   // SoulBody is already a real sponsor's own gym
-  const w = 2.9, h = 1.45, px = X + (kind === 'chiringuito' ? -17.6 : 17), d = painter(1024, 512, w, h); adPanel(d, w, h, ['ESTE LOCAL', 'PUEDE SER EL TUYO', 'La pelea final, en tu negocio']);
-  const b = new T.Mesh(new T.BoxGeometry(w, h, .08), [mat(0x15141c, .8), mat(0x15141c, .8), mat(0x15141c, .8), mat(0x15141c, .8), d.mat({ roughness: .5, emissiveIntensity: 1 }), mat(0x15141c, .8)]); b.position.set(px, 2.55, RWALL + .2); world.add(b);
-  halo(px, 2.55, RWALL + .3, 0xffc83a, w * 1.4, h * 1.6, .12); lightAt(px, 2.4, RWALL + 1.6, 0xffe4b8, .7);
+  const J = jefeSlot(worldIx); if (kind === 'gym' || (J && J.on && J.fijo)) return;   // places already built from a real business
+  const px = X + (kind === 'chiringuito' ? -17.6 : 17); let w = 2.9, h = 1.45, face;
+  if (J && J.on) { w = 4; h = 3; face = anunMat(J, 1200, 900, .55); } else { const d = painter(1024, 512, w, h); adPanel(d, w, h, ['ESTE LOCAL', 'PUEDE SER EL TUYO', 'La pelea final, en tu negocio'], J && J.id); face = d.mat({ roughness: .5, emissiveIntensity: 1 }); }
+  const bk = mat(0x15141c, .8), b = new T.Mesh(new T.BoxGeometry(w, h, .08), [bk, bk, bk, bk, face, bk]); b.position.set(px, 1.2 + h / 2 + (h < 2 ? .6 : 0), RWALL + .2); world.add(b);
+  halo(px, b.position.y, RWALL + .3, 0xffc83a, w * 1.4, h * 1.6, .12); lightAt(px, b.position.y - .1, RWALL + 1.6, 0xffe4b8, .7);
 }
-const AD_BOARDS = [{ x: 31, w: 5.2, v: 0, build: buildAdBoard, nombre: 'Espacio libre' }, { x: 57, w: 5.2, v: 1, build: buildAdBoard, nombre: 'Espacio libre' }, { x: 73, w: 5.2, v: 2, build: buildAdBoard, nombre: 'Espacio libre' }];
-const sponsorsFor = ix => (SPONSORS[ix] || []).concat(AD_BOARDS.filter(a => !(SPONSORS[ix] || []).some(s => Math.abs(s.x - a.x) < (s.w + a.w) / 2)));
-const sponsorAt = (x, pad) => sponsorsFor(worldIx).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
+// what gets built along the street, and where props should keep clear of it
+const sponsorsFor = ix => slotsFor(ix).filter(s => s.tipo === 'valla' || (s.tipo === 'fachada' && s.on)).map(s => Object.assign(s, { build: s.tipo === 'valla' ? buildAdBoard : s.fijo === 'Dimpresión · Dosmares' ? buildDimFront : buildImgFront }));
+const freeFronts = ix => slotsFor(ix).filter(s => s.tipo === 'fachada' && !s.on);
+const sponsorAt = (x, pad) => slotsFor(worldIx).some(s => s.tipo !== 'jefe' && (s.on || s.tipo === 'valla' || TH.open) && Math.abs(x - s.x) < s.w / 2 + (pad || 0));
+// the newest list, from the web; kept for when there is no connection
+function anunLoad(){
+  fetch(ANUN_URL + 'anuncios.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+    if (j && setAnuncios(j) && worldIx >= 0 && (mode === 'title' || mode === 'select' || mode === 'net')) { anunDirty = false; buildWorld(worldIx); attract(); } }).catch(() => {});
+}
 
 /* ---------- Dobletinta: the level 1 boss's place, after the owner's photos ----------
    Outside: grey render, a dark stone plinth, a tall glass doorway and the name in raised blackletter.
@@ -1818,13 +1904,14 @@ function buildWorld(ix){
   for (let X = -4; X < X1; X += TH.kind === 'desguace' ? 28 : 14) buildLamp(X);
   if (TH.kind === 'paseo') buildPaseo();
   for (const s of sponsorsFor(ix)) s.build(s.x, s);
-  const at = [8, 34.5, 60, 97].map(X => sponsorAt(X, 2.5) ? X + 9 : X), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
+  for (const s of freeFronts(ix)) buildFreeFront(s.x, s);
+  const at = [8, 34.5, 60, 97].map(X => { while (sponsorAt(X, 2.5) && X < 100) X += 4.5; return X; }), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
   at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
   buildVenue(DOOR_X, LEVELS[ix].room); buildRoom(LEVELS[ix].room);
 }
 // back to the street look after a boss room (or when a level restarts without rebuilding)
-function useStreet(ix){ if (worldIx !== ix) buildWorld(ix); else if (envKey !== 's' + ix) { envKey = 's' + ix; TH = THEMES[LEVELS[ix].theme]; applyTheme(); try { buildEnv(); } catch (e) {} } }
+function useStreet(ix){ if (worldIx !== ix || anunDirty) { anunDirty = false; buildWorld(ix); } else if (envKey !== 's' + ix) { envKey = 's' + ix; TH = THEMES[LEVELS[ix].theme]; applyTheme(); try { buildEnv(); } catch (e) {} } }
 
 
 /* ============================================================
@@ -2849,7 +2936,7 @@ function endGame(won, nw){
 }
 function again(){ if (NET.host && !salon.perdida) return netToLobby(); if (salon.perdida) { score = 0; playT = 0; bestCombo = 0; combo = 0; loadLevel(levelIx, true); } else openSelect(); }
 function setPause(on){ if (NET.on) { NET.menu = !!on && (mode === 'play' || mode === 'win'); ui.pause.hidden = !NET.menu; if (NET.menu) { fillMoves($('#pauseMoves')); $('#btnResume').focus({ preventScroll: true }); } return; } if (on && mode === 'play') { mode = 'pause'; fillMoves($('#pauseMoves')); ui.pause.hidden = false; $('#btnResume').focus({ preventScroll: true }); } else if (!on && mode === 'pause') { mode = 'play'; ui.pause.hidden = true; last = performance.now(); } }
-function toTitle(){ document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'title'; backdrop(); ui.title.hidden = false; }
+function toTitle(){ anunLoad(); document.body.classList.remove('playing'); hideAll(); ui.hud.hidden = true; mode = 'title'; backdrop(); ui.title.hidden = false; }
 
 /* ---------- input ---------- */
 const keys = {}, remote = [{}, {}];
@@ -3702,7 +3789,7 @@ document.addEventListener('gesturestart', e => e.preventDefault());
 
 /* ---------- boot ---------- */
 function boot(){
-  buildRain(); buildWorld(0); setupPost(); label();   // the street stays empty until the fighters are loaded, so the plain stand-in dolls never flash on screen
+  anunLoad(); buildRain(); buildWorld(0); setupPost(); label();   // the street stays empty until the fighters are loaded, so the plain stand-in dolls never flash on screen
   const pb = $('#btnPlay'); pb.disabled = true; pb.textContent = 'Cargando…';
   const ready = () => { pb.disabled = false; pb.textContent = 'Jugar'; if (SALON) { openSelect(); avisar({ tipo: 'ejs-inicio' }); } netAuto(); };
   loadAssets().then(() => { try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
@@ -3715,7 +3802,7 @@ function boot(){
 // Hooks for the arcade page that hosts the game (coins, pause, score, screenshot, guest input) and for automated tests
 window.__ar = { dbg, A: ASSET, get assets(){ return ASSET.ok; }, get player(){ return players[0]; }, get players(){ return players; }, get enemies(){ return enemies; },
   get net(){ return { on: NET.on, host: NET.host, client: NET.client, slot: NET.slot, code: NET.code, lobby: NET.lobby, n: players.length, me: NET.me && { x: NET.me.x, z: NET.me.z, hp: NET.me.hp, state: NET.me.state, lives: NET.me.lives, out: NET.me.out, arma: NET.me.arma && NET.me.arma.k }, ents: NET.ents.size, crates: crates.length, pickups: pickups.length }; },
-  netCreate, netJoin, netStart, netToLobby, netLeave, get NET(){ return NET; }, get inputs(){ return inputs; }, get stick(){ return stick; },
+  anuncios(j){ setAnuncios(j); anunDirty = false; buildWorld(worldIx); }, get ANUN(){ return ANUN; }, get three(){ return { scene, camera, renderer }; }, set camX(v){ camX = v; }, netCreate, netJoin, netStart, netToLobby, netLeave, get NET(){ return NET; }, get inputs(){ return inputs; }, get stick(){ return stick; },
   get s(){ const p = players[0]; return { mode, level: levelIx, camX, zi, score, lives: p && p.lives, hp: p && Math.round(p.hp), n: enemies.length, px: p && p.x, boss: !!boss, np: players.length, progress, post: post.ok && post.on }; },
   get pickups(){ return pickups; }, get shots(){ return shots; }, get zona(){ return { zi, inRoom, awaiting, wave, envKey }; }, sala(){ zi = LV.zones.length - 1; zone = null; for (const e of enemies) disposeFighter(e); enemies = []; enterRoom(); }, dar(k, i){ const p = players[i || 0]; giveWeapon(p, k, WEAPONS[k].uses); }, diff(i){ diffIx = i; DF = DIFFS[i]; }, poner(spec, dx, dz){ const p = players[0], e = spawnEnemy(spec, p.x + dx, p.z + (dz || 0)); e.wait = 0; return e; },
   moneda, entrada, espejo, retratos: renderPortraits, pausa(si){ setPause(!!si); }, puntos(){ return score; }, foto(){ try { render(); return canvas.toDataURL('image/jpeg', .82); } catch (e) { return null; } },

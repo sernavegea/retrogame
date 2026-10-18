@@ -73,6 +73,16 @@ ARCHIVOS
   lib/          three.js r128 y sus cargadores de modelos; peerjs.min.js para jugar en red.
   portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
 
+ESPACIOS PUBLICITARIOS
+  Cada nivel tiene 7 espacios numerados nivel-espacio (3-05 = nivel 3, espacio 5), de izquierda a derecha:
+  01 fachada, 02 fachada, 03 valla, 04 fachada, 05 valla, 06 valla, 07 local del jefe (la puerta del final y la sala de dentro).
+  Los libres se ven en el juego con su numero (lona "Se alquila esta fachada", valla "Este espacio puede ser tuyo", cartel en la sala).
+  Ya ocupados y hechos a medida: 1-01 Dimpresion / Dosmares, 1-07 Dobletinta y 3-07 SoulBody.
+  Donde esta cada espacio: anuncios/espacios.js (lo usan el juego, la web y la pagina de administracion).
+  Que hay en cada uno: anuncios/anuncios.json, que escribe la pagina anunciate/admin.html (no se sube a mano).
+  El juego descarga anuncios.json al arrancar y lo guarda para cuando no haya conexion. Las imagenes estan en anuncios/img/.
+  Plano de la web: anunciate/plano/ (capturas de cada calle y cada local, sacadas del propio juego).
+
 CREDITOS Y LICENCIAS
   Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
   Motor 3D: three.js, licencia MIT. https://threejs.org
