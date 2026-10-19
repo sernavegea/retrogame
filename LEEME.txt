@@ -1,0 +1,97 @@
+ASFALTO ROJO - beat 'em up en 3D. Maquina de la casa de MenteRetro.
+
+Esta carpeta va tal cual en la raiz del repositorio, junto al index.html del salon.
+El salon la abre con  asfalto-rojo/index.html?salon=1  y entonces el juego va directo a elegir luchador,
+cada moneda de mas vale un credito para continuar y los puntos pasan al salon al salir.
+Abierta directamente (asfalto-rojo/index.html) funciona como juego suelto, con su pantalla de inicio.
+
+HISTORIA
+  Don Rojo y sus bandas cobran a cada negocio de la ciudad; al que no paga, se lo cierran a golpes.
+  Nico, Chispa, Vera y Tinta, cuatro amigos del barrio, deciden plantarse. Cada jefe que cae suelta el nombre
+  del siguiente, de la Navaja en Dobletinta hasta Don Rojo, en lo alto de la Torre Roja.
+  Al vencer a cada jefe hay una escena: en el local, el jefe tirado en el suelo confiesa quien es el siguiente y donde esta,
+  y despues se ve la calle del nivel siguiente con su jefe en la puerta. Tras Don Rojo, escena final. Se saltan con cualquier boton.
+  La primera partida desde el nivel 1 empieza con una intro (se salta con cualquier boton); se puede volver a ver
+  con "Ver la historia" en la pantalla de inicio. Cada nivel abre con una frase de la historia y la cuenta sigue al superarlo.
+
+QUE TRAE
+  10 niveles, cada uno con su calle y su local, donde espera el jefe:
+    1 El barrio (Dobletinta)          6 El paseo maritimo (chiringuito)
+    2 El centro (peluqueria)          7 El mercado (estudio de tatuajes)
+    3 El poligono (SoulBody)          8 Las vias (taller)
+    4 El desguace (casino)            9 La zona de copas (discoteca)
+    5 El puerto (lonja)              10 Las torres (atico de Don Rojo, jefe final)
+  Al limpiar la calle se entra por la puerta y el jefe espera dentro. Cada nivel superado se puede elegir despues como punto de partida.
+  Armas por el suelo y en las cajas: bate, tuberia, navaja y botella. Golpe las usa (se gastan), Especial las lanza.
+  Hay enemigos armados (sueltan el arma al caer) y uno de amarillo que tira botellas desde lejos.
+  Tres dificultades: Facil, Normal y Dificil. En Normal y Dificil los enemigos bloquean y los jefes se enfurecen a media vida.
+  4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
+  Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
+  Blue: al pasarse el juego entero se desbloquea Blue, una chihuahua negra que acompana al 1P en todos los niveles.
+  Cada vez que sale el ataque especial, corre a por el enemigo mas cercano y le muerde dos veces. No se le puede hacer dano.
+  Se lleva o se deja en la pantalla de elegir luchador ("Con Blue" / "Sin Blue") y en la sala de juego en red.
+  Locales reales: la fachada de Dimpresion / Dosmares (nivel 1, al principio) y Dobletinta (nivel 1: la fachada es la puerta
+  del jefe y la pelea final es dentro, con el mural del estudio, a partir de las fotos del local).
+  En red, de 2 a 4 jugadores, cada uno en su movil (ver JUGAR EN RED).
+  Dos jugadores en el mismo teclado o con mandos (en el ordenador), y a distancia con "Invitar a dobles" del salon.
+  El progreso se guarda en el navegador de cada jugador.
+
+JUGAR EN RED (2 a 4 moviles)
+  Uno pulsa "Jugar en red" > "Crear sala" y le sale un codigo de 4 letras y un QR. Los demas pulsan "Jugar en red",
+  escriben el codigo y "Unirse"; quien no tenga la app puede escanear el QR y jugar desde el navegador (misma partida).
+  En la sala cada uno elige luchador (se pueden repetir; el repetido sale con otro color). El anfitrion elige nivel y
+  dificultad y pulsa "Empezar". Los luchadores que se pueden elegir y los niveles son los que tenga desbloqueados el anfitrion.
+  Cada movil dibuja la partida entera con su propia calidad: por la red no viaja video, solo posiciones y golpes
+  (unos 20 KB por segundo por jugador). El anfitrion lleva a los enemigos, las oleadas y los puntos.
+  Con mas jugadores salen mas enemigos y aguantan mas.
+  Si alguien pierde la conexion, su luchador se retira y la partida sigue; puede volver a entrar con el mismo codigo
+  mientras quede sitio. Si el anfitrion sale o se le corta, la partida termina para todos.
+  El menu de pausa no para la partida en red. Si el anfitrion bloquea el movil o cambia de app, la partida se congela para todos.
+  La conexion es directa entre moviles (WebRTC). Para encontrarse usan el servidor publico y gratuito de PeerJS (0.peerjs.com)
+  y, si la red movil no deja conexion directa, su servidor de reenvio. Hace falta internet; con wifi va mejor que con datos.
+
+INSTALARLO COMO APP
+  iPhone / iPad: abre  .../asfalto-rojo/  en Safari, pulsa Compartir y elige "Anadir a pantalla de inicio".
+  Android: en Chrome, boton "Instalar app" de la pantalla de inicio del juego (o menu > Instalar aplicacion).
+  Una vez instalado abre a pantalla completa y funciona sin conexion. El progreso se guarda aparte del navegador.
+  Archivos de la app: manifest.webmanifest, sw.js, iconos/ y fuentes/ (las tipografias viajan con el juego).
+
+CONTROLES
+  Un jugador:    WASD o flechas, J golpe, L especial, espacio o K salto (tambien Z X C y V). P pausa, M musica.
+  Dos jugadores: 1P con WASD, J K L y espacio; 2P con flechas, coma golpe, guion especial, punto o Mayus derecha salto
+                 (o 1 3 0 del teclado numerico). El 2P puede entrar en plena partida pulsando dos veces la coma, o con otro mando.
+  Mando (PS5, Xbox...): stick o cruceta, cuadrado golpe, equis salto, circulo especial, Options pausa.
+  En los menus: izquierda/derecha luchador, arriba/abajo nivel, L1/R1 dificultad, triangulo 1 o 2 jugadores, equis empezar.
+  Tactil: joystick a la izquierda y tres botones a la derecha (golpe, salto, especial).
+
+COMBOS
+  Golpe, Golpe, Golpe      Gancho que tumba (solo sigue si el golpe anterior acierta)
+  Manten Golpe y suelta    Mazazo (desde el nivel 2)
+  En el aire, Golpe: patada voladora.   Especial quieto: molinete.   Especial moviendote: embestida.
+
+ARCHIVOS
+  index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
+  models.js     cuerpos 3D, animaciones y texturas. Incluye las texturas de los cuatro luchadores con las caras de las fotos de referencia.
+  lib/          three.js r128 y sus cargadores de modelos; peerjs.min.js para jugar en red.
+  portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
+
+ESPACIOS PUBLICITARIOS
+  Cada nivel tiene 7 espacios numerados nivel-espacio (3-05 = nivel 3, espacio 5), de izquierda a derecha:
+  01 fachada, 02 fachada, 03 valla, 04 fachada, 05 valla, 06 valla, 07 local del jefe (la puerta del final y la sala de dentro).
+  Los libres se ven en el juego con su numero (lona "Se alquila esta fachada", valla "Este espacio puede ser tuyo", cartel en la sala).
+  Ya ocupados y hechos a medida: 1-01 Dimpresion / Dosmares, 1-07 Dobletinta y 3-07 SoulBody.
+  Donde esta cada espacio: anuncios/espacios.js (lo usan el juego, la web y la pagina de administracion).
+  Que hay en cada uno: anuncios/anuncios.json, que escribe la pagina anunciate/admin.html (no se sube a mano).
+  El juego descarga anuncios.json al arrancar y lo guarda para cuando no haya conexion. Las imagenes estan en anuncios/img/.
+  Plano de la web: anunciate/plano/ (capturas de cada calle y cada local, sacadas del propio juego).
+
+CREDITOS Y LICENCIAS
+  Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
+  Motor 3D: three.js, licencia MIT. https://threejs.org
+  Juego en red: PeerJS, licencia MIT. https://peerjs.com   Codigos QR: qrcode-generator (Kazuhiko Arase), licencia MIT.
+
+CALIDAD Y RENDIMIENTO
+  "Calidad: auto" (pantalla de inicio y pausa) baja la resolucion, las sombras y el brillo si el equipo no llega a 45 imagenes por segundo.
+  Tambien se puede fijar a mano: alta, media, baja o minima. La tecla F muestra un contador de imagenes por segundo y la tarjeta grafica usada.
+  Si va lento en un PC bueno, pulsa F: si pone "Microsoft Basic Render Driver" falta el controlador de la grafica en Windows (instalarlo desde NVIDIA, AMD o Intel); si pone "SwiftShader", activar en Chrome Configuracion > Sistema > "Usar aceleracion grafica".
+  Con el modo de ahorro de energia de Chrome activo, el juego queda limitado a 30 imagenes por segundo.
