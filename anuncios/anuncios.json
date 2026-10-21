@@ -1,0 +1,227 @@
+{
+ "version": 1,
+ "actualizado": "2026-10-21T20:34:36.658Z",
+ "precios": {
+  "fachada": {},
+  "valla": {},
+  "jefe": {}
+ },
+ "espacios": {
+  "1-01": {
+   "estado": "ocupado",
+   "negocio": "Dimpresión · Dosmares"
+  },
+  "1-02": {
+   "estado": "ocupado",
+   "hasta": "2026-10-21",
+   "negocio": "MambaFit",
+   "imagen": "img/1-02-mvikm1fq.jpg"
+  },
+  "1-03": {
+   "estado": "libre"
+  },
+  "1-04": {
+   "estado": "libre"
+  },
+  "1-05": {
+   "estado": "libre"
+  },
+  "1-06": {
+   "estado": "libre"
+  },
+  "1-07": {
+   "estado": "ocupado",
+   "negocio": "Dobletinta"
+  },
+  "2-01": {
+   "estado": "libre"
+  },
+  "2-02": {
+   "estado": "libre"
+  },
+  "2-03": {
+   "estado": "libre"
+  },
+  "2-04": {
+   "estado": "libre"
+  },
+  "2-05": {
+   "estado": "libre"
+  },
+  "2-06": {
+   "estado": "libre"
+  },
+  "2-07": {
+   "estado": "libre"
+  },
+  "3-01": {
+   "estado": "libre"
+  },
+  "3-02": {
+   "estado": "libre"
+  },
+  "3-03": {
+   "estado": "libre"
+  },
+  "3-04": {
+   "estado": "libre"
+  },
+  "3-05": {
+   "estado": "libre"
+  },
+  "3-06": {
+   "estado": "libre"
+  },
+  "3-07": {
+   "estado": "ocupado",
+   "negocio": "SoulBody"
+  },
+  "4-01": {
+   "estado": "libre"
+  },
+  "4-02": {
+   "estado": "libre"
+  },
+  "4-03": {
+   "estado": "libre"
+  },
+  "4-04": {
+   "estado": "libre"
+  },
+  "4-05": {
+   "estado": "libre"
+  },
+  "4-06": {
+   "estado": "libre"
+  },
+  "4-07": {
+   "estado": "libre"
+  },
+  "5-01": {
+   "estado": "libre"
+  },
+  "5-02": {
+   "estado": "libre"
+  },
+  "5-03": {
+   "estado": "libre"
+  },
+  "5-04": {
+   "estado": "libre"
+  },
+  "5-05": {
+   "estado": "libre"
+  },
+  "5-06": {
+   "estado": "libre"
+  },
+  "5-07": {
+   "estado": "libre"
+  },
+  "6-01": {
+   "estado": "libre"
+  },
+  "6-02": {
+   "estado": "libre"
+  },
+  "6-03": {
+   "estado": "libre"
+  },
+  "6-04": {
+   "estado": "libre"
+  },
+  "6-05": {
+   "estado": "libre"
+  },
+  "6-06": {
+   "estado": "libre"
+  },
+  "6-07": {
+   "estado": "libre"
+  },
+  "7-01": {
+   "estado": "libre"
+  },
+  "7-02": {
+   "estado": "libre"
+  },
+  "7-03": {
+   "estado": "libre"
+  },
+  "7-04": {
+   "estado": "libre"
+  },
+  "7-05": {
+   "estado": "libre"
+  },
+  "7-06": {
+   "estado": "libre"
+  },
+  "7-07": {
+   "estado": "libre"
+  },
+  "8-01": {
+   "estado": "libre"
+  },
+  "8-02": {
+   "estado": "libre"
+  },
+  "8-03": {
+   "estado": "libre"
+  },
+  "8-04": {
+   "estado": "libre"
+  },
+  "8-05": {
+   "estado": "libre"
+  },
+  "8-06": {
+   "estado": "libre"
+  },
+  "8-07": {
+   "estado": "libre"
+  },
+  "9-01": {
+   "estado": "libre"
+  },
+  "9-02": {
+   "estado": "libre"
+  },
+  "9-03": {
+   "estado": "libre"
+  },
+  "9-04": {
+   "estado": "libre"
+  },
+  "9-05": {
+   "estado": "libre"
+  },
+  "9-06": {
+   "estado": "libre"
+  },
+  "9-07": {
+   "estado": "libre"
+  },
+  "10-01": {
+   "estado": "libre"
+  },
+  "10-02": {
+   "estado": "libre"
+  },
+  "10-03": {
+   "estado": "libre"
+  },
+  "10-04": {
+   "estado": "libre"
+  },
+  "10-05": {
+   "estado": "libre"
+  },
+  "10-06": {
+   "estado": "libre"
+  },
+  "10-07": {
+   "estado": "libre"
+  }
+ }
+}
