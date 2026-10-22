@@ -75,6 +75,7 @@ button:focus-visible{outline:2px solid var(--cool);outline-offset:3px}
 #inCard span{display:block;margin-top:6px;font-weight:600;font-size:clamp(15px,2vw,20px);color:var(--paper)}
 #inTitle{position:absolute;left:0;right:0;top:20%;margin:0;text-align:center;font-family:var(--f-display);font-weight:400;font-size:clamp(44px,9vw,110px);line-height:1;color:var(--paper);text-transform:uppercase;text-shadow:0 4px 0 #000,0 0 30px rgba(255,45,85,.6);animation:slide .4s ease-out}
 #inTitle span{color:var(--hot)}
+#inCap .who{display:block;font-style:normal;font-family:var(--f-display);font-weight:400;font-size:.7em;letter-spacing:.06em;color:var(--gold);margin-bottom:4px}
 #inSkip{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(10% + 10px);pointer-events:auto;padding:6px 14px;font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:rgba(10,8,18,.7);box-shadow:0 0 0 1px var(--mute)}
 #storyCap{position:absolute;left:0;right:0;bottom:22px;width:min(86%,720px);margin:0 auto;box-sizing:border-box;padding:8px 14px;text-align:center;font-family:var(--f-ui);font-style:italic;font-weight:700;font-size:clamp(15px,2vw,20px);line-height:1.25;color:#f1ecff;background:rgba(8,6,16,.72);border-left:4px solid var(--hot);pointer-events:none;animation:slide .3s ease-out}
 body:not(.playing) #storyCap{display:none}
@@ -715,7 +716,7 @@ function buildBuildings(){
     const b = new T.Mesh(new T.BoxGeometry(w, h, 6), [side, side, roofM, roofM, facade(w, h), side]);
     b.position.set(bx + w / 2, h / 2, WALL_Z - 3); b.receiveShadow = true; world.add(b);
     const nm = i % 5 === 3 ? ['TU ANUNCIO AQUÍ', '#ffc83a'] : names[i % names.length]; const sy = low ? rr(3.75, Math.max(3.8, h - 1)) : rr(3.9, 5.7);
-    if (Math.abs(bx + w / 2 - DOOR_X) > 7 && !sponsorAt(bx + w / 2, w / 2)) neonSign(nm[0], nm[1], bx + w / 2 + rr(-.4, .4), sy, rr(.85, 1.15), w - .8);
+    if (Math.abs(bx + w / 2 - DOOR_X) > 7 && !sponsorAt(bx + w / 2, w / 2) && !freeAt(bx + w / 2, w / 2)) neonSign(nm[0], nm[1], bx + w / 2 + rr(-.4, .4), sy, rr(.85, 1.15), w - .8);
     if (low && R() < .6) { const tank = new T.Mesh(G('tank', () => new T.CylinderGeometry(.7, .7, 1.3, 10)), side); tank.position.set(bx + w * rr(.3, .7), h + .9, WALL_Z - 2.2); world.add(tank); }
     bx += w + (R() < .3 ? rr(1.3, 1.9) : 0); i++;
   }
@@ -1734,21 +1735,42 @@ function adPanel(d, w, h, t, id){
 }
 // an advertiser's picture: drawn the moment it arrives; until then (or with no connection) the business's name on a dark panel
 function anunSrc(e){ return /^(https?:|data:|blob:)/.test(e.imagen) ? e.imagen : ANUN_URL + e.imagen; }
-function anunMat(s, W, H, glow){
+// a daylight or dusk photo, toned to the rainy night of the street: cooler, darker at the top and the edges, so it sits among the other buildings
+function nightGrade(x, W, H){
+  x.save(); x.globalCompositeOperation = 'multiply'; x.fillStyle = '#c4bee0'; x.fillRect(0, 0, W, H);
+  x.globalCompositeOperation = 'source-over';
+  let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(14,10,28,.6)'); g.addColorStop(.3, 'rgba(14,10,28,.1)'); g.addColorStop(.75, 'rgba(14,10,28,0)'); g.addColorStop(1, 'rgba(10,8,18,.35)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (const [a, b] of [[0, W * .1], [W, W * .9]]) { g = x.createLinearGradient(a, 0, b, 0); g.addColorStop(0, 'rgba(10,8,18,.55)'); g.addColorStop(1, 'rgba(10,8,18,0)'); x.fillStyle = g; x.fillRect(Math.min(a, b), 0, W * .1, H); }
+  x.restore();
+}
+function anunMat(s, W, H, glow, night){
   const [c, x] = cv(W, H), t = tex(c), m = new T.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: glow, roughness: .6 });
   const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a2438'); g.addColorStop(1, '#0e0c16'); x.fillStyle = g; x.fillRect(0, 0, W, H);
   x.fillStyle = '#f4f0ff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `400 ${H * .16 | 0}px ${FONT_D}`; const nm = (s.e.negocio || 'Tu negocio').toUpperCase(), mw = x.measureText(nm).width;
   x.save(); x.translate(W / 2, H / 2); if (mw > W * .86) x.scale(W * .86 / mw, 1); x.fillText(nm, 0, 0); x.restore(); t.needsUpdate = true;
   if (s.e.imagen) { const i = new Image(); i.crossOrigin = 'anonymous';
-    i.onload = () => { const k = Math.max(W / i.width, H / i.height), iw = i.width * k, ih = i.height * k; x.clearRect(0, 0, W, H); x.drawImage(i, (W - iw) / 2, (H - ih) / 2, iw, ih); t.needsUpdate = true; }; i.src = anunSrc(s.e); }
+    i.onload = () => { const k = Math.max(W / i.width, H / i.height), iw = i.width * k, ih = i.height * k; x.clearRect(0, 0, W, H); x.drawImage(i, (W - iw) / 2, (H - ih) / 2, iw, ih); if (night) nightGrade(x, W, H); t.needsUpdate = true; }; i.src = anunSrc(s.e); }
   return m;
 }
 // a taken street front: the advertiser's photo on a building of its own, lit like the others
 function buildImgFront(X, s, wO, hO){
-  const w = wO || s.w, h = hO || 6.2, side = mat(0x1c1a22, .9), front = anunMat(s, 1200, Math.round(1200 * h / w), .42);
-  const b = new T.Mesh(new T.BoxGeometry(w, h, 4), [side, side, side, side, front, side]); b.position.set(X, h / 2, WALL_Z - 1.86); b.receiveShadow = true; world.add(b);
-  box3(mat(0x101014, .6), X, h + .08, WALL_Z - 1.86, w + .2, .16, 4.1);
-  lightAt(X, 3.6, WALL_Z + 1.8, 0xfff0d8, .9); halo(X, h * .55, WALL_Z + .3, 0xfff0dc, w * .9, h * .7, .06);
+  const w = wO || s.w, h = hO || 6.2, up = wO ? 0 : 3.6, z0 = WALL_Z - 1.86, side = mat(0x1c1a22, .9), stone = mat(0x34323c, .85), trim = mat(0x18171d, .6);
+  // the photo, set a little back between two pillars, toned to the night
+  const front = anunMat(s, 1200, Math.round(1200 * h / (w - .6)), .4, true);
+  const b = new T.Mesh(new T.BoxGeometry(w - .6, h, 4), [side, side, side, side, front, side]); b.position.set(X, h / 2, z0 - .14); b.receiveShadow = true; world.add(b);
+  for (const sx of [-1, 1]) box3(stone, X + sx * (w / 2 - .15), (h + up) / 2, z0 + .12, .3, h + up, 4.3);
+  box3(stone, X, h + .14, z0 + .2, w + .1, .28, 4.5);                       // cornice over the shop front
+  box3(trim, X, .09, z0 + .1, w - .6, .18, 4.3);                            // kerb of the shop front
+  // the storey above, so the building is as tall as its neighbours and does not end where the photo ends
+  if (up) { const d = painter(512, Math.round(512 * up / w), w, up), wall = pick(['#4a4250', '#3e4450', '#54443e', '#46404a']); d.r(0, 0, w, up, wall);
+    for (let i = 0; i < 40; i++) d.r(R() * w, R() * up, .6 + R(), .05, 'rgba(0,0,0,.12)');
+    const n = Math.max(2, Math.round(w / 3)); for (let i = 0; i < n; i++) { const wx = (i + .5) * w / n - .55, lit = (i * 7 + Math.round(X)) % 3 !== 1;
+      d.r(wx - .08, .7, 1.26, 2.06, '#26222c'); if (lit) { d.g(wx, .78, 1.1, 1.9, '#9a6c3c'); d.r(wx, .78, 1.1, 1.9, '#c8945a'); d.r(wx, 1.9, 1.1, .78, '#8a6a58'); } else d.grad(wx, .78, 1.1, 1.9, '#2a3040', '#141820'); d.r(wx + .52, .78, .06, 1.9, '#26222c'); d.r(wx - .12, .62, 1.34, .1, '#5a5460'); }
+    const top = new T.Mesh(new T.BoxGeometry(w - .6, up, 4), [side, side, side, side, d.mat({ emissiveIntensity: .8 }), side]); top.position.set(X, h + up / 2, z0); world.add(top);
+    box3(trim, X, h + up + .1, z0 + .1, w + .2, .2, 4.4); }
+  // two wall lamps light the front from the pillars, and a faint wet sheen at its foot
+  for (const sx of [-1, 1]) { box3(trim, X + sx * (w / 2 - .15), h - .35, WALL_Z + .45, .22, .14, .3); halo(X + sx * (w / 2 - .15), h - .5, WALL_Z + .62, 0xffe0b0, 1.4, 1, .35); }
+  lightAt(X, h * .6, WALL_Z + 2, 0xffe8c8, .75);
 }
 // a free street front: a vinyl banner across the building (or, where there are no buildings, a sign on two posts) with its number
 function buildFreeFront(X, s){
@@ -1783,6 +1805,7 @@ function buildRoomAd(X, kind){
 // what gets built along the street, and where props should keep clear of it
 const sponsorsFor = ix => slotsFor(ix).filter(s => s.tipo === 'valla' || (s.tipo === 'fachada' && s.on)).map(s => Object.assign(s, { build: s.tipo === 'valla' ? buildAdBoard : s.fijo === 'Dimpresión · Dosmares' ? buildDimFront : buildImgFront }));
 const freeFronts = ix => slotsFor(ix).filter(s => s.tipo === 'fachada' && !s.on);
+const freeAt = (x, pad) => !TH.open && freeFronts(worldIx).some(s => Math.abs(x - s.x) < s.w / 2 + (pad || 0));
 const sponsorAt = (x, pad) => slotsFor(worldIx).some(s => s.tipo !== 'jefe' && (s.on || s.tipo === 'valla' || TH.open) && Math.abs(x - s.x) < s.w / 2 + (pad || 0));
 // the newest list, from the web; kept for when there is no connection
 function anunLoad(){
@@ -1905,7 +1928,7 @@ function buildWorld(ix){
   if (TH.kind === 'paseo') buildPaseo();
   for (const s of sponsorsFor(ix)) s.build(s.x, s);
   for (const s of freeFronts(ix)) buildFreeFront(s.x, s);
-  const at = [8, 34.5, 60, 97].map(X => { while (sponsorAt(X, 2.5) && X < 100) X += 4.5; return X; }), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
+  const at = [8, 34.5, 60, 97].reduce((a, X) => { X = Math.max(X, (a.length ? a[a.length - 1] : -9) + 7.5); while (sponsorAt(X, 2.5) && X < 104) X += 1.5; if (X < 104) a.push(X); return a; }, []), cols = TH.prop === 'container' ? ['#8a3a22', '#23506a', '#3d5a34', '#7a6420'] : [0x7a1626, 0x1d4a6a, 0x3a3a44, 0x6a5a1a];
   at.forEach((X, i) => TH.prop === 'car' || TH.prop === 'van' ? buildCar(X, cols[i], TH.prop === 'van' && i % 2 === 0 ? 'van' : i % 2 ? 'hatch' : 'sedan') : TH.prop === 'container' ? buildContainer(X, cols[i]) : TH.prop === 'kiosk' ? buildKiosk(X, i) : buildPile(X));
   buildProps(); if (TH.steam) { buildSteam(21, 1.3); buildSteam(48, -.6); buildSteam(75, 1.6); }
   buildVenue(DOOR_X, LEVELS[ix].room); buildRoom(LEVELS[ix].room);
@@ -2110,7 +2133,7 @@ LOOKS.capo9 = Object.assign({}, LOOKS.boss, { tintZones: null, z: Object.assign(
 LOOKS.atleta = Object.assign({}, LOOKS.thug, { tone: [.98, .88, .82], gait: 'Jog', hairColor: [.2, .16, .13], bulk: 1.04, tintZones: [9, 10, 15],
   z: Object.assign(paint([24, 24, 30], [9, 10, 15]), paint([228, 228, 232], [12]), paint([30, 30, 36], [13, 14]), paint([20, 20, 24], [7, 18])) });
 
-const SKINS = ['hero', 'vera', 'chaval', 'tinta'], GRIP = [0, 0, 1, .09];   // skin textures that carry a face taken from a reference photo
+const SKINS = ['hero', 'chaval', 'tinta'], GRIP = [0, 0, 1, .09];   // skin textures that carry a face taken from a reference photo
 // Loose clothes (a T-shirt, baggy shorts) should not show the muscles underneath: their zones get a flattened copy of the body's normal map.
 function normalTexture(bodyKey, look){
   const L = LOOKS[look], B = ASSET.body[bodyKey]; if (!L.loose || !B.normPx) return B.normal;
@@ -2887,6 +2910,7 @@ function startGame(){
   score = 0; playT = 0; bestCombo = 0; combo = 0; loadLevel(startLevel, true); banner('¡A por ellos!', 'Nivel ' + (levelIx + 1) + ' · ' + LV.name);
 }
 function loadLevel(ix, fresh){
+  if (IN) introCancel();
   netAll(['level', ix, fresh ? 1 : 0]); levelIx = ix; LV = LEVELS[ix]; inRoom = awaiting = false; trans = null; fadeEl.style.opacity = 0; useStreet(ix); clearActors(); if (!NET.client) for (const c of CRATES) spawnCrate(c[0], c[1], diffIx ? c[2] : 'batido');
   ui.go.textContent = 'Avanza ▶';
   for (const p of players) { if (p.gone) continue; if (fresh) { p.lives = 3; p.hp = p.maxHp; p.energy = 40; p.out = false; loseWeapon(p, false); }
@@ -2903,6 +2927,7 @@ function joinP2(){
   for (const k in cache) delete cache[k]; banner('¡Entra el 2P!', p.ch.name); sfx('pick');
 }
 function afterWin(){
+  if (!afterWin.go && !dbg.noCut) { playCut(levelIx, () => { afterWin.go = true; afterWin(); afterWin.go = false; }); return; }
   const prev = progress; progress = Math.max(progress, levelIx + 1); saveProgress(); const nw = news(prev, progress);
   if (levelIx + 1 >= LEVELS.length) { endGame(true, nw); return; }
   mode = 'clear'; document.body.classList.remove('playing'); ui.go.hidden = true; ui.banner.hidden = true; ui.clear.hidden = false; if (nw.length) sfx('unlock');
@@ -3190,37 +3215,76 @@ const SHOTS = [
     cam: [[0, 83, 2.5, 10.5, 83, 1.3, 0], [7.4, 83, 1.9, 8, 83, 1.25, 0]],
     caps: [[.3, 'Esta noche, Dobletinta no va a pagar.'], [3.6, 'NICO: —Se acabó pagar.']], title: 5 },
 ];
-function playIntro(done){
-  audioInit(); hideAll(); ui.hud.hidden = true; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing');
-  clearActors(); setPlayers([]); mode = 'intro'; IN = { i: -1, t: 0, T: 0, actors: [], moves: [], done, cam: null, start: performance.now() };
+// the boss of each level, and what each one gives away when he is on the floor
+const BOSS_OF = ['capo1', 'capo3', 'capo2', 'boss', 'capo4', 'capo5', 'capo6', 'capo7', 'capo8', 'capo9'];
+const CUT_LINES = [
+  ['—¿Para quién cobras?', 'LA NAVAJA: —Vale, vale… Yo solo recojo. El dinero se lo llevo a El Tijeras, a su peluquería del centro.'],
+  ['—¿A quién le pasas la caja?', 'EL TIJERAS: —Yo no me quedo nada, lo juro… Todo va al polígono. El Mulo se ha quedado con el gimnasio SoulBody.'],
+  ['—¿De dónde sale tanto matón?', 'EL MULO: —Los paga El Chatarrero… Desmonta los coches que robamos en su desguace y lo gasta en su casino.'],
+  ['—Estas cuentas no son tuyas.', 'EL CHATARRERO: —Todo sube a Don Rojo… Su mercancía entra por el puerto. El Pescadero la esconde en la lonja.'],
+  ['—¿Quién más vigila la costa?', 'EL PESCADERO: —El Socorrista… Desde el Chiringuito Las Olas ve todo lo que se mueve en el paseo marítimo.'],
+  ['—Se acabó cobrar por las sombrillas.', 'EL SOCORRISTA: —Id al mercado, valientes… Allí manda La Aguja. Marca a los nuestros en el Estudio Aguja Negra.'],
+  ['—Ese tatuaje rojo… ¿quién lo pidió?', 'LA AGUJA: —Los que llevan la marca conducen los coches de El Grasas. Su taller está bajo el puente, junto a las vías.'],
+  ['—¿Dónde se esconde ahora la banda?', 'EL GRASAS: —Sin coches no hay huida… Están en la zona de copas. El Portero de la discoteca Ritmo guarda la tarjeta de la Torre.'],
+  ['—La tarjeta. Ahora.', 'EL PORTERO: —Toma… Sube si te atreves. Don Rojo os espera en el ático de la Torre Roja. Y no estará solo.'],
+  ['—Se acabó, Don Rojo.', 'DON ROJO: —Esta ciudad… era mía.']
+];
+// after each boss: the confession in the room where he fell, then a look at the next place and who waits there
+function cutShots(ix){
+  const heroes = (players.length ? players.map(p => p.char) : ['hero']).slice(0, 4), lead = CHARS[heroes[0]].name.toUpperCase(), L = CUT_LINES[ix], last = ix >= LEVELS.length - 1;
+  const room = { dur: 9.4, street: ix, room: LEVELS[ix].room, cast(){
+      const b = introActor(BOSS_OF[ix], ROOM_X + 1.3, .2, -1); b.state = 'down'; b.engage = false; if (b.model) b.model.kb = 1;
+      heroes.forEach((k, i) => introActor(k, ROOM_X - .6 - i * 1.05, [.35, -.7, 1.2, -1.4][i], 1, true)); },
+    cam: [[0, ROOM_X - 3.5, 2.1, 7.4, ROOM_X, 1, 0], [9.4, ROOM_X - 1.6, 1.4, 5, ROOM_X + .4, .7, 0]],
+    caps: [[.5, lead + ': ' + L[0]], [2.5, L[1]]] };
+  if (last) return [room, { dur: 8.5, street: 0, cast(){ heroes.forEach((k, i) => { const f = introActor(k, 84.2 + i * 1.1, [.7, -.4, 1.1, -.8][i], -1, true); f.state = 'win'; }); },
+    cam: [[0, 80, 2.4, 10, 85, 2, -3], [8.5, 85, 1.9, 7.6, 85.5, 1.4, -1]],
+    caps: [[.5, lead + ': —Nunca fue tuya.'], [2.6, STORY[ix].done]], card: [3, 'La ciudad es libre', 'Gracias por jugar a Asfalto Rojo', 5] }];
+  const n = ix + 1, R = ROOMS[LEVELS[n].room], E = EDEF[BOSS_OF[n]];
+  return [room, { dur: 7, street: n, cast(){
+      const b = introActor(BOSS_OF[n], DOOR_X, -.4, -1); b.engage = true;
+      if (n === LEVELS.length - 1) { introActor('capo1', DOOR_X - 1.5, -1.2, -1); introActor('capo3', DOOR_X + 1.6, -1.1, -1); }
+      else { introActor('thug', DOOR_X - 1.6, -1.3, -1); introActor('brute', DOOR_X + 1.7, -1.1, -1); } },
+    cam: [[0, DOOR_X - 7, 2.6, 9.5, DOOR_X - 2, 1.8, -2], [7, DOOR_X - 3, 1.9, 7, DOOR_X, 1.5, -1]],
+    caps: [[.6, STORY[n].go]], card: [1, 'Nivel ' + (n + 1) + ' · ' + LEVELS[n].name, (E.nombre || '') + ' · ' + LEVELS[n].zones[LEVELS[n].zones.length - 1].title, 5] }];
+}
+function playIntro(done, shots, cut){
+  audioInit(); hideAll(); ui.hud.hidden = true; ui.go.hidden = true; ui.banner.hidden = true; document.body.classList.remove('playing'); storyEl.hidden = true;
+  if (cut) { for (const p of players) { p.root.visible = false; if (p.ring) p.ring.visible = false; if (p.dog) p.dog.root.visible = false; } } else setPlayers([]);
+  clearActors(); mode = 'intro'; IN = { i: -1, t: 0, T: 0, actors: [], moves: [], done, cam: null, start: performance.now(), shots: shots || SHOTS, cut: !!cut, keep: [levelIx, LV] };
   inEl.box.hidden = false; inEl.title.hidden = true; inEl.card.hidden = true; inEl.cap.textContent = ''; introShot(0);
 }
+function playCut(ix, done){ playIntro(done, cutShots(ix), true); }
 function introShot(i){
-  const S = SHOTS[i]; IN.i = i; IN.t = 0; introClear(); fadeEl.style.opacity = 1;
-  levelIx = S.street; LV = LEVELS[S.street]; inRoom = awaiting = false; useStreet(S.street); S.cast();
-  inEl.cap.textContent = ''; inEl.card.hidden = true; last = performance.now();
+  const S = IN.shots[i]; IN.i = i; IN.t = 0; introClear(); fadeEl.style.opacity = 1;
+  levelIx = S.street; LV = LEVELS[S.street]; inRoom = awaiting = false; useStreet(S.street);
+  if (S.room) { const R0 = ROOMS[S.room]; envKey = 'r' + S.street; TH = R0.th; applyTheme(); try { buildEnv(); } catch (e) {} }
+  S.cast(); if (S.card) { const f = IN.actors[0]; if (f) f.card = S.card; }
+  inEl.cap.textContent = ''; inEl.cap._t = ''; inEl.card.hidden = true; last = performance.now();
 }
+function introCancel(){ if (!IN) return; introClear(); if (IN.cut) { levelIx = IN.keep[0]; LV = IN.keep[1]; } IN = null; inEl.box.hidden = true; inEl.cap.textContent = ''; inEl.cap._t = ''; }
 function endIntro(){
-  if (!IN) return; const done = IN.done; introClear(); IN = null; inEl.box.hidden = true; fadeEl.style.opacity = 0;
-  try { localStorage.setItem('ar-intro', '1'); } catch (_) {}
+  if (!IN) return; const done = IN.done, cut = IN.cut; introCancel(); fadeEl.style.opacity = 0;
+  if (!cut) try { localStorage.setItem('ar-intro', '1'); } catch (_) {}
   for (const I of inputs) I.clear(); done();
 }
 function introStep(dt){
-  const S = SHOTS[IN.i]; IN.t += dt; IN.T += dt; const t = IN.t;
-  fadeEl.style.opacity = Math.max(0, 1 - t / .5, (t - (S.dur - .45)) / .45 * (IN.i < SHOTS.length - 1 ? 1 : 0));
+  const SH = IN.shots, S = SH[IN.i]; IN.t += dt; IN.T += dt; const t = IN.t;
+  fadeEl.style.opacity = Math.max(0, 1 - t / .5, (t - (S.dur - .45)) / .45 * (IN.i < SH.length - 1 ? 1 : 0));
   for (const [f, x0, x1, t0, t1] of IN.moves) { if (t < t0) { f.x = x0; f.state = 'idle'; } else if (t < t1) { const u = (t - t0) / (t1 - t0); f.x = x0 + (x1 - x0) * u; f.state = 'walk'; f.walkT += Math.abs(x1 - x0) / (t1 - t0) * dt * 2.5; f.facing = 1; } else { f.x = x1; f.state = 'idle'; } }
-  for (const f of IN.actors) { if (f.hit) { f.t += dt; if (f.state !== 'attack' || f.t > f.hit.dur + .5) { f.state = 'attack'; f.atk = f.hit; f.t = 0; } } }
+  for (const f of IN.actors) { if (f.hit) { f.t += dt; if (f.state !== 'attack' || f.t > f.hit.dur + .5) { f.state = 'attack'; f.atk = f.hit; f.t = 0; } } else if (f.state === 'down' || f.state === 'win') f.t += dt; }
   // camera
   const K = S.cam; let k = 0; while (k < K.length - 2 && t > K[k + 1][0]) k++; const A = K[k], B = K[k + 1], u = MU.clamp((t - A[0]) / (B[0] - A[0]), 0, 1), e = u * u * (3 - 2 * u);
   IN.cam = A.slice(1).map((v, j) => v + (B[j + 1] - v) * e); camX = IN.cam[3];
   // captions type themselves out; a name card follows each fighter as they arrive
   let cap = ''; for (const c of S.caps) if (t >= c[0]) cap = c[1].slice(0, Math.floor((t - c[0]) * 42));
-  if (inEl.cap.textContent !== cap) inEl.cap.textContent = cap;
-  const who = IN.actors.find(f => f.card && t >= f.card[0] && t < f.card[0] + 2.2);
+  if (inEl.cap._t !== cap) { inEl.cap._t = cap; const m = /^([A-ZÁÉÍÓÚÑ ]{2,24}): (—.*)$/.exec(cap);   // «NAME: —line»: the name above, in gold
+    if (m) { inEl.cap.innerHTML = '<b class="who"></b><span></span>'; inEl.cap.firstChild.textContent = m[1]; inEl.cap.lastChild.textContent = m[2]; } else inEl.cap.textContent = cap; }
+  const who = IN.actors.find(f => f.card && t >= f.card[0] && t < f.card[0] + (f.card[3] || 2.2));
   if (who) { if (inEl.card._k !== who.card[1]) { inEl.card._k = who.card[1]; inEl.card.querySelector('b').textContent = who.card[1]; inEl.card.querySelector('span').textContent = who.card[2]; inEl.card.hidden = false; } }
   else if (!inEl.card.hidden) { inEl.card.hidden = true; inEl.card._k = null; }
   inEl.title.hidden = !(S.title && t >= S.title);
-  if (t >= S.dur) { if (IN.i + 1 < SHOTS.length) introShot(IN.i + 1); else endIntro(); }
+  if (t >= S.dur) { if (IN.i + 1 < SH.length) introShot(IN.i + 1); else endIntro(); }
 }
 // a short line of story at the bottom of the screen while a level starts
 let storyT = 0; const storyEl = $('#storyCap');
@@ -3698,6 +3762,7 @@ $('#netRoster').addEventListener('click', e => { const b = e.target.closest('[da
   if (L.slots[L.you]) L.slots[L.you].char = k; picks[0] = unlockedChar(k) ? k : picks[0]; if (NET.host) netLobbyOut(); else { netUp(['pick', k]); netView(); } });
 $('#netLevel').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (!b || b.disabled || !NET.host) return; NET.lobby.lv = +b.dataset.l; sfx('pick'); netLobbyOut(); });
 $('#netDiff').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (!b || !NET.host) return; NET.lobby.diff = +b.dataset.d; sfx('pick'); netLobbyOut(); });
+addEventListener('keydown', e => { if (e.code === 'Escape' && (mode === 'select' || mode === 'clear' || mode === 'over') && !SALON) toTitle(); });
 $('#btnQuit').onclick = () => { const was = NET.on; netLeave(); ui.pause.hidden = true; NET.menu = false; if (was) openNet(); else toTitle(); };
 $('#btnChange').onclick = () => { if (NET.host) netToLobby(); else if (NET.client) { netLeave(); openNet(); } else openSelect(); };
 $('#btnNext').onclick = () => { if (!NET.client) nextLevel(); };

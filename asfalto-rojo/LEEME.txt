@@ -9,6 +9,8 @@ HISTORIA
   Don Rojo y sus bandas cobran a cada negocio de la ciudad; al que no paga, se lo cierran a golpes.
   Nico, Chispa, Vera y Tinta, cuatro amigos del barrio, deciden plantarse. Cada jefe que cae suelta el nombre
   del siguiente, de la Navaja en Dobletinta hasta Don Rojo, en lo alto de la Torre Roja.
+  Al vencer a cada jefe hay una escena: en el local, el jefe tirado en el suelo confiesa quien es el siguiente y donde esta,
+  y despues se ve la calle del nivel siguiente con su jefe en la puerta. Tras Don Rojo, escena final. Se saltan con cualquier boton.
   La primera partida desde el nivel 1 empieza con una intro (se salta con cualquier boton); se puede volver a ver
   con "Ver la historia" en la pantalla de inicio. Cada nivel abre con una frase de la historia y la cuenta sigue al superarlo.
 
@@ -23,7 +25,7 @@ QUE TRAE
   Armas por el suelo y en las cajas: bate, tuberia, navaja y botella. Golpe las usa (se gastan), Especial las lanza.
   Hay enemigos armados (sueltan el arma al caer) y uno de amarillo que tira botellas desde lejos.
   Tres dificultades: Facil, Normal y Dificil. En Normal y Dificil los enemigos bloquean y los jefes se enfurecen a media vida.
-  4 luchadores hechos a partir de fotos: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
+  4 luchadores: Nico y Chispa desde el principio; Vera y Tinta se desbloquean al superar los niveles 1 y 2.
   Golpes nuevos al avanzar: Embestida (nivel 1 superado) y Mazazo (nivel 2 superado).
   Blue: al pasarse el juego entero se desbloquea Blue, una chihuahua negra que acompana al 1P en todos los niveles.
   Cada vez que sale el ataque especial, corre a por el enemigo mas cercano y le muerde dos veces. No se le puede hacer dano.
@@ -69,7 +71,7 @@ COMBOS
 
 ARCHIVOS
   index.html    todo el juego: escenarios, combate, enemigos, interfaz y sonido.
-  models.js     cuerpos 3D, animaciones y texturas. Incluye las texturas de los cuatro luchadores con las caras de las fotos de referencia.
+  models.js     cuerpos 3D, animaciones y texturas.
   lib/          three.js r128 y sus cargadores de modelos; peerjs.min.js para jugar en red.
   portada.jpg   la imagen que se ve en la pantalla de la maquina desde el pasillo.
 
