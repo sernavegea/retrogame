@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-10-21T20:45:16.384Z",
+ "actualizado": "2026-10-22T06:27:36.355Z",
  "precios": {
   "fachada": {},
   "valla": {},
@@ -13,9 +13,9 @@
   },
   "1-02": {
    "estado": "ocupado",
-   "hasta": "2026-10-21",
+   "hasta": "2026-10-22",
    "negocio": "MambaFit",
-   "imagen": "img/1-02-mvikzr9e.jpg"
+   "imagen": "img/1-02-mvj5smwe.jpg"
   },
   "1-03": {
    "estado": "libre"
