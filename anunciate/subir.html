@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Subir a la web</title>
+<link rel="icon" type="image/png" href="../asfalto-rojo/iconos/icono-32.png">
+<style>
+@font-face{font-family:'Bungee';src:url('../asfalto-rojo/fuentes/bungee-400.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Barlow Condensed';font-weight:500;src:url('../asfalto-rojo/fuentes/barlow-condensed-500-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Barlow Condensed';font-weight:700;src:url('../asfalto-rojo/fuentes/barlow-condensed-700-normal.woff2') format('woff2');font-display:swap}
+:root{--ink:#0b0a14;--ink2:#15131f;--ink3:#1e1b2c;--line:#3a3552;--paper:#f1ecff;--mute:#a59fc4;--hot:#ff2d55;--gold:#ffc83a;--cool:#27e0ff;--ok:#25d366;--res:#ff9a3a;
+  --fd:'Bungee','Impact','Arial Black',sans-serif;--fu:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{background:var(--ink);color:var(--paper);font:500 18px/1.35 var(--fu);-webkit-text-size-adjust:100%}
+body{margin:0}
+.wrap{width:min(900px,100% - 24px);margin:0 auto;padding:14px 0 130px}
+h1{font-family:var(--fd);font-weight:400;font-size:clamp(24px,5vw,34px);margin:6px 0 4px}h1 span{color:var(--hot)}
+h2{font-family:var(--fd);font-weight:400;font-size:20px;margin:0 0 10px}
+p{margin:0}.mute{color:var(--mute)}a{color:var(--cool)}
+.box{background:var(--ink2);border-radius:6px;padding:16px;box-shadow:0 0 0 1px rgba(255,255,255,.07);margin-top:14px}
+button,.pick{font:700 17px/1 var(--fu);letter-spacing:.03em;border:0;border-radius:4px;padding:12px 14px;cursor:pointer;color:var(--ink);background:var(--gold);display:inline-flex;align-items:center;gap:6px}
+button.ghost,.pick.ghost{background:var(--ink3);color:var(--paper);box-shadow:0 0 0 1px var(--line)}
+button.hot{background:var(--hot);color:#fff}button:disabled{opacity:.5;cursor:default}
+.pick input{display:none}
+input[type=text],input[type=password]{font:500 17px/1.2 var(--fu);color:var(--paper);background:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:9px;width:100%;min-width:0}
+input:focus{outline:2px solid var(--cool);outline-offset:1px}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:15px;color:var(--mute)}
+label.c{display:flex;gap:8px;align-items:flex-start;font-size:16px;margin-top:8px}label.c input{margin-top:4px;width:18px;height:18px;flex:none}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.msg{margin-top:8px;font-weight:700}.msg.err{color:#ff8aa0}.msg.ok{color:var(--ok)}
+.files{margin-top:10px;max-height:52vh;overflow:auto;border-radius:4px;box-shadow:0 0 0 1px var(--line)}
+.files div{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:6px 10px;border-bottom:1px solid #24203a;font-size:16px;align-items:center}
+.files div:last-child{border-bottom:0}
+.files .p{overflow-wrap:anywhere}.files .s{color:var(--mute);font-size:14px;white-space:nowrap}
+.tag{font-size:13px;font-weight:700;padding:2px 7px;border-radius:3px;background:var(--ink3);color:var(--mute);white-space:nowrap}
+.tag.nuevo{background:var(--ok);color:var(--ink)}.tag.cambia{background:var(--gold);color:var(--ink)}.tag.salta{background:#3a2030;color:#ff8aa0}
+.sum{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-weight:700}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,10,20,.96);border-top:1px solid var(--line);padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:5}
+.bar .in{width:min(900px,100%);margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.bar p{font-weight:700;flex:1 1 200px}
+progress{width:100%;height:8px;accent-color:var(--hot);margin-top:6px}
+code{background:var(--ink3);padding:1px 5px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Subir a la <span>web</span></h1>
+  <p class="mute">Para cambiar la web desde el móvil: eliges un zip (o archivos sueltos) y se sube todo a <b>sernavegea/retrogame</b> con sus carpetas, en un solo cambio. En uno o dos minutos se ve en la web. <a href="admin.html">Volver a los espacios</a></p>
+
+  <div class="box">
+    <h2>Conexión con GitHub</h2>
+    <p id="acc" class="mute">Comprobando…</p>
+    <div class="row" id="tokRow" style="margin-top:10px" hidden><label class="f" style="flex:1 1 300px">Clave de GitHub<input id="token" type="password" autocomplete="off" placeholder="github_pat_…"></label><button id="saveTok">Guardar y conectar</button></div>
+    <p class="mute" style="font-size:15px;margin-top:6px">Usa la misma clave que la página de los espacios: si ya la guardaste allí en este navegador, no hace falta ponerla otra vez.</p>
+  </div>
+
+  <div class="box">
+    <h2>1 · Qué subir</h2>
+    <div class="row">
+      <label class="pick">Elegir zip o archivos<input id="pickF" type="file" multiple></label>
+      <label class="pick ghost" id="pickDW" hidden>Elegir carpeta<input id="pickD" type="file" webkitdirectory multiple></label>
+      <button class="ghost" id="clear" hidden>Empezar de nuevo</button>
+    </div>
+    <p class="mute" style="font-size:15px;margin-top:8px">Un <b>zip</b> se abre aquí y se sube lo que lleva dentro, con sus carpetas. Por ejemplo, <code>menteretro-con-asfalto-rojo-v30.zip</code> trae la carpeta <code>asfalto-rojo/</code> y va a su sitio tal cual.</p>
+  </div>
+
+  <div class="box">
+    <h2>2 · Dónde</h2>
+    <label class="f">Carpeta de la web donde va (vacío = la raíz de la web)<input id="dest" type="text" placeholder="por ejemplo: asfalto-rojo  o  anunciate" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+    <label class="c"><input type="checkbox" id="strip"><span>Quitar la carpeta de arriba del zip <span class="mute">(si el zip lo trae todo dentro de una carpeta que no quieres en la web)</span></span></label>
+    <label class="c"><input type="checkbox" id="allowAds"><span>Dejar que se sobrescriba <code>anuncios/anuncios.json</code> <span class="mute">(no: ahí están los anuncios publicados; se cambia desde la página de los espacios)</span></span></label>
+    <div class="sum" id="sum"></div>
+    <div class="files" id="files" hidden></div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Subir</h2>
+    <label class="f">Nota del cambio<input id="note" type="text" value="Subida desde el móvil"></label>
+    <p class="mute" style="font-size:15px;margin-top:8px">Solo se suben los archivos nuevos o que han cambiado. No se borra nada de la web: lo que ya estaba y no viene en el zip se queda como estaba.</p>
+    <p class="msg" id="msg"></p>
+    <progress id="prog" value="0" max="1" hidden></progress>
+  </div>
+</div>
+
+<div class="bar"><div class="in"><p id="state">Elige qué subir.</p><button class="hot" id="go" disabled>Subir a la web</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  const OWNER = 'sernavegea', REPO = 'retrogame', API = 'https://api.github.com/repos/' + OWNER + '/' + REPO, ADS = 'anuncios/anuncios.json';
+  const $ = id => document.getElementById(id);
+  let token = '', branch = 'main', remote = null, items = [], busy = false;
+  try { token = localStorage.getItem('ar-admin-token') || ''; } catch (_) {}
+  const gh = (url, opt) => fetch(url.startsWith('http') ? url : API + url, Object.assign({ cache: 'no-store' }, opt || {}, { headers: Object.assign({ Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}) }));
+  const msg = (t, k) => { $('msg').textContent = t || ''; $('msg').className = 'msg ' + (k || ''); };
+  const size = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+  const junk = p => /(^|\/)(__MACOSX|\.git|\.DS_Store|Thumbs\.db|desktop\.ini)(\/|$)/i.test(p);
+
+  async function connect(){
+    remote = null;
+    if (!token) { $('acc').textContent = 'Sin clave. Pégala aquí para poder subir.'; $('tokRow').hidden = false; refresh(); return; }
+    $('acc').textContent = 'Conectando…';
+    try {
+      const r = await gh('');
+      if (r.status === 401) { token = ''; $('acc').textContent = 'La clave no vale (caducada o mal copiada). Pon otra.'; $('tokRow').hidden = false; refresh(); return; }
+      if (!r.ok) { $('acc').textContent = 'GitHub no deja ver el repositorio (' + r.status + '). Revisa que la clave es para sernavegea/retrogame.'; $('tokRow').hidden = false; refresh(); return; }
+      branch = (await r.json()).default_branch || 'main';
+      // what is in the web now, to know what is new and what has not changed
+      const t = await gh('/git/trees/' + encodeURIComponent(branch) + '?recursive=1');
+      remote = {}; if (t.ok) { const j = await t.json(); for (const e of j.tree || []) if (e.type === 'blob') remote[e.path] = e.sha; }
+      $('acc').textContent = 'Conectado a ' + OWNER + '/' + REPO + ' (rama ' + branch + ').'; $('tokRow').hidden = true;
+    } catch (e) { $('acc').textContent = 'No se llega a GitHub. Revisa la conexión.'; }
+    refresh();
+  }
+  $('saveTok').onclick = () => { token = $('token').value.trim(); try { localStorage.setItem('ar-admin-token', token); } catch (_) {} $('token').value = ''; connect(); };
+
+  // the same fingerprint GitHub keeps for each file, to skip what is already there
+  async function gitSha(buf){ const head = new TextEncoder().encode('blob ' + buf.byteLength + '\0'), all = new Uint8Array(head.length + buf.byteLength); all.set(head); all.set(new Uint8Array(buf), head.length);
+    return [...new Uint8Array(await crypto.subtle.digest('SHA-1', all))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+
+  async function addFiles(list, fromDir){
+    msg('Leyendo…'); busy = true; refresh();
+    try {
+      for (const f of list) {
+        if (/\.zip$/i.test(f.name) && !fromDir) {
+          if (!window.JSZip) { msg('No se ha podido cargar el lector de zips. Revisa la conexión y recarga.', 'err'); continue; }
+          const z = await JSZip.loadAsync(f);
+          for (const e of Object.values(z.files)) if (!e.dir && !junk(e.name)) items.push({ src: e.name, buf: await e.async('arraybuffer') });
+        } else { const p = fromDir ? (f.webkitRelativePath || f.name) : f.name; if (!junk(p)) items.push({ src: p, buf: await f.arrayBuffer() }); }
+      }
+      for (const it of items) if (!it.sha) it.sha = await gitSha(it.buf);
+      msg('');
+    } catch (e) { msg('No se ha podido leer: ' + (e.message || e), 'err'); }
+    busy = false; refresh();
+  }
+  $('pickF').onchange = e => { const l = [...e.target.files]; e.target.value = ''; if (l.length) addFiles(l, false); };
+  $('pickD').onchange = e => { const l = [...e.target.files]; e.target.value = ''; if (l.length) addFiles(l, true); };
+  if ('webkitdirectory' in document.createElement('input') && !/Android|iPhone|iPad/i.test(navigator.userAgent)) $('pickDW').hidden = false;
+  $('clear').onclick = () => { items = []; msg(''); refresh(); };
+  for (const id of ['dest', 'strip', 'allowAds']) $(id).addEventListener('input', refresh);
+
+  // where each file goes in the web
+  function plan(){
+    const dest = $('dest').value.trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+    const tops = new Set(items.map(it => it.src.split('/')[0])), strip = $('strip').checked && tops.size === 1 && items.every(it => it.src.includes('/'));
+    const seen = new Map();
+    for (const it of items) { let p = it.src.replace(/\\/g, '/').replace(/^\/+/, ''); if (strip) p = p.slice(p.indexOf('/') + 1); p = (dest ? dest + '/' : '') + p; seen.set(p, it); }
+    return [...seen].map(([path, it]) => { let st = !remote ? '' : !(path in remote) ? 'nuevo' : remote[path] === it.sha ? 'igual' : 'cambia';
+      if (path === ADS && !$('allowAds').checked) st = 'salta'; if (it.buf.byteLength > 95 * 1048576) st = 'salta';
+      return { path, it, st }; }).sort((a, b) => a.path.localeCompare(b.path));
+  }
+  const LBL = { nuevo: 'nuevo', cambia: 'cambia', igual: 'igual', salta: 'no se sube', '': '' };
+  function refresh(){
+    const P = plan(), up = P.filter(p => p.st === 'nuevo' || p.st === 'cambia' || (!remote && p.st === ''));
+    $('clear').hidden = !items.length; $('files').hidden = !items.length;
+    $('files').innerHTML = P.map(p => `<div><span class="p">${p.path.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span><span class="s">${size(p.it.buf.byteLength)}</span><span class="tag ${p.st}">${LBL[p.st]}</span></div>`).join('');
+    const n = k => P.filter(p => p.st === k).length;
+    $('sum').innerHTML = items.length ? [`${P.length} archivos`, n('nuevo') && `<span style="color:var(--ok)">${n('nuevo')} nuevos</span>`, n('cambia') && `<span style="color:var(--gold)">${n('cambia')} cambian</span>`, n('igual') && `<span class="mute">${n('igual')} iguales</span>`, n('salta') && `<span style="color:#ff8aa0">${n('salta')} no se suben</span>`].filter(Boolean).join(' · ') : '';
+    $('go').disabled = busy || !token || !remote || !up.length;
+    $('state').textContent = busy ? 'Trabajando…' : !items.length ? 'Elige qué subir.' : !remote ? 'Falta conectar con GitHub.' : up.length ? 'Listo para subir ' + up.length + ' archivo' + (up.length > 1 ? 's' : '') + ' (' + size(up.reduce((a, p) => a + p.it.buf.byteLength, 0)) + ').' : 'Todo está ya igual en la web: no hay nada que subir.';
+  }
+
+  const b64 = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+  async function must(r, what){ if (r.ok) return r.json(); let d = ''; try { d = (await r.json()).message || ''; } catch (_) {} throw new Error(what + ' (' + r.status + (d ? ': ' + d : '') + ')'); }
+
+  $('go').onclick = async () => {
+    const up = plan().filter(p => p.st === 'nuevo' || p.st === 'cambia'); if (!up.length) return;
+    busy = true; refresh(); const pr = $('prog'); pr.hidden = false; pr.max = up.length + 2; pr.value = 0;
+    try {
+      const ref = await must(await gh('/git/ref/heads/' + encodeURIComponent(branch)), 'No se encuentra la rama');
+      const head = ref.object.sha, base = await must(await gh('/git/commits/' + head), 'No se lee el último cambio');
+      const tree = [];
+      for (const [i, p] of up.entries()) { msg('Subiendo ' + (i + 1) + ' de ' + up.length + ': ' + p.path);
+        const b = await must(await gh('/git/blobs', { method: 'POST', body: JSON.stringify({ content: b64(p.it.buf), encoding: 'base64' }) }), 'No se ha podido subir ' + p.path);
+        tree.push({ path: p.path, mode: '100644', type: 'blob', sha: b.sha }); pr.value = i + 1; }
+      msg('Guardando el cambio…');
+      const t = await must(await gh('/git/trees', { method: 'POST', body: JSON.stringify({ base_tree: base.tree.sha, tree }) }), 'No se ha podido preparar el cambio');
+      const c = await must(await gh('/git/commits', { method: 'POST', body: JSON.stringify({ message: $('note').value.trim() || 'Subida desde el móvil', tree: t.sha, parents: [head] }) }), 'No se ha podido crear el cambio'); pr.value++;
+      await must(await gh('/git/refs/heads/' + encodeURIComponent(branch), { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) }), 'No se ha podido publicar (¿ha cambiado algo en GitHub mientras tanto? Vuelve a intentarlo)'); pr.value++;
+      for (const p of up) remote[p.path] = p.it.sha;
+      msg('Hecho: ' + up.length + ' archivo' + (up.length > 1 ? 's' : '') + ' en la web. GitHub tarda uno o dos minutos en mostrarlo; si no lo ves, recarga la página sin caché.', 'ok');
+    } catch (e) { msg(e.message || String(e), 'err'); }
+    busy = false; pr.hidden = true; refresh();
+  };
+  connect();
+})();
+</script>
+</body>
+</html>
