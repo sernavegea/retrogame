@@ -3833,23 +3833,23 @@ const DFACE = Math.PI / 2 - .2, DZ = .6, DHALF = 7.2, DGAP = .7;
 // clip: animation; rate: playback speed; hit: clip time of contact; end: clip time when you can act again; eff: the bone that hits;
 // h: hi/mid; stun/bstun: seconds the other is stuck when hit / when blocking; push: how far it shoves; next: what comes out if you press P or K once it has touched
 const DMOVES = {
-  jab:     { nm: 'Directo', clip: 'D_Jab', rate: 1.25, hit: .27, end: .47, dmg: 5, eff: 'hand_l', h: 'hi', stun: .34, bstun: .22, push: .22, next: { P: 'cross', K: 'mae' } },
-  cross:   { nm: 'Cruzado', clip: 'D_Cross', rate: 1.15, hit: .23, end: .56, dmg: 8, eff: 'hand_r', h: 'hi', stun: .42, bstun: .26, push: .3, next: { P: 'hook', K: 'mawashi' } },
-  hook:    { nm: 'Gancho', clip: 'Melee_Hook', rate: 1.05, hit: .29, end: .46, dmg: 12, eff: 'hand_r', h: 'hi', stun: .58, bstun: .3, push: .55, heavy: true, next: { K: 'yoko' } },
-  body:    { nm: 'Ráfaga al cuerpo', clip: 'D_Body', rate: 1.15, hit: .18, end: .82, dmg: 4, eff: 'hand_r', h: 'mid', stun: .36, bstun: .2, push: .1, hits: [[.18, 'hand_r'], [.35, 'hand_l'], [.52, 'hand_r']], next: { P: 'hook', K: 'mae' } },
-  oizuki:  { nm: 'Oi-zuki', clip: 'D_Oizuki', rate: 1.3, hit: .64, end: .98, dmg: 12, eff: 'hand_r', h: 'mid', stun: .5, bstun: .3, push: .5, adv: .8, next: { K: 'mawashi' } },
-  mae:     { nm: 'Mae-geri', clip: 'D_Mae', rate: 1.3, hit: .5, end: 1.0, dmg: 9, eff: 'ball_r', h: 'mid', stun: .48, bstun: .28, push: .65, adv: .5, next: { K: 'mawashi', P: 'cross' } },
-  mawashi: { nm: 'Mawashi-geri', clip: 'D_Mawashi', rate: 1.25, hit: .53, end: 1.0, dmg: 14, eff: 'ball_r', h: 'hi', stun: .6, bstun: .34, push: .6, adv: .55, kd: 'counter', heavy: true },
-  yoko:    { nm: 'Yoko-geri', clip: 'D_Yoko', rate: 1.25, hit: .64, end: 1.12, dmg: 13, eff: 'foot_r', h: 'mid', stun: .55, bstun: .34, push: 1.25, adv: .55, heavy: true },
-  low:     { nm: 'Patada baja', clip: 'D_Low', rate: 1.4, hit: .46, end: .86, dmg: 7, eff: 'ball_r', h: 'mid', stun: .4, bstun: .22, push: .25, adv: .5, next: { P: 'jab', K: 'mae' } },
-  fly:     { nm: 'Patada voladora', clip: 'D_Jump', rate: 1.12, hit: 1.15, end: 1.7, dmg: 19, eff: 'ball_l', h: 'hi', stun: .7, bstun: .45, push: .9, adv: .85, kd: true, heavy: true, cost: 50, win: .2 },
+  jab:     { nm: 'Directo', clip: 'D_Jab', rate: 1.55, from: 0.05, hit: .27, end: .47, dmg: 5, eff: 'hand_l', h: 'hi', stun: .34, bstun: .22, push: .22, next: { P: 'cross', K: 'mae' } },
+  cross:   { nm: 'Cruzado', clip: 'D_Cross', rate: 1.45, from: 0.04, hit: .23, end: .56, dmg: 8, eff: 'hand_r', h: 'hi', stun: .42, bstun: .26, push: .3, next: { P: 'hook', K: 'mawashi' } },
+  hook:    { nm: 'Gancho', clip: 'Melee_Hook', rate: 1.3, from: 0, hit: .29, end: .46, dmg: 12, eff: 'hand_r', h: 'hi', stun: .58, bstun: .3, push: .55, heavy: true, next: { K: 'yoko' } },
+  body:    { nm: 'Ráfaga al cuerpo', clip: 'D_Body', rate: 1.45, from: 0, hit: .18, end: .82, dmg: 4, eff: 'hand_r', h: 'mid', stun: .36, bstun: .2, push: .1, hits: [[.18, 'hand_r'], [.35, 'hand_l'], [.52, 'hand_r']], next: { P: 'hook', K: 'mae' } },
+  oizuki:  { nm: 'Oi-zuki', clip: 'D_Oizuki', rate: 1.55, from: 0.15, hit: .64, end: .98, dmg: 12, eff: 'hand_r', h: 'mid', stun: .5, bstun: .3, push: .5, adv: .8, next: { K: 'mawashi' } },
+  mae:     { nm: 'Mae-geri', clip: 'D_Mae', rate: 1.55, from: 0.08, hit: .5, end: 1.0, dmg: 9, eff: 'ball_r', h: 'mid', stun: .48, bstun: .28, push: .65, adv: .5, next: { K: 'mawashi', P: 'cross' } },
+  mawashi: { nm: 'Mawashi-geri', clip: 'D_Mawashi', rate: 1.5, from: 0.18, hit: .53, end: 1.0, dmg: 14, eff: 'ball_r', h: 'hi', stun: .6, bstun: .34, push: .6, adv: .55, kd: 'counter', heavy: true },
+  yoko:    { nm: 'Yoko-geri', clip: 'D_Yoko', rate: 1.5, from: 0.25, hit: .64, end: 1.12, dmg: 13, eff: 'foot_r', h: 'mid', stun: .55, bstun: .34, push: 1.25, adv: .55, heavy: true },
+  low:     { nm: 'Patada baja', clip: 'D_Low', rate: 1.6, from: 0.1, hit: .46, end: .86, dmg: 7, eff: 'ball_r', h: 'mid', stun: .4, bstun: .22, push: .25, adv: .5, next: { P: 'jab', K: 'mae' } },
+  fly:     { nm: 'Patada voladora', clip: 'D_Jump', rate: 1.3, from: 0.2, hit: 1.15, end: 1.7, dmg: 19, eff: 'ball_l', h: 'hi', stun: .7, bstun: .45, push: .9, adv: .85, kd: true, heavy: true, cost: 50, win: .2 },
 };
 for (const k in DMOVES) { const m = DMOVES[k]; m.key = k; if (!m.hits) m.hits = [[m.hit, m.eff]]; m.last = m.hits[m.hits.length - 1][0]; }
 const DU = { on: false, a: null, b: null, ai: null, round: 1, wins: [0, 0], clock: 60, phase: 'intro', pt: 0, slow: 0, stop: 0, shake: 0, cam: null, rival: 0, liga: true, arena: 0, paused: false, stats: null, el: null };
 const DSAVE = (() => { try { return JSON.parse(localStorage.getItem('ar-duelo') || '{}'); } catch (_) { return {}; } })();
 const dSave = () => { try { localStorage.setItem('ar-duelo', JSON.stringify(DSAVE)); } catch (_) {} };
 DSAVE.liga = DSAVE.liga || 0;   // rivals of the league beaten so far
-const DRIVAL = BOSS_OF.map((k, i) => ({ kind: k, name: EDEF[k].nombre, arena: i, lvl: Math.min(1, .12 + i * .095) }));
+const DRIVAL = BOSS_OF.map((k, i) => ({ kind: k, name: EDEF[k].nombre, arena: i, lvl: Math.min(.86, .12 + i * .082) }));
 
 /* ---------- the fighters ---------- */
 function dMake(look, s, hp, dmgK, name){
@@ -3892,7 +3892,7 @@ function dMove(f, o, dx){   // root motion and footwork, without walking through
 const threat = (f, o) => o.st === 'atk' && o.ct < o.m.last + .06 && Math.abs(o.x - f.x) < 2.7;
 function dStart(f, o, key){
   const m = DMOVES[key]; if (m.cost && f.fur < m.cost) return false; if (m.cost) f.fur -= m.cost;
-  f.st = 'atk'; f.m = m; f.t = 0; f.landed = false; f.hitDone = false; f.hi = 0; f.whiff = false; f.prevAdv = 0; dClip(f, m.clip, .07); f.used[key] = (f.used[key] || 0) + 1;
+  f.st = 'atk'; f.m = m; f.t = 0; f.landed = false; f.hitDone = false; f.hi = 0; f.whiff = false; dClip(f, m.clip, .05); f.ct = m.from || 0; f.prevAdv = dAdv(m.clip, f.ct); f.used[key] = (f.used[key] || 0) + 1;
   if (f === DU.a) { DU.stats.tries++; DU.learn[key] = (DU.learn[key] || 0) + 1; }
   sfx(m.heavy ? 'whoosh' : 'whoosh'); return true;
 }
@@ -3921,7 +3921,7 @@ function dFighter(f, o, dt){
   }
   f.loop = f.st === 'idle' || f.st === 'block';
   if (f.st === 'idle') f.ct += dt;
-  else if (f.st === 'walkF' || f.st === 'walkB') { const r = f.st === 'walkF' ? 1.5 : 1.3, d = f.model.clips[f.clip].duration; f.ct += dt * r; let a = dAdv(f.clip, Math.min(f.ct, d));
+  else if (f.st === 'walkF' || f.st === 'walkB') { const r = f.st === 'walkF' ? 1.85 : 1.6, d = f.model.clips[f.clip].duration; f.ct += dt * r; let a = dAdv(f.clip, Math.min(f.ct, d));
     dMove(f, o, (a - f.prevAdv) * f.facing * 1.15); f.prevAdv = a; if (f.ct >= d - .02) { f.ct = 0; f.prevAdv = 0; if (!(f.st === 'walkF' ? fwd : back)) { f.st = 'idle'; dClip(f, 'D_Idle', .16); } } }
   else if (f.st === 'block') { f.ct += dt * .6; if (f.bs <= 0 && !(back && threat(f, o)) && f.t > .2) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } else if (f.bs > 0) f.bs -= dt; }
   else if (f.st === 'atk') { const m = f.m; f.ct += dt * m.rate;
@@ -3932,10 +3932,10 @@ function dFighter(f, o, dt){
     // chains: only once the blow has touched, between the contact and the end of the move
     if (f.landed && f.hitDone && f.ct > m.last) { const n = (P && m.next && m.next.P) || (K && m.next && m.next.K); if (n && dStart(f, o, n)) return; if (S && f.fur >= 50) { if (dStart(f, o, 'fly')) return; } }
     if (f.ct >= m.end) { f.st = 'idle'; f.m = null; dClip(f, 'D_Idle', .16); } }
-  else if (f.st === 'hurt') { f.ct += dt * .95; if (f.t >= f.stun) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } dMove(f, o, f.vx * dt); f.vx *= Math.exp(-9 * dt); }
+  else if (f.st === 'hurt') { f.ct += dt * 1.25; if (f.t >= f.stun) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } dMove(f, o, f.vx * dt); f.vx *= Math.exp(-9 * dt); }
   else if (f.st === 'fall') { f.ct = Math.min(.36, f.t * .7); dMove(f, o, f.vx * dt); f.vx *= Math.exp(-2.6 * dt); if (f.t > .55) { f.st = f.hp <= 0 ? 'ko' : 'down'; f.t = 0; dust(f.x, DZ, 8); sfx('thud'); DU.shake = Math.max(DU.shake, .35); } }
-  else if (f.st === 'down' || f.st === 'ko') { const d = f.model.clips.Hit_Knockback.duration; f.ct = Math.min(d - .01, .36 + f.t * 1.2); if (f.st === 'down' && f.t > .75) { f.st = 'getup'; f.t = 0; dClip(f, 'LayToIdle', .12); f.inv = 1.4; } }
-  else if (f.st === 'getup') { f.ct += dt * 1.3; if (f.ct >= 1.5) { f.st = 'idle'; dClip(f, 'D_Idle', .2); f.inv = .25; } }
+  else if (f.st === 'down' || f.st === 'ko') { const d = f.model.clips.Hit_Knockback.duration; f.ct = Math.min(d - .01, .36 + f.t * 1.2); if (f.st === 'down' && f.t > .55) { f.st = 'getup'; f.t = 0; dClip(f, 'LayToIdle', .12); f.inv = 1.4; } }
+  else if (f.st === 'getup') { f.ct += dt * 1.6; if (f.ct >= 1.5) { f.st = 'idle'; dClip(f, 'D_Idle', .2); f.inv = .25; } }
   else if (f.st === 'win') { f.ct = Math.min(f.ct + dt * .9, f.model.clips.Yes.duration - .01); }
 }
 // does the fist or the foot get there? The animation decides: the hitting bone has to reach the front of the other's body
