@@ -30,6 +30,17 @@ QUE TRAE
   Blue: al pasarse el juego entero se desbloquea Blue, una chihuahua negra que acompana al 1P en todos los niveles.
   Cada vez que sale el ataque especial, corre a por el enemigo mas cercano y le muerde dos veces. No se le puede hacer dano.
   Se lleva o se deja en la pantalla de elegir luchador ("Con Blue" / "Sin Blue") y en la sala de juego en red.
+
+DUELO (uno contra uno)
+  Boton "Duelo" en la portada. Combate a lo Street Fighter, al mejor de 3 asaltos de 60 segundos, en el local de cada jefe.
+  Liga del barrio: los 10 jefes en orden, cada uno mas listo que el anterior. Combate libre: revancha con cualquiera ya vencido.
+  Los movimientos son capturas de movimiento de personas reales (boxeo y karate), adaptadas al esqueleto de los luchadores.
+  Controles: Puno (boton rojo, J), Patada (boton azul, K o espacio), Especial (boton amarillo, L); joystick o A/D para moverse.
+    Puno: directo; si toca, otra vez cruzado y otra gancho. Adelante+Puno: oi-zuki. Abajo+Puno: rafaga al cuerpo.
+    Patada: mae-geri; si toca, otra vez mawashi-geri. Adelante+Patada: mawashi-geri. Atras+Patada: yoko-geri. Abajo+Patada: patada baja.
+    Especial con media barra de furia: patada voladora. Atras cubre; atras justo al llegar el golpe es parada perfecta.
+  Un golpe solo enlaza con el siguiente si el anterior toca. El rival se fija en el golpe que mas repites y aprende a cubrirlo.
+  Al acabar: nota (S, A, B, C), precision, combo maximo, paradas y bloqueos.
   Locales reales: la fachada de Dimpresion / Dosmares (nivel 1, al principio) y Dobletinta (nivel 1: la fachada es la puerta
   del jefe y la pelea final es dentro, con el mural del estudio, a partir de las fotos del local).
   En red, de 2 a 4 jugadores, cada uno en su movil (ver JUGAR EN RED).
@@ -88,6 +99,7 @@ ESPACIOS PUBLICITARIOS
 CREDITOS Y LICENCIAS
   Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
   Motor 3D: three.js, licencia MIT. https://threejs.org
+  Capturas de movimiento del Duelo: CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu), de uso libre.
   Juego en red: PeerJS, licencia MIT. https://peerjs.com   Codigos QR: qrcode-generator (Kazuhiko Arase), licencia MIT.
 
 CALIDAD Y RENDIMIENTO

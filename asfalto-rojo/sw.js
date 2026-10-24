@@ -1,6 +1,6 @@
 /* Service worker de Asfalto Rojo: guarda el juego entero para que la app instalada abra sin conexión.
    El nombre de la caché cambia con cada versión del juego; al publicar una nueva, se descarga y sustituye a la anterior. */
-const VERSION = 'asfalto-rojo-b0fa224cfa';
+const VERSION = 'asfalto-rojo-cbde71ab08';
 const ARCHIVOS = ["index.html", "models.js", "manifest.webmanifest", "lib/GLTFLoader.js", "lib/SkeletonUtils.js", "lib/peerjs.min.js", "lib/three.min.js", "fuentes/barlow-condensed-500-normal.woff2", "fuentes/barlow-condensed-700-italic.woff2", "fuentes/barlow-condensed-700-normal.woff2", "fuentes/barlow-condensed-800-italic.woff2", "fuentes/bungee-400.woff2", "iconos/icono-180.png", "iconos/icono-192.png", "iconos/icono-32.png", "iconos/icono-512.png"];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(['./'].concat(ARCHIVOS).map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k.startsWith('asfalto-rojo-') && k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
