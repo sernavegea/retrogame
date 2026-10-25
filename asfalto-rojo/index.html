@@ -274,9 +274,11 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
   background:rgba(11,10,20,.5);box-shadow:inset 0 0 0 3px currentColor}
 .pb.on{background:currentColor}
 .pb.on span{color:var(--ink)}
-#bA{right:0;bottom:0;width:92px;height:92px;color:var(--hot);font-size:18px}
-#bJ{right:104px;bottom:6px;color:var(--cool)}
-#bS{right:34px;bottom:100px;width:66px;height:66px;color:var(--gold);font-size:13px}
+#bA{right:0;bottom:0;width:90px;height:90px;color:var(--hot);font-size:18px}
+#bK{right:100px;bottom:2px;width:80px;height:80px;color:#ff9a3a;font-size:14px}
+#bJ{right:8px;bottom:100px;width:72px;height:72px;color:var(--cool)}
+#bS{right:92px;bottom:92px;width:64px;height:64px;color:var(--gold);font-size:13px}
+.duel #bJ{display:none}
 .pb span{color:var(--paper)}
 @media (orientation:portrait){
   .touch #view{flex:0 0 auto;height:min(58%,92vw)}
@@ -301,6 +303,8 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
 
 /* ---------- duelo ---------- */
 .cta.duelb{background:var(--hot);color:#fff}
+#dhud .dflash{position:absolute;inset:0;background:#fff;opacity:0;mix-blend-mode:screen}#dhud .dflash.go{animation:dfla .16s steps(2) forwards}@keyframes dfla{0%{opacity:.7}100%{opacity:0}}
+.dsel .dtop{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
 #dhud{position:absolute;inset:0;pointer-events:none;z-index:3;font-family:var(--f-ui)}
 #dhud .dside{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));width:min(40vw,520px);display:flex;flex-direction:column;gap:5px}
 #dhud .dside.l{left:max(14px,env(safe-area-inset-left))}#dhud .dside.r{right:max(14px,env(safe-area-inset-right));align-items:flex-end}
@@ -399,6 +403,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
     <div id="stick"><div class="base"><i id="knob"></i></div></div>
     <div id="btns">
       <button class="pb" id="bS" type="button" tabindex="-1"><span>Esp</span></button>
+      <button class="pb" id="bK" type="button" tabindex="-1"><span>Patada</span></button>
       <button class="pb" id="bJ" type="button" tabindex="-1"><span>Salto</span></button>
       <button class="pb" id="bA" type="button" tabindex="-1"><span>Golpe</span></button>
     </div>
@@ -415,7 +420,8 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
       <dl class="keys">
         <dt>Moverse</dt><dd><span class="k"><kbd>WASD</kbd> o flechas.</span><span class="t">Joystick de la izquierda.</span></dd>
         <dt>Golpe</dt><dd><span class="k"><kbd>J</kbd> o <kbd>Z</kbd>.</span><span class="t">Botón rojo.</span> Tres seguidos acaban en gancho.</dd>
-        <dt>Salto</dt><dd><span class="k">Espacio, <kbd>K</kbd> o <kbd>V</kbd>.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
+        <dt>Patada</dt><dd><span class="k"><kbd>K</kbd> o <kbd>X</kbd>.</span><span class="t">Botón naranja.</span> Mézclala con el golpe: cada orden es un combo distinto.</dd>
+        <dt>Salto</dt><dd><span class="k">Espacio, <kbd>I</kbd> o <kbd>V</kbd>.</span><span class="t">Botón azul.</span> Golpea en el aire para la patada voladora.</dd>
         <dt>Especial</dt><dd><span class="k"><kbd>L</kbd> o <kbd>C</kbd>.</span><span class="t">Botón amarillo.</span> Molinete que golpea a los dos lados y gasta la barra azul. Al superar niveles ganas golpes nuevos.</dd>
       </dl>
       <div class="opts">
@@ -426,7 +432,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
         <button id="btnAds" type="button">Anúnciate en el juego</button>
         <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
-      <p class="credit">Personajes y animaciones: Quaternius (CC0). Artes marciales del Duelo: CMU Graphics Lab Motion Capture Database.</p>
+      <p class="credit">Personajes y animaciones: Quaternius (CC0). Animaciones del Duelo: Mixamo (Adobe).</p>
     </div>
   </div>
 
@@ -2298,10 +2304,10 @@ function animModel(f, dt){
   else if (s === 'attack') { const a = f.atk, r = segTime(a.m, f.t); name = r[0]; time = r[1]; rate = 38; if (a.kf) lean = (a.lean || 0) * Math.min(1, f.t / a.hit, (a.dur - f.t) / .12); }
   else if (s === 'jump') { if (f.air) { name = 'NinjaJump_Idle_Loop'; kick = 1; lean = -.42; } else name = 'Jump_Loop'; time = f.t; rate = 16; }
   else if (s === 'spin') { name = 'A_TPose'; time = 0; rate = 30; lean = .12; }
-  else if (s === 'hurt') { name = f.hc ? 'Hit_Head' : 'Hit_Chest'; time = Math.min(f.t * 1.15, M.clips[name].duration - .01); rate = 40; }
-  else if (s === 'fall') { name = 'Hit_Knockback'; M.kb = Math.min(.33, f.t * .62); time = M.kb; rate = 30; }
-  else if (s === 'down' || s === 'dead') { name = 'Hit_Knockback'; M.kb = Math.min(M.clips[name].duration - .01, Math.max(.3, M.kb) + dt * 1.3); time = M.kb; rate = 30; }
-  else if (s === 'getup') { name = 'LayToIdle'; time = Math.min(1.5, f.t / (f.isPlayer ? GETUP_P : GETUP_E) * 1.5); rate = 30; }
+  else if (s === 'hurt') { if (M.clips.D_HitL) { name = f.hc ? 'D_HitL' : 'D_HitS'; time = .05 + Math.min(f.t * 1.4, .62); } else { name = f.hc ? 'Hit_Head' : 'Hit_Chest'; time = Math.min(f.t * 1.15, M.clips[name].duration - .01); } rate = 40; }
+  else if (s === 'fall') { if (M.clips.D_Fall) { name = 'D_Fall'; M.kb = 1.05 + Math.min(1.1, f.t * 1.9); } else { name = 'Hit_Knockback'; M.kb = Math.min(.33, f.t * .62); } time = M.kb; rate = 30; }
+  else if (s === 'down' || s === 'dead') { if (M.clips.D_Fall) { name = 'D_Fall'; M.kb = Math.min(2.9, Math.max(2.15, M.kb) + dt * 1.4); } else { name = 'Hit_Knockback'; M.kb = Math.min(M.clips[name].duration - .01, Math.max(.3, M.kb) + dt * 1.3); } time = M.kb; rate = 30; }
+  else if (s === 'getup') { const u = Math.min(1, f.t / (f.isPlayer ? GETUP_P : GETUP_E)); if (M.clips.D_GetUp) { name = 'D_GetUp'; time = .3 + u * 1.5; } else { name = 'LayToIdle'; time = u * 1.5; } rate = 30; }
   else if (s === 'dash') { const dw = f.dashW || DASHW; name = 'Shield_Dash'; time = f.t < dw ? 0 : Math.min(.28, (f.t - dw) * .5); rate = f.t < dw && !f.isPlayer ? 7 : 30; }
   else if (s === 'charge') { name = 'OverhandThrow'; time = .25; rate = 12; }
   else if (s === 'win') { name = 'Yes'; time = time_(f); rate = 6; }
@@ -2320,7 +2326,7 @@ function animModel(f, dt){
       f.root.updateMatrixWorld(true); aimBone(M.obj, L[0], L[1], mix(1), w); aimBone(M.obj, L[1], L[2], mix(2), w); if (A[3] || B[3]) { const fa = A[3] || B[3], fb = B[3] || A[3]; _dir.set(fa[0] + (fb[0] - fa[0]) * e, fa[1] + (fb[1] - fa[1]) * e, fa[2] + (fb[2] - fa[2]) * e).normalize(); aimBone(M.obj, L[2], a.leg === 'l' ? b.ball_l : b.ball_r, _dir, w * (A[3] && B[3] ? 1 : A[3] ? 1 - e : e)); } } }
   else if (M.kick > .02) { const b = M.bones; f.root.updateMatrixWorld(true); _dir.set(-.1, -.1, 1).normalize(); aimBone(M.obj, b.thigh_r, b.calf_r, _dir, M.kick); aimBone(M.obj, b.calf_r, b.foot_r, _dir, M.kick); }
   let er = 0, eg = 0, eb = 0;
-  if (f.flash > 0) { f.flash -= dt; er = eg = eb = .42; } else if (f.blockT > 0) { f.blockT -= dt; er = .08; eg = .3; eb = .62; } else if (f.tele) { const pu = .26 + .26 * Math.sin(time_(f) * 38); er = pu; eg = pu * .08; eb = pu * .1; }
+  if (f.flash > 0) { f.flash -= dt; er = eg = eb = .1; } else if (f.blockT > 0) { f.blockT -= dt; er = .02; eg = .06; eb = .12; } else if (f.tele) { const pu = .26 + .26 * Math.sin(time_(f) * 38); er = pu; eg = pu * .08; eb = pu * .1; }
   else if (s === 'charge') { const pu = .22 + .2 * Math.sin(time_(f) * 30); er = pu; eg = pu * .7; eb = pu * .1; }
   else if (f.rage) { er = .13 + .07 * Math.sin(time_(f) * 9); }
   if (er !== f._er || eb !== f._eb) { f._er = er; f._eb = eb; for (let i = 0; i < f.flashN; i++) f.mats[i].emissive.setRGB(er, eg, eb); }
@@ -2330,9 +2336,9 @@ const time_ = f => time + f.seed, dbg = {};
 
 /* ---------- attacks ---------- */
 const PATK = [
-  { dur: .24, hit: .07, hold: .09, wind: POSE.jabW, pose: POSE.jab, dmg: 7, range: 1.5, kb: 2.2, stun: .36, lunge: 2.2, m: [['Punch_Jab', .05, .217, .07], ['Punch_Jab', .217, .6, .24]] },
-  { dur: .28, hit: .09, hold: .1, wind: POSE.crossW, pose: POSE.cross, dmg: 9, range: 1.55, kb: 2.8, stun: .4, lunge: 2.6, m: [['Punch_Cross', .06, .267, .09], ['Punch_Cross', .267, .75, .28]] },
-  { dur: .54, hit: .16, hold: .18, wind: POSE.kickW, pose: POSE.kick, dmg: 16, range: 1.8, kb: 6.5, launch: 6.5, down: true, lunge: 2.4, m: [['Melee_Hook', .04, .272, .16], ['Melee_Hook', .272, .467, .3], ['Melee_Hook_Rec', 0, .6, .54]] },
+  { dur: .24, hit: .07, hold: .09, wind: POSE.jabW, pose: POSE.jab, dmg: 7, range: 1.5, kb: 2.2, stun: .36, lunge: 2.2, m: [['D_Jab', .2, .42, .07], ['D_Jab', .42, .85, .24]] },
+  { dur: .28, hit: .09, hold: .1, wind: POSE.crossW, pose: POSE.cross, dmg: 9, range: 1.55, kb: 2.8, stun: .4, lunge: 2.6, m: [['D_Cross', .45, .66, .09], ['D_Cross', .66, 1.02, .28]] },
+  { dur: .54, hit: .16, hold: .18, wind: POSE.kickW, pose: POSE.kick, dmg: 16, range: 1.8, kb: 6.5, launch: 6.5, down: true, lunge: 2.4, m: [['D_Hook', .25, .47, .16], ['D_Hook', .47, .92, .54]] },
   // the charged blow, unlocked later: hold the button and let go
   { dur: .62, hit: .2, hold: .2, wind: POSE.smashW, pose: POSE.smash, dmg: 26, range: 1.75, kb: 8, launch: 7.6, down: true, lunge: 3, m: [['OverhandThrow', .25, .378, .2], ['OverhandThrow', .378, 1.3, .62]] },
 ];
@@ -2343,20 +2349,12 @@ PATK[2].fin = true; PATK[2].nm = 'Gancho';
 // roll: the trunk leans away from the leg. The key is what was pressed so far: P punch, K kick; fin ends the chain.
 const GUARDM = d => [['Guard', 0, .01, d]], FOLD = [0, -1, -.12];
 const KATK = {
-  K:   { nm: 'Patada', dur: .52, hit: .21, hold: .1, wind: POSE.kickW, pose: POSE.kick, dmg: 10, range: 1.9, kb: 4.2, stun: .45, lunge: 1.6, leg: 'l', m: GUARDM(.52),
-    yaw: [[0, 0], [.1, -1.5], [.38, -1.5], [.52, 0]], rollk: [[0, 0], [.12, .18], [.21, .32], [.32, .32], [.48, 0]],
-    kf: [[.1, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.21, [.97, -.24, .05], [.97, -.22, .02], [.05, -.85, .5]], [.31, [.97, -.24, .05], [.97, -.22, .02], [.05, -.85, .5]], [.4, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.5, [.2, -1, .15], FOLD]] },
-  KK:  { nm: 'Patada circular', dur: .5, hit: .2, hold: .08, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.85, kb: 4, stun: .5, lunge: 2, twist: -1.15, roll: .22, leg: 'l', m: GUARDM(.5),
-    kf: [[.08, [.8, .3, .35], [-.15, -.35, -1]], [.2, [.85, .28, .45], [.88, .3, .45]], [.27, [.7, .28, .7], [.62, .3, .8]], [.38, [.35, .1, .9], FOLD]] },
-  KKK: { nm: 'Patada giratoria', fin: true, dur: .74, hit: .36, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 17, range: 2, kb: 8, launch: 6, down: true, lunge: 2.4, m: GUARDM(.74),
-    yaw: [[0, 0], [.08, .25], [.2, -1.6], [.3, -3.6], [.36, -4.71], [.5, -4.71], [.74, -6.283]], rollk: [[0, 0], [.2, 0], [.36, -.34], [.48, -.34], [.64, 0]],
-    kf: [[.18, [0, .45, .9], [0, -.75, -.65], [0, -.4, .9]], [.28, [-.5, .55, .67], [.8, -.55, -.15], [-.1, -.3, .95]], [.36, [-.97, -.24, .05], [-.97, -.22, .02], [-.05, -.85, .5]], [.48, [-.97, -.24, .05], [-.97, -.22, .02], [-.05, -.85, .5]], [.56, [-.5, .55, .67], [.8, -.55, -.15]], [.66, [-.1, -1, .1], [0, -1, -.05]]] },
-  PK:  { nm: 'Barrido', fin: true, dur: .46, hit: .17, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.75, kb: 2.2, launch: 3.4, down: true, lunge: 2, lean: .24, twist: .35, m: GUARDM(.46),
-    kf: [[.08, [-.5, -.6, .45], [.1, -.75, -.6]], [.17, [-.15, -.66, .74], [.12, -.52, .84]], [.26, [.1, -.66, .74], [.4, -.5, .76]], [.36, [-.1, -.9, .3], FOLD]] },
-  PPK: { nm: 'Patada lateral', fin: true, dur: .6, hit: .25, hold: .14, wind: POSE.kickW, pose: POSE.kick, dmg: 19, range: 2, kb: 9.4, launch: 5.6, down: true, lunge: 3.2, leg: 'l', m: GUARDM(.6),
-    yaw: [[0, 0], [.12, -1.55], [.44, -1.55], [.6, 0]], rollk: [[0, 0], [.14, .2], [.25, .45], [.4, .45], [.56, 0]],
-    kf: [[.13, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.25, [.97, -.14, .05], [.97, -.12, .02], [.05, -.85, .5]], [.38, [.97, -.14, .05], [.97, -.12, .02], [.05, -.85, .5]], [.47, [.55, .55, .62], [-.8, -.55, -.15], [.1, -.3, .95]], [.58, [.2, -1, .15], FOLD]] },
-  KP:  { nm: 'Gancho al cielo', fin: true, dur: .5, hit: .15, hold: .18, wind: POSE.kickW, pose: POSE.smash, dmg: 12, range: 1.6, kb: 1.4, launch: 9.2, down: true, lunge: 2, m: [['Melee_Hook', .04, .272, .15], ['Melee_Hook', .272, .467, .28], ['Melee_Hook_Rec', 0, .6, .5]] },
+  K:   { nm: 'Patada', dur: .5, hit: .2, hold: .1, wind: POSE.kickW, pose: POSE.kick, dmg: 10, range: 1.95, kb: 4.2, stun: .45, lunge: 1.4, m: [['D_Thrust', .75, 1.25, .2], ['D_Thrust', 1.25, 1.62, .5]] },
+  KK:  { nm: 'Patada circular', dur: .5, hit: .2, hold: .08, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.9, kb: 4, stun: .5, lunge: 1.8, m: [['D_Round', .4, .75, .2], ['D_Round', .75, 1.2, .5]] },
+  KKK: { nm: 'Patada lateral', fin: true, dur: .56, hit: .24, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 17, range: 2.05, kb: 8, launch: 6, down: true, lunge: 2.2, m: [['D_Side', .25, .65, .24], ['D_Side', .65, 1.05, .56]] },
+  PK:  { nm: 'Barrido', fin: true, dur: .44, hit: .17, hold: .12, wind: POSE.kickW, pose: POSE.kick, dmg: 11, range: 1.8, kb: 2.2, launch: 3.4, down: true, lunge: 1.8, m: [['D_Low', .3, .6, .17], ['D_Low', .6, 1, .44]] },
+  PPK: { nm: 'Patada media', fin: true, dur: .56, hit: .22, hold: .14, wind: POSE.kickW, pose: POSE.kick, dmg: 19, range: 2, kb: 9.4, launch: 5.6, down: true, lunge: 2.6, m: [['D_Mid', .3, .66, .22], ['D_Mid', .66, 1.12, .56]] },
+  KP:  { nm: 'Uppercut', fin: true, dur: .5, hit: .18, hold: .18, wind: POSE.kickW, pose: POSE.smash, dmg: 12, range: 1.6, kb: 1.4, launch: 9.2, down: true, lunge: 1.6, m: [['D_Upper', .35, .7, .18], ['D_Upper', .7, 1.1, .5]] },
 };
 const AIRK = { dmg: 12, range: 1.35, kb: 5.5, launch: 5.6, down: true }, PDASH = { dmg: 12, range: 1.25, kb: 7, launch: 5.6, down: true };
 const SPIN = { dmg: 15, kb: 6.5, launch: 7.2, down: true };
@@ -2539,7 +2537,7 @@ const CRATES = [[25.5, -1.5, 'arma'], [30, 1.9, 'batido'], [53.5, -1.2, 'batido'
 // block: chance that an enemy on guard stops a light blow and answers; aguante: from that point of its own attack a light blow no longer interrupts it
 const DIFFS = [{ name: 'Fácil', hp: .9, dmg: .85, eng: 0, cd: 1.1, rate: 1, back: .45, cura: 45, block: 0, aguante: 9 }, { name: 'Normal', hp: 1.15, dmg: 1.5, eng: 1, cd: .7, rate: 1.2, back: .3, cura: 36, block: .16, aguante: .6 }, { name: 'Difícil', hp: 1.35, dmg: 2, eng: 2, cd: .5, rate: 1.4, back: .15, cura: 30, block: .3, aguante: .35 }];
 let diffIx = 1, DF = DIFFS[1]; try { const v = parseInt(localStorage.getItem('ar-diff'), 10); if (v >= 0 && v < DIFFS.length) { diffIx = v; DF = DIFFS[v]; } } catch (_) {}
-const PSPD = 4.4, GRAV = 25, GETUP_P = .55, GETUP_E = .62, P2_TINT = 0x2a6fd0;
+const PSPD = 4.4, GRAV = 25, GETUP_P = .8, GETUP_E = .9, P2_TINT = 0x2a6fd0;
 let mode = 'title', players = [], enemies = [], crates = [], pickups = [], debris = [];
 let camX = 6.5, camMax = 16, halfW = 8, shake = 0, hitStop = 0, slowT = 0;
 let levelIx = 0, LV = LEVELS[0], zi = 0, zone = null, wave = 0, waveDelay = 0, winT = 0, inRoom = false, awaiting = false, trans = null;
@@ -2748,10 +2746,11 @@ function updatePlayer(p, dt){
       if (I.take('spc')) special(p);
       else if (I.take('jump')) { p.state = 'jump'; p.t = 0; p.air = false; p.vy = 8.8; p.y = .02; p.avx = I.x * spd * .98; p.avz = I.y * 2.2; p.set = new Set(); sfx('jump'); }
       else if (I.take('atk')) { p.holdT = 0; p.chain = null; startAtk(p, 'P'); }
+      else if (I.take('kick')) { p.holdT = 0; p.chain = null; startAtk(p, 'K'); }
       else if (progress >= 2 && I.held.atk && !p.arma) { p.holdT += dt; if (p.holdT > .3) { p.state = 'charge'; p.t = 0; } } else p.holdT = 0;
       break; }
     case 'attack': { const a = p.atk;
-      if (I.take('atk')) p.buf = 'P';
+      if (I.take('atk')) p.buf = 'P'; else if (I.take('kick')) p.buf = 'K';
       if (a.yaw) p.spin = keyAt(a.yaw, p.t); else if (a.twist) p.spin = a.twist * Math.sin(Math.PI * Math.min(1, p.t / (a.dur * .85)));
       if (!p.done && p.t >= a.hit) { p.done = true; p.conn = strike(p, a); if (p.conn) { if (p.seq === 'W') wear(p); if (a.fin && a.nm) moveName(a.nm); } else if (!a.fin) sfx('whoosh'); }
       if (p.done && I.q.spc > 0) { I.take('spc'); if (special(p)) break; }
@@ -2922,7 +2921,7 @@ function news(from, to){ const out = [];
   for (const k of CHAR_ORDER) { const c = CHARS[k]; if (c.need > from && c.need <= to) out.push(['Nuevo luchador', c.name, c.tag + '. Elígelo en tu próxima partida.']); }
   if (from < LEVELS.length && to >= LEVELS.length) out.push(['Nuevo compañero', 'Blue', 'Tu chihuahua te acompaña en todos los niveles y muerde cuando haces el ataque especial. Se lleva o se deja al elegir luchador.']);
   return out; }
-function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patada voladora', 'Golpe en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
+function fillMoves(el){ const rows = [['Gancho', 'Golpe, Golpe, Golpe.'], ['Patadas', 'Patada, Patada, Patada: acaba en patada lateral. Golpe y Patada: barrido. Golpe, Golpe, Patada: patada media. Patada y Golpe: uppercut.'], ['Patada voladora', 'Golpe en el aire.'], ['Molinete', 'Especial sin moverte. Gasta barra.'], ['Armas', 'Pasa por encima para cogerlas. Golpe las usa y se gastan; Especial las lanza.']];
   for (const m of MOVES) rows.push([m.name, progress >= m.need ? m.how : 'Bloqueado. Supera el nivel ' + m.need + '.']);
   el.innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join(''); }
 
@@ -3007,9 +3006,9 @@ function toTitle(){ anunLoad(); document.body.classList.remove('playing'); hideA
 
 /* ---------- input ---------- */
 const keys = {}, remote = [{}, {}];
-const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyX: 'atk', Space: 'jump', KeyK: 'jump', KeyI: 'jump', KeyV: 'jump', KeyL: 'spc', KeyC: 'spc' };
-const KP1 = { KeyJ: 'atk', KeyK: 'jump', Space: 'jump', KeyI: 'jump', KeyL: 'spc' };
-const KP2 = { Numpad1: 'atk', Numpad2: 'jump', Numpad3: 'spc', Numpad0: 'jump', NumpadEnter: 'jump', Comma: 'atk', Period: 'jump', Slash: 'spc', Minus: 'spc', ShiftRight: 'jump' };
+const KSOLO = { KeyJ: 'atk', KeyZ: 'atk', KeyK: 'kick', KeyX: 'kick', Space: 'jump', KeyI: 'jump', KeyV: 'jump', KeyL: 'spc', KeyC: 'spc' };
+const KP1 = { KeyJ: 'atk', KeyK: 'kick', Space: 'jump', KeyI: 'jump', KeyL: 'spc' };
+const KP2 = { Numpad1: 'atk', Numpad2: 'kick', Numpad3: 'spc', Numpad0: 'jump', NumpadEnter: 'jump', Comma: 'atk', Period: 'kick', Slash: 'spc', Minus: 'spc', ShiftRight: 'jump' };
 function pressFor(who, k, sure){
   if (mode === 'duel') { if (who === 0 && k) inputs[0].press(k); return; }
   if (mode !== 'play') return; if (NET.on) who = 0;
@@ -3039,14 +3038,14 @@ stickEl.addEventListener('pointerdown', e => { e.preventDefault(); stick.id = e.
 stickEl.addEventListener('pointermove', e => { if (e.pointerId === stick.id) stickMove(e); });
 const stickEnd = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; } };
 stickEl.addEventListener('pointerup', stickEnd); stickEl.addEventListener('pointercancel', stickEnd);
-for (const [id, k] of [['bA', 'atk'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
+for (const [id, k] of [['bA', 'atk'], ['bK', 'kick'], ['bJ', 'jump'], ['bS', 'spc']]) { const b = $('#' + id);
   b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); if (mode === 'play' || mode === 'duel') inputs[0].press(k); });
   const up = () => { b.classList.remove('on'); inputs[0].release(k); }; b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   b.addEventListener('contextmenu', e => e.preventDefault()); }
 // A guest of the arcade page plays as 2P: the host forwards their pad as (player, button, pressed)
 function entrada(j, b, v){
   const who = j ? 1 : 0, on = !!v, dir = { 4: 'u', 5: 'd', 6: 'l', 7: 'r' }[b]; if (dir) { remote[who][dir] = on; return; }
-  const k = { 1: 'atk', 0: 'jump', 8: 'spc' }[b];
+  const k = { 1: 'atk', 9: 'kick', 0: 'jump', 8: 'spc' }[b];
   if (who === 1 && players.length < 2) { if (on && (k || b === 3)) pressFor(1, k || 'atk', true); return; }
   if (!k) return; if (on) pressFor(who, k, true); else inputs[who].release(k);
 }
@@ -3073,7 +3072,7 @@ function pollInputs(){
   pads.forEach((g, i) => { const who = twoP && pads.length < 2 ? 1 : Math.min(i, 1), pv = padPrev[g.index] || (padPrev[g.index] = {}), b = n => !!(g.buttons[n] && g.buttons[n].pressed);
     let gx = Math.abs(g.axes[0]) > .25 ? g.axes[0] : 0, gy = Math.abs(g.axes[1]) > .25 ? g.axes[1] : 0;
     if (b(14)) gx = -1; if (b(15)) gx = 1; if (b(12)) gy = -1; if (b(13)) gy = 1; ax[who][0] += gx; ax[who][1] += gy;
-    for (const [bi, k] of [[2, 'atk'], [0, 'jump'], [1, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
+    for (const [bi, k] of [[2, 'atk'], [3, 'kick'], [0, 'jump'], [1, 'spc']]) { const d = b(bi); if (d && !pv[bi]) pressFor(who, k, true); else if (!d && pv[bi]) inputs[who].release(k); pv[bi] = d; }
     // menus with the pad: one new press or one new push of the stick is one step
     const dx = gx < -.5 ? -1 : gx > .5 ? 1 : 0, dy = gy < -.5 ? -1 : gy > .5 ? 1 : 0, ex = dx !== pv.dx ? dx : 0, ey = dy !== pv.dy ? dy : 0, hit = {}; pv.dx = dx; pv.dy = dy;
     for (const n of [0, 1, 2, 3, 4, 5, 9]) { const d = b(n); hit[n] = d && !pv['m' + n]; pv['m' + n] = d; }
@@ -3119,8 +3118,8 @@ function setupPost(){
     const mat = (fs, u) => new T.ShaderMaterial({ vertexShader: VS, fragmentShader: fs, uniforms: u, depthTest: false, depthWrite: false, toneMapped: false });
     post.bright = mat('uniform sampler2D t; varying vec2 vUv; void main(){ vec3 c = texture2D(t, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(.74, 1., l), 1.); }', { t: { value: null } });
     post.blur = mat('uniform sampler2D t; uniform vec2 d; varying vec2 vUv; void main(){ vec3 c = texture2D(t, vUv).rgb * .227027; c += (texture2D(t, vUv + d * 1.3846).rgb + texture2D(t, vUv - d * 1.3846).rgb) * .316216; c += (texture2D(t, vUv + d * 3.2308).rgb + texture2D(t, vUv - d * 3.2308).rgb) * .07027; gl_FragColor = vec4(c, 1.); }', { t: { value: null }, d: { value: new T.Vector2() } });
-    post.comp = mat('uniform sampler2D t, b1, b2, b3; uniform float time; varying vec2 vUv; void main(){ vec3 c = texture2D(t, vUv).rgb; vec3 b = texture2D(b1, vUv).rgb * .45 + texture2D(b2, vUv).rgb * .5 + texture2D(b3, vUv).rgb * .55; c = 1. - (1. - c) * (1. - clamp(b * .8, 0., 1.)); float n = fract(sin(dot(vUv * 913. + time, vec2(12.9898, 78.233))) * 43758.5453); c += (n - .5) * .022; gl_FragColor = vec4(c, 1.); }',
-      { t: { value: null }, b1: { value: null }, b2: { value: null }, b3: { value: null }, time: { value: 0 } });
+    post.comp = mat('uniform sampler2D t, b1, b2, b3; uniform float time, comic; uniform vec2 px; varying vec2 vUv; float lu(vec2 o){ return dot(texture2D(t, vUv + o * px).rgb, vec3(.299, .587, .114)); } void main(){ vec3 c = texture2D(t, vUv).rgb; vec3 b = texture2D(b1, vUv).rgb * .45 + texture2D(b2, vUv).rgb * .5 + texture2D(b3, vUv).rgb * .55; c = 1. - (1. - c) * (1. - clamp(b * .8, 0., 1.)); float n = fract(sin(dot(vUv * 913. + time, vec2(12.9898, 78.233))) * 43758.5453); c += (n - .5) * .022 * (1. - comic); if (comic > .5) { float l = dot(c, vec3(.299, .587, .114)); vec3 ch = c / max(l, .02); float lq = (floor(l * 4.5) + .5) / 4.5; c = ch * mix(l, lq, .75); c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, 1.25), 0., 1.); float gx = lu(vec2(1., 0.)) - lu(vec2(-1., 0.)) + .5 * (lu(vec2(1., 1.)) - lu(vec2(-1., 1.)) + lu(vec2(1., -1.)) - lu(vec2(-1., -1.))); float gy = lu(vec2(0., 1.)) - lu(vec2(0., -1.)) + .5 * (lu(vec2(1., 1.)) - lu(vec2(1., -1.)) + lu(vec2(-1., 1.)) - lu(vec2(-1., -1.))); float e = smoothstep(.1, .26, length(vec2(gx, gy))); vec2 g = gl_FragCoord.xy / 5.; float d = length(fract(g) - .5); if (d < (1. - smoothstep(.04, .22, l)) * .48) c *= .6; c = mix(c, vec3(.04, .03, .07), e * .9); } gl_FragColor = vec4(c, 1.); }',
+      { t: { value: null }, b1: { value: null }, b2: { value: null }, b3: { value: null }, time: { value: 0 }, comic: { value: 0 }, px: { value: new T.Vector2(1 / 1280, 1 / 720) } });
     post.quad = new T.Mesh(new T.PlaneGeometry(2, 2), post.bright); post.quad.frustumCulled = false;
     post.qs = new T.Scene(); post.qs.add(post.quad); post.qc = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     post.ok = true;
@@ -3823,27 +3822,31 @@ function netAuto(){   // a link with ?sala=CODE (the QR on the host's screen) go
 
 /* ============================================================
    DUELO · uno contra uno, a lo Street Fighter
-   Los movimientos son capturas de movimiento reales (CMU Graphics Lab, uso libre) adaptadas al esqueleto de los luchadores:
-   boxeo (directo, cruzado, gancho al hígado), karate (oi-zuki, mae-geri, mawashi-geri, yoko-geri) y una patada voladora.
+   Los movimientos son capturas de movimiento profesionales para juegos (Mixamo, de Adobe) adaptadas al esqueleto de los luchadores:
+   boxeo (directo, cruzado, gancho, uppercut, golpes al cuerpo), MMA y muay thai (patadas, rodillazo, codazo) y una patada huracán.
    Mantener atrás cubre; hacerlo justo antes del golpe es una parada perfecta que deja al rival vendido.
    Los golpes se encadenan solo si el anterior toca (aunque sea en la guardia): la habilidad está en el ritmo y la distancia.
    ============================================================ */
-const DADV = {"D_StepF":[0.0,0.014,0.027,0.043,0.059,0.076,0.096,0.113,0.131,0.148,0.167,0.188,0.21,0.236,0.268,0.299,0.328,0.353,0.373,0.392],"D_StepB":[0.0,-0.012,-0.029,-0.047,-0.069,-0.096,-0.124,-0.154,-0.188,-0.218,-0.243,-0.265,-0.284,-0.304,-0.329,-0.358,-0.389,-0.419,-0.444,-0.465,-0.48,-0.492,-0.504],"D_Jab":[0.0,0.005,0.013,0.024,0.036,0.047,0.057,0.067,0.077,0.089,0.1,0.11,0.119,0.128,0.133],"D_Cross":[0.0,0.0,-0.005,-0.013,-0.021,-0.027,-0.031,-0.034,-0.037,-0.043,-0.052,-0.064,-0.078,-0.094,-0.112,-0.132,-0.154,-0.176,-0.195,-0.211],"D_Body":[0.0,0.018,0.03,0.036,0.04,0.044,0.057,0.074,0.087,0.102,0.117,0.121,0.122,0.117,0.109,0.101,0.1,0.098,0.094,0.087,0.079,0.068,0.055,0.04,0.024,0.007,-0.011],"D_Oizuki":[0.0,0.01,0.025,0.044,0.068,0.096,0.125,0.153,0.178,0.206,0.237,0.273,0.314,0.36,0.411,0.465,0.519,0.573,0.626,0.671,0.704,0.73,0.751,0.766,0.779,0.788,0.796,0.801,0.807,0.813,0.819,0.825,0.83,0.835,0.839,0.843],"D_Mae":[0.0,0.036,0.074,0.112,0.143,0.168,0.189,0.206,0.22,0.234,0.251,0.271,0.293,0.315,0.331,0.341,0.345,0.347,0.35,0.35,0.347,0.344,0.34,0.331,0.321,0.308,0.295,0.283,0.273,0.264,0.257,0.248,0.238,0.226,0.213,0.197,0.178,0.155,0.129],"D_Mawashi":[0.0,0.006,0.02,0.036,0.058,0.081,0.107,0.133,0.16,0.186,0.211,0.235,0.262,0.291,0.316,0.333,0.352,0.381,0.415,0.449,0.474,0.481,0.503,0.53,0.551,0.566,0.583,0.602,0.622,0.642,0.663,0.684,0.703,0.717,0.729,0.74,0.75,0.759],"D_Yoko":[0.0,0.009,0.021,0.037,0.059,0.086,0.119,0.156,0.192,0.23,0.274,0.318,0.355,0.39,0.421,0.454,0.48,0.503,0.523,0.539,0.557,0.575,0.603,0.616,0.609,0.611,0.623,0.634,0.648,0.662,0.675,0.691,0.71,0.731,0.754,0.78,0.808,0.836,0.859,0.879,0.894,0.908,0.922,0.933],"D_Low":[0.0,0.034,0.062,0.084,0.1,0.115,0.128,0.143,0.159,0.177,0.193,0.205,0.214,0.223,0.228,0.229,0.227,0.224,0.217,0.207,0.194,0.179,0.165,0.151,0.138,0.127,0.117,0.105,0.091,0.076],"D_Jump":[0.0,0.049,0.101,0.154,0.208,0.261,0.312,0.363,0.415,0.472,0.533,0.601,0.679,0.76,0.83,0.887,0.941,0.99,1.025,1.053,1.081,1.119,1.164,1.213,1.261,1.303,1.339,1.369,1.39,1.402,1.412,1.427,1.448,1.482,1.527,1.577,1.631,1.695,1.76,1.828,1.878,1.921,1.963,1.996,2.028,2.057,2.083,2.106,2.125,2.14,2.155,2.166,2.175,2.181,2.184,2.186]};
+const DADV = {"D_StepF":[0.0,0.008,0.018,0.028,0.038,0.049,0.062,0.076,0.091,0.109,0.129,0.16,0.192,0.221,0.246,0.272,0.299,0.33,0.36,0.389,0.412,0.432,0.449,0.462,0.473,0.482,0.492,0.503,0.513,0.523,0.532],"D_StepB":[0.0,-0.006,-0.012,-0.018,-0.024,-0.03,-0.037,-0.046,-0.056,-0.071,-0.088,-0.108,-0.131,-0.156,-0.183,-0.209,-0.232,-0.251,-0.266,-0.278,-0.288,-0.294,-0.299,-0.303,-0.305,-0.309,-0.316,-0.328],"D_Jab":[0.0,0.008,0.02,0.04,0.066,0.1,0.137,0.175,0.21,0.246,0.289,0.338,0.381,0.414,0.44,0.46,0.474,0.483,0.485,0.481,0.472,0.456,0.433,0.403,0.368,0.334,0.303,0.274,0.251,0.231,0.213,0.197,0.18,0.161,0.14,0.116,0.09,0.066,0.044,0.024,0.006,-0.007,-0.017,-0.024,-0.028,-0.03,-0.03,-0.028,-0.023,-0.018,-0.013,-0.007,-0.0],"D_Cross":[0.0,0.009,0.018,0.029,0.044,0.063,0.085,0.11,0.138,0.172,0.214,0.262,0.316,0.37,0.418,0.455,0.48,0.498,0.512,0.527,0.542,0.555,0.564,0.569,0.57,0.566,0.558,0.547,0.536,0.525,0.513,0.498,0.477,0.45,0.418,0.382,0.345,0.311,0.279,0.249,0.223,0.201,0.182,0.165,0.15,0.137,0.124,0.109,0.09,0.068,0.047,0.028,0.01,-0.006,-0.019,-0.029,-0.036,-0.04,-0.041,-0.039,-0.035,-0.028,-0.018,-0.009,-0.0],"D_Hook":[0.0,0.001,0.003,0.006,0.011,0.02,0.03,0.041,0.059,0.086,0.119,0.153,0.19,0.227,0.262,0.296,0.334,0.374,0.41,0.439,0.46,0.473,0.478,0.477,0.47,0.458,0.441,0.419,0.394,0.363,0.33,0.297,0.268,0.241,0.218,0.197,0.179,0.164,0.152,0.142,0.134,0.128,0.124,0.119,0.112,0.105,0.098,0.088,0.077,0.064,0.05,0.037,0.025,0.015,0.006,0.0,-0.002,-0.002,-0.0,0.0,0.0],"D_Upper":[0.0,0.007,0.015,0.023,0.033,0.046,0.063,0.083,0.105,0.129,0.159,0.193,0.235,0.282,0.328,0.371,0.404,0.426,0.44,0.45,0.462,0.472,0.481,0.486,0.486,0.482,0.472,0.46,0.445,0.43,0.414,0.397,0.375,0.35,0.324,0.295,0.267,0.242,0.219,0.2,0.185,0.172,0.159,0.146,0.135,0.127,0.117,0.104,0.085,0.066,0.048,0.029,0.007,-0.012,-0.028,-0.042,-0.053,-0.059,-0.062,-0.062,-0.059,-0.053,-0.044,-0.033,-0.02,-0.009,-0.0],"D_Elbow":[0.0,-0.007,-0.013,-0.015,-0.014,-0.01,-0.004,0.005,0.017,0.031,0.049,0.071,0.098,0.132,0.166,0.195,0.221,0.242,0.259,0.276,0.289,0.296,0.296,0.292,0.286,0.276,0.265,0.252,0.238,0.223,0.206,0.188,0.168,0.144,0.119,0.093,0.068,0.045,0.026,0.012,0.001,-0.004,-0.007,-0.008,-0.007,-0.003,0.003,0.011,0.019,0.027,0.034,0.039,0.043,0.045,0.044,0.041,0.036,0.031,0.024,0.016,0.008,0.0],"D_Body":[0.0,0.008,0.018,0.029,0.045,0.065,0.088,0.112,0.138,0.167,0.201,0.238,0.277,0.315,0.348,0.375,0.395,0.41,0.424,0.439,0.453,0.463,0.469,0.47,0.465,0.456,0.441,0.424,0.408,0.389,0.368,0.343,0.316,0.288,0.261,0.236,0.212,0.192,0.175,0.16,0.145,0.133,0.121,0.107,0.091,0.074,0.056,0.038,0.019,0.001,-0.015,-0.029,-0.039,-0.047,-0.051,-0.053,-0.053,-0.05,-0.045,-0.036,-0.027,-0.017,-0.008,-0.0],"D_Thrust":[0.0,0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.008,0.007,0.004,-0.002,-0.009,-0.019,-0.032,-0.048,-0.066,-0.087,-0.107,-0.124,-0.138,-0.149,-0.158,-0.166,-0.172,-0.178,-0.185,-0.192,-0.195,-0.197,-0.202,-0.21,-0.216,-0.214,-0.201,-0.181,-0.16,-0.135,-0.108,-0.084,-0.066,-0.05,-0.034,-0.017,-0.001,0.011,0.023,0.033,0.04,0.046,0.051,0.054,0.056,0.056,0.054,0.049,0.042,0.035,0.027,0.019,0.011,0.005,0.002,0.0],"D_Mid":[0.0,0.002,0.003,0.004,0.009,0.017,0.032,0.051,0.075,0.102,0.135,0.17,0.198,0.216,0.231,0.251,0.283,0.324,0.36,0.379,0.39,0.394,0.396,0.391,0.378,0.364,0.347,0.328,0.305,0.279,0.249,0.217,0.185,0.156,0.13,0.108,0.088,0.069,0.051,0.033,0.017,0.007,0.001,-0.002,-0.003,-0.003,-0.003,-0.001,0.0],"D_Round":[0.0,-0.005,-0.009,-0.015,-0.023,-0.032,-0.039,-0.041,-0.038,-0.026,-0.001,0.041,0.096,0.156,0.211,0.254,0.283,0.3,0.308,0.307,0.304,0.308,0.322,0.339,0.349,0.361,0.376,0.388,0.395,0.394,0.383,0.366,0.345,0.322,0.297,0.272,0.246,0.22,0.198,0.178,0.161,0.144,0.127,0.111,0.092,0.072,0.052,0.034,0.02,0.009,0.0],"D_Side":[0.0,0.003,0.01,0.02,0.032,0.044,0.058,0.073,0.09,0.109,0.13,0.152,0.174,0.194,0.213,0.223,0.221,0.215,0.208,0.206,0.21,0.225,0.242,0.256,0.258,0.246,0.235,0.225,0.212,0.199,0.185,0.172,0.16,0.149,0.137,0.127,0.118,0.107,0.096,0.084,0.073,0.062,0.05,0.037,0.025,0.014,0.006,0.001,0.0],"D_Low":[0.0,-0.002,-0.004,-0.003,0.003,0.014,0.033,0.058,0.088,0.116,0.134,0.144,0.15,0.157,0.167,0.177,0.188,0.2,0.21,0.219,0.225,0.224,0.223,0.219,0.209,0.194,0.177,0.162,0.152,0.143,0.134,0.123,0.113,0.103,0.093,0.081,0.065,0.047,0.03,0.016,0.005,-0.002,-0.006,-0.006,-0.004,-0.0],"D_Knee":[0.0,0.002,0.005,0.008,0.013,0.019,0.026,0.035,0.045,0.063,0.088,0.121,0.16,0.193,0.21,0.217,0.225,0.237,0.252,0.27,0.287,0.302,0.314,0.321,0.321,0.316,0.307,0.295,0.282,0.268,0.256,0.244,0.234,0.225,0.217,0.206,0.192,0.173,0.151,0.13,0.114,0.102,0.095,0.09,0.088,0.087,0.088,0.09,0.09,0.089,0.087,0.085,0.083,0.079,0.072,0.062,0.049,0.035,0.024,0.013,0.007,0.004,0.001,-0.001,-0.002,-0.003,-0.002,-0.002,-0.0],"D_Fly":[0.0,0.065,0.146,0.238,0.333,0.425,0.506,0.573,0.622,0.656,0.681,0.702,0.728,0.765,0.818,0.887,0.971,1.064,1.16,1.25,1.327,1.389,1.435,1.466,1.489,1.511,1.539,1.579,1.636,1.71,1.797,1.891,1.986,2.073,2.147,2.205,2.247,2.275,2.297,2.32,2.35,2.395,2.456,2.533,2.623,2.718,2.811,2.896,2.966,3.02,3.058,3.084,3.105,3.129,3.163,3.211],"D_Block":[0.0,0.001,0.002,0.006,0.011,0.021,0.038,0.061,0.088,0.118,0.147,0.173,0.188,0.19,0.184,0.174,0.16,0.145,0.13,0.114,0.096,0.078,0.06,0.043,0.027,0.014,0.002,-0.009,-0.019,-0.027,-0.033,-0.036,-0.036,-0.033,-0.028,-0.021,-0.013,-0.006,-0.0,0.003,0.005,0.006,0.005,0.002,-0.002,-0.006,-0.011,-0.014,-0.016,-0.016,-0.014,-0.011,-0.006,-0.0],"D_BlockHit":[0.0,0.004,0.01,0.018,0.025,0.026,0.025,0.018,0.005,-0.011,-0.028,-0.044,-0.059,-0.072,-0.086,-0.098,-0.109,-0.118,-0.124,-0.129,-0.133,-0.134,-0.134,-0.13,-0.124,-0.116,-0.108,-0.099,-0.089,-0.079,-0.068,-0.058,-0.047,-0.037,-0.028,-0.02,-0.013,-0.007,-0.003,-0.001,-0.0],"D_HitH":[0.0,0.004,0.024,0.059,0.084,0.087,0.082,0.076,0.068,0.057,0.044,0.032,0.019,0.006,-0.007,-0.019,-0.032,-0.046,-0.062,-0.079,-0.093,-0.102,-0.107,-0.108,-0.106,-0.101,-0.094,-0.086,-0.078,-0.069,-0.059,-0.049,-0.039,-0.03,-0.024,-0.018,-0.013,-0.008,-0.005,-0.002,-0.001,-0.001,-0.0,-0.0],"D_HitS":[0.0,0.0,-0.002,-0.013,-0.051,-0.088,-0.101,-0.104,-0.1,-0.095,-0.088,-0.079,-0.069,-0.058,-0.046,-0.035,-0.025,-0.016,-0.009,-0.003,0.001,0.004,0.006,0.007,0.007,0.006,0.005,0.003,0.002,0.001,-0.0,-0.001,-0.001,-0.002,-0.001,-0.001,-0.0],"D_HitSB":[0.0,-0.001,-0.002,-0.005,-0.066,-0.148,-0.189,-0.199,-0.2,-0.197,-0.194,-0.19,-0.184,-0.178,-0.171,-0.164,-0.157,-0.15,-0.14,-0.125,-0.108,-0.091,-0.076,-0.06,-0.044,-0.03,-0.018,-0.009,-0.003,0.0,0.001,0.001,-0.001,-0.002,-0.003,-0.003,-0.003,-0.003,-0.002,-0.002,-0.001,-0.0,-0.0],"D_Fall":[0.0,0.0,0.0,0.001,0.001,0.002,0.002,0.003,0.003,0.004,0.004,0.004,0.005,0.005,0.006,0.007,0.007,0.008,0.008,0.009,0.009,0.009,0.008,0.007,0.004,-0.001,-0.005,-0.006,-0.005,-0.003,0.0,0.002,0.003,0.001,-0.007,-0.019,-0.034,-0.051,-0.07,-0.091,-0.114,-0.138,-0.162,-0.186,-0.21,-0.235,-0.26,-0.286,-0.313,-0.34,-0.368,-0.396,-0.425,-0.454,-0.485,-0.518,-0.553,-0.589,-0.628,-0.667,-0.709,-0.75,-0.791,-0.833,-0.877,-0.919,-0.962,-0.998,-1.024,-1.047,-1.065,-1.076,-1.085,-1.095,-1.099,-1.097,-1.091,-1.085,-1.081,-1.076,-1.069,-1.062,-1.056,-1.051,-1.047,-1.044,-1.042,-1.04,-1.04,-1.041,-1.041,-1.042,-1.042,-1.043,-1.044,-1.044,-1.045,-1.045,-1.046,-1.046,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.046,-1.046,-1.046,-1.046,-1.046,-1.046,-1.046,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045,-1.045],"D_GetUp":[0.0,0.0,0.001,0.002,0.002,0.0,-0.004,-0.007,-0.009,-0.011,-0.013,-0.021,-0.031,-0.042,-0.051,-0.057,-0.059,-0.057,-0.053,-0.048,-0.042,-0.035,-0.029,-0.024,-0.017,-0.008,0.002,0.014,0.023,0.027,0.027,0.026,0.024,0.022,0.02,0.016,0.011,0.007,0.006,0.006,0.009,0.013,0.017,0.023,0.025,0.025,0.028,0.035,0.043,0.051,0.055,0.055,0.053,0.052,0.051,0.05,0.049,0.048,0.047,0.046,0.044,0.042,0.041,0.039,0.037,0.036,0.035,0.034,0.033,0.032,0.031,0.03,0.029,0.029,0.028,0.027,0.026,0.025,0.024,0.023,0.022,0.021],"D_Win":[0.0,-0.001,-0.002,-0.003,-0.004,-0.007,-0.011,-0.019,-0.026,-0.033,-0.037,-0.037,-0.033,-0.028,-0.019,-0.009,-0.0,0.008,0.012,0.013,0.012,0.01,0.01,0.011,0.014,0.017,0.019,0.019,0.018,0.018,0.018,0.018,0.018,0.018,0.018,0.018,0.019,0.021,0.023,0.025,0.028,0.03,0.032,0.034,0.037,0.039,0.041,0.043,0.044,0.046,0.047,0.048,0.049,0.049,0.05,0.051,0.051,0.051,0.051,0.051,0.05,0.051,0.051,0.051,0.051,0.051,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.049,0.049,0.048,0.047,0.046,0.045,0.044,0.043,0.042,0.041,0.04,0.037,0.035,0.032,0.028,0.025,0.021,0.017,0.014,0.012,0.011,0.01,0.01,0.009,0.006,0.003,-0.001,-0.006,-0.01,-0.014,-0.018,-0.02,-0.022,-0.024,-0.024,-0.024,-0.022,-0.021,-0.018,-0.015,-0.013,-0.01,-0.008,-0.006,-0.005,-0.003,-0.002,-0.0,0.001,0.002,0.003,0.003,0.003,0.003,0.002,0.002,0.002,0.001,0.001,0.001,0.0,0.0],"D_Taunt":[0.0,-0.004,-0.006,-0.008,-0.007,-0.005,-0.0,0.007,0.016,0.026,0.039,0.052,0.068,0.083,0.096,0.106,0.114,0.118,0.118,0.118,0.12,0.124,0.129,0.133,0.137,0.14,0.141,0.141,0.138,0.132,0.124,0.114,0.102,0.088,0.074,0.06,0.046,0.032,0.019,0.009,-0.0,-0.007,-0.012,-0.016,-0.018,-0.018,-0.016,-0.012,-0.007,-0.0]};
 const DFACE = Math.PI / 2 - .2, DZ = .6, DHALF = 7.2, DGAP = .7;
 // clip: animation; rate: playback speed; hit: clip time of contact; end: clip time when you can act again; eff: the bone that hits;
 // h: hi/mid; stun/bstun: seconds the other is stuck when hit / when blocking; push: how far it shoves; next: what comes out if you press P or K once it has touched
 const DMOVES = {
-  jab:     { nm: 'Directo', clip: 'D_Jab', rate: 1.55, from: 0.05, hit: .27, end: .47, dmg: 5, eff: 'hand_l', h: 'hi', stun: .34, bstun: .22, push: .22, next: { P: 'cross', K: 'mae' } },
-  cross:   { nm: 'Cruzado', clip: 'D_Cross', rate: 1.45, from: 0.04, hit: .23, end: .56, dmg: 8, eff: 'hand_r', h: 'hi', stun: .42, bstun: .26, push: .3, next: { P: 'hook', K: 'mawashi' } },
-  hook:    { nm: 'Gancho', clip: 'Melee_Hook', rate: 1.3, from: 0, hit: .29, end: .46, dmg: 12, eff: 'hand_r', h: 'hi', stun: .58, bstun: .3, push: .55, heavy: true, next: { K: 'yoko' } },
-  body:    { nm: 'Ráfaga al cuerpo', clip: 'D_Body', rate: 1.45, from: 0, hit: .18, end: .82, dmg: 4, eff: 'hand_r', h: 'mid', stun: .36, bstun: .2, push: .1, hits: [[.18, 'hand_r'], [.35, 'hand_l'], [.52, 'hand_r']], next: { P: 'hook', K: 'mae' } },
-  oizuki:  { nm: 'Oi-zuki', clip: 'D_Oizuki', rate: 1.55, from: 0.15, hit: .64, end: .98, dmg: 12, eff: 'hand_r', h: 'mid', stun: .5, bstun: .3, push: .5, adv: .8, next: { K: 'mawashi' } },
-  mae:     { nm: 'Mae-geri', clip: 'D_Mae', rate: 1.55, from: 0.08, hit: .5, end: 1.0, dmg: 9, eff: 'ball_r', h: 'mid', stun: .48, bstun: .28, push: .65, adv: .5, next: { K: 'mawashi', P: 'cross' } },
-  mawashi: { nm: 'Mawashi-geri', clip: 'D_Mawashi', rate: 1.5, from: 0.18, hit: .53, end: 1.0, dmg: 14, eff: 'ball_r', h: 'hi', stun: .6, bstun: .34, push: .6, adv: .55, kd: 'counter', heavy: true },
-  yoko:    { nm: 'Yoko-geri', clip: 'D_Yoko', rate: 1.5, from: 0.25, hit: .64, end: 1.12, dmg: 13, eff: 'foot_r', h: 'mid', stun: .55, bstun: .34, push: 1.25, adv: .55, heavy: true },
-  low:     { nm: 'Patada baja', clip: 'D_Low', rate: 1.6, from: 0.1, hit: .46, end: .86, dmg: 7, eff: 'ball_r', h: 'mid', stun: .4, bstun: .22, push: .25, adv: .5, next: { P: 'jab', K: 'mae' } },
-  fly:     { nm: 'Patada voladora', clip: 'D_Jump', rate: 1.3, from: 0.2, hit: 1.15, end: 1.7, dmg: 19, eff: 'ball_l', h: 'hi', stun: .7, bstun: .45, push: .9, adv: .85, kd: true, heavy: true, cost: 50, win: .2 },
+  jab:   { nm: 'Directo', clip: 'D_Jab', rate: 1.3, from: 0.2, hit: 0.42, end: 0.88, dmg: 5, eff: 'hand_l', h: 'hi', stun: .36, bstun: .22, push: .22, next: { P: 'cross', K: 'thrust' } },
+  cross: { nm: 'Cruzado', clip: 'D_Cross', rate: 1.3, from: 0.35, hit: 0.66, end: 1.05, dmg: 8, eff: 'hand_r', h: 'hi', stun: .44, bstun: .26, push: .3, next: { P: 'hook', K: 'knee' } },
+  hook:  { nm: 'Gancho', clip: 'D_Hook', rate: 1.3, from: 0.25, hit: 0.47, end: 0.92, dmg: 11, eff: 'hand_l', h: 'hi', stun: .56, bstun: .3, push: .5, heavy: true, next: { K: 'round' } },
+  upper: { nm: 'Uppercut', clip: 'D_Upper', rate: 1.3, from: 0.35, hit: 0.7, end: 1.1, dmg: 12, eff: 'hand_r', h: 'hi', stun: .6, bstun: .32, push: .4, heavy: true, kd: 'counter' },
+  elbow: { nm: 'Codazo', clip: 'D_Elbow', rate: 1.3, from: 0.4, hit: 0.7, end: 1.1, dmg: 11, eff: 'lowerarm_r', h: 'hi', stun: .5, bstun: .3, push: .45, heavy: true, next: { K: 'knee' } },
+  body:  { nm: 'Al cuerpo', clip: 'D_Body', rate: 1.3, from: 0.2, hit: 0.42, end: 1.0, dmg: 6, eff: 'hand_l', h: 'mid', stun: .4, bstun: .22, push: .15, hits: [[.42, 'hand_l'], [.67, 'hand_r']], next: { P: 'upper', K: 'mid' } },
+  thrust:{ nm: 'Patada de empuje', clip: 'D_Thrust', rate: 1.3, from: 0.75, hit: 1.25, end: 1.62, dmg: 9, eff: 'ball_l', h: 'mid', stun: .48, bstun: .28, push: .8, next: { K: 'mid', P: 'cross' } },
+  mid:   { nm: 'Patada media', clip: 'D_Mid', rate: 1.3, from: 0.3, hit: 0.66, end: 1.12, dmg: 11, eff: 'ball_r', h: 'mid', stun: .52, bstun: .3, push: .5, heavy: true },
+  round: { nm: 'Patada circular', clip: 'D_Round', rate: 1.3, from: 0.4, hit: 0.75, end: 1.2, dmg: 14, eff: 'ball_r', h: 'hi', stun: .6, bstun: .34, push: .6, kd: 'counter', heavy: true },
+  side:  { nm: 'Patada lateral', clip: 'D_Side', rate: 1.3, from: 0.25, hit: 0.65, end: 1.05, dmg: 13, eff: 'ball_l', h: 'mid', stun: .55, bstun: .34, push: 1.25, heavy: true },
+  low:   { nm: 'Patada baja', clip: 'D_Low', rate: 1.35, from: 0.3, hit: 0.6, end: 1.0, dmg: 7, eff: 'ball_r', h: 'mid', stun: .4, bstun: .22, push: .25, next: { P: 'jab', K: 'thrust' } },
+  knee:  { nm: 'Rodillazo', clip: 'D_Knee', rate: 1.3, from: 0.4, hit: 0.8, end: 1.18, dmg: 12, eff: 'calf_r', h: 'mid', stun: .55, bstun: .3, push: .5, heavy: true, next: { P: 'elbow' } },
+  fly:   { nm: 'Patada huracán', clip: 'D_Fly', rate: 1.15, from: 0, hit: 0.48, end: 1.85, dmg: 8, eff: 'ball_l', h: 'hi', stun: .5, bstun: .3, push: .35, adv: .8, heavy: true, cost: 50, hits: [[.48, 'ball_l'], [.94, 'ball_l'], [1.4, 'ball_l']] },
 };
+DMOVES.fly.kd = true;
 for (const k in DMOVES) { const m = DMOVES[k]; m.key = k; if (!m.hits) m.hits = [[m.hit, m.eff]]; m.last = m.hits[m.hits.length - 1][0]; }
 const DU = { on: false, a: null, b: null, ai: null, round: 1, wins: [0, 0], clock: 60, phase: 'intro', pt: 0, slow: 0, stop: 0, shake: 0, cam: null, rival: 0, liga: true, arena: 0, paused: false, stats: null, el: null };
 const DSAVE = (() => { try { return JSON.parse(localStorage.getItem('ar-duelo') || '{}'); } catch (_) { return {}; } })();
@@ -3870,11 +3873,11 @@ function dPose(f, dt){
     if (n === f.clip) { const d = cl[n].duration; a.time = f.loop ? (f.ct % d + d) % d : Math.min(f.ct, d - .001); } }
   M.mixer.update(0);
   f.root.position.set(f.x, 0, DZ); f.root.scale.set(f.facing * f.sc * f.bulk, f.sc, f.sc * f.bulk); f.rig.rotation.y = DFACE; f.body.rotation.set(0, 0, 0);
-  let er = 0, eg = 0, eb = 0; if (f.flash > 0) { f.flash -= dt; er = eg = eb = .22; } else if (f.st === 'block' && f.bs > 0) { er = .05; eg = .25; eb = .6; } else if (f.fur >= 100) { er = .16 + .08 * Math.sin(time * 9); eg = .03; }
+  let er = 0, eg = 0, eb = 0; if (f.flash > 0) { f.flash -= dt; er = eg = eb = .08; }
   if (er !== f._er || eb !== f._eb || eg !== f._eg) { f._er = er; f._eb = eb; f._eg = eg; for (let i = 0; i < f.flashN; i++) f.mats[i].emissive.setRGB(er, eg, eb); }
   f.root.updateMatrixWorld(true);
   // the cover: elbows in, forearms up in front of the face, on top of the stance
-  f.guardW = (f.guardW || 0) + ((f.st === 'block' ? 1 : 0) - (f.guardW || 0)) * (1 - Math.exp(-22 * dt));
+  f.guardW = (f.guardW || 0) + ((0) - (f.guardW || 0)) * (1 - Math.exp(-22 * dt));
   if (f.guardW > .01) { const b = f.model.bones, o = f.model.obj, w = f.guardW;
     aimBone(o, b.upperarm_l, b.lowerarm_l, _dg.set(.32, -.5, .8).normalize(), w); aimBone(o, b.lowerarm_l, b.hand_l, _dg.set(-.18, .9, .4).normalize(), w);
     aimBone(o, b.upperarm_r, b.lowerarm_r, _dg.set(-.3, -.55, .78).normalize(), w); aimBone(o, b.lowerarm_r, b.hand_r, _dg.set(.2, .9, .36).normalize(), w);
@@ -3899,31 +3902,31 @@ function dStart(f, o, key){
 function dPick(f, I, P, K, S){
   const fw = I.x * f.facing, back = fw < -.45, fwd = fw > .45, down = I.y > .55;
   if (S) return f.fur >= 50 ? 'fly' : null;
-  if (P) return down ? 'body' : fwd ? 'oizuki' : 'jab';
-  if (K) return down ? 'low' : fwd ? 'mawashi' : back ? 'yoko' : 'mae';
+  if (P) return down ? 'upper' : fwd ? 'elbow' : back ? 'body' : 'jab';
+  if (K) return down ? 'low' : fwd ? 'round' : back ? 'side' : 'thrust';
   return null;
 }
 function dFighter(f, o, dt){
   const I = f.I; f.t += dt; if (f.inv > 0) f.inv -= dt; if (f.comboT > 0) { f.comboT -= dt; if (f.comboT <= 0) f.combo = 0; }
   const live = DU.phase === 'fight', fw = I.x * f.facing, back = live && fw < -.45, fwd = live && fw > .45;
   if (back) { if (f.backT === 0) f.backPress = 0; f.backT += dt; } else f.backT = 0; f.backPress += dt;
-  const P = live && I.take('atk'), K = live && I.take('jump'), S = live && I.take('spc');
+  const P = live && I.take('atk'), K = live && (I.take('kick') || I.take('jump')), S = live && I.take('spc');
   const free = f.st === 'idle' || f.st === 'walkF' || f.st === 'walkB' || f.st === 'block';
   if (free) {
     f.facing = o.x >= f.x ? 1 : -1;
     const want = (P || K || S) && dPick(f, I, P, K, S);
     if (want && dStart(f, o, want)) {}
     else if (f.st === 'block' && f.bs > 0) { f.bs -= dt; }
-    else if (back && threat(f, o)) { if (f.st !== 'block') { f.st = 'block'; f.bs = 0; dClip(f, 'D_Idle', .06); } }
+    else if (back && threat(f, o)) { if (f.st !== 'block') { f.st = 'block'; f.bs = 0; dClip(f, 'D_Block', .06); f.ct = .25; } }
     else if (fwd) { if (f.st !== 'walkF') { f.st = 'walkF'; dClip(f, 'D_StepF', .12); f.prevAdv = 0; } }
     else if (back) { if (f.st !== 'walkB') { f.st = 'walkB'; dClip(f, 'D_StepB', .12); f.prevAdv = 0; } }
     else if (f.st !== 'idle') { f.st = 'idle'; dClip(f, 'D_Idle', .16); }
   }
-  f.loop = f.st === 'idle' || f.st === 'block';
+  f.loop = f.st === 'idle';
   if (f.st === 'idle') f.ct += dt;
   else if (f.st === 'walkF' || f.st === 'walkB') { const r = f.st === 'walkF' ? 1.85 : 1.6, d = f.model.clips[f.clip].duration; f.ct += dt * r; let a = dAdv(f.clip, Math.min(f.ct, d));
     dMove(f, o, (a - f.prevAdv) * f.facing * 1.15); f.prevAdv = a; if (f.ct >= d - .02) { f.ct = 0; f.prevAdv = 0; if (!(f.st === 'walkF' ? fwd : back)) { f.st = 'idle'; dClip(f, 'D_Idle', .16); } } }
-  else if (f.st === 'block') { f.ct += dt * .6; if (f.bs <= 0 && !(back && threat(f, o)) && f.t > .2) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } else if (f.bs > 0) f.bs -= dt; }
+  else if (f.st === 'block') { if (f.clip === 'D_BlockHit') { f.ct += dt * 1.6; if (f.ct > .55) { dClip(f, 'D_Block', .08); f.ct = .55; } } else f.ct = Math.min(.55, f.ct + dt * 1.6); if (f.bs <= 0 && !(back && threat(f, o)) && f.t > .2) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } else if (f.bs > 0) f.bs -= dt; }
   else if (f.st === 'atk') { const m = f.m; f.ct += dt * m.rate;
     const a = dAdv(m.clip, f.ct); if (m.adv) dMove(f, o, (a - f.prevAdv) * f.facing * m.adv); f.prevAdv = a;
     if (!f.hitDone && f.ct >= m.hits[f.hi][0] - .05) { const h = m.hits[f.hi]; let done = false;
@@ -3933,10 +3936,11 @@ function dFighter(f, o, dt){
     if (f.landed && f.hitDone && f.ct > m.last) { const n = (P && m.next && m.next.P) || (K && m.next && m.next.K); if (n && dStart(f, o, n)) return; if (S && f.fur >= 50) { if (dStart(f, o, 'fly')) return; } }
     if (f.ct >= m.end) { f.st = 'idle'; f.m = null; dClip(f, 'D_Idle', .16); } }
   else if (f.st === 'hurt') { f.ct += dt * 1.25; if (f.t >= f.stun) { f.st = 'idle'; dClip(f, 'D_Idle', .14); } dMove(f, o, f.vx * dt); f.vx *= Math.exp(-9 * dt); }
-  else if (f.st === 'fall') { f.ct = Math.min(.36, f.t * .7); dMove(f, o, f.vx * dt); f.vx *= Math.exp(-2.6 * dt); if (f.t > .55) { f.st = f.hp <= 0 ? 'ko' : 'down'; f.t = 0; dust(f.x, DZ, 8); sfx('thud'); DU.shake = Math.max(DU.shake, .35); } }
-  else if (f.st === 'down' || f.st === 'ko') { const d = f.model.clips.Hit_Knockback.duration; f.ct = Math.min(d - .01, .36 + f.t * 1.2); if (f.st === 'down' && f.t > .55) { f.st = 'getup'; f.t = 0; dClip(f, 'LayToIdle', .12); f.inv = 1.4; } }
-  else if (f.st === 'getup') { f.ct += dt * 1.6; if (f.ct >= 1.5) { f.st = 'idle'; dClip(f, 'D_Idle', .2); f.inv = .25; } }
-  else if (f.st === 'win') { f.ct = Math.min(f.ct + dt * .9, f.model.clips.Yes.duration - .01); }
+  else if (f.st === 'fall') { f.ct += dt * 1.35; const a = dAdv('D_Fall', f.ct); dMove(f, o, -(a - f.prevAdv) * (f.x >= o.x ? 1 : -1) * .8 + f.vx * dt); f.prevAdv = a; f.vx *= Math.exp(-4 * dt);
+    if (f.ct > 2.35) { f.st = f.hp <= 0 ? 'ko' : 'down'; f.t = 0; dust(f.x, DZ, 8); sfx('thud'); DU.shake = Math.max(DU.shake, .35); } }
+  else if (f.st === 'down' || f.st === 'ko') { f.ct = Math.min(2.9, f.ct + dt * .5); if (f.st === 'down' && f.t > .5) { f.st = 'getup'; f.t = 0; dClip(f, 'D_GetUp', .15); f.ct = .3; f.inv = 1.4; } }
+  else if (f.st === 'getup') { f.ct += dt * 1.6; if (f.ct >= 1.85) { f.st = 'idle'; dClip(f, 'D_Idle', .25); f.inv = .25; } }
+  else if (f.st === 'win') { f.ct = Math.min(f.ct + dt, f.model.clips.D_Win.duration - .01); }
 }
 // does the fist or the foot get there? The animation decides: the hitting bone has to reach the front of the other's body
 function dContact(f, o, eff){
@@ -3952,9 +3956,9 @@ function dResolve(a, d, m){
   const guard = d.st === 'block' || ((d.st === 'idle' || d.st === 'walkB') && d.backT > 0);
   if (guard) {
     if (d.backPress < .17 && d.st !== 'block' && (d !== DU.b || Math.random() < DU.ai.lvl * .45)) {   // a perfect parry: pressed back right as the blow came
-      a.st = 'hurt'; a.t = 0; a.stun = .62; dClip(a, 'Hit_Chest', .06); a.vx = -a.facing * 1.2; d.fur = Math.min(100, d.fur + 16); d.st = 'idle'; dClip(d, 'D_Idle', .05);
+      a.st = 'hurt'; a.t = 0; a.stun = .62; dClip(a, 'D_HitSB', .06); a.vx = -a.facing * 1.2; d.fur = Math.min(100, d.fur + 16); d.st = 'idle'; dClip(d, 'D_Block', .05); d.ct = .4;
       impact(at.x, at.y, at.z, 0x27e0ff, true); sfx('block'); sfx('pick'); DU.stop = .14; dText('¡PARADA!', 'cool'); if (d === DU.a) DU.stats.parries++; a.landed = false; return; }
-    d.st = 'block'; d.t = 0; d.bs = m.bstun; dClip(d, 'D_Idle', .05); d.guardW = 1;
+    d.st = 'block'; d.t = 0; d.bs = m.bstun; dClip(d, 'D_BlockHit', .04); d.ct = .1;
     d.hp = Math.max(1, d.hp - m.dmg * .12 * a.dmgK); d.fur = Math.min(100, d.fur + 5); a.fur = Math.min(100, a.fur + 3);
     dMove(d, a, a.facing * m.push * .7); impact(at.x, at.y, at.z, 0x5ab8ff, false); sfx('block'); DU.stop = .05; if (d === DU.a) DU.stats.blocks++; return;
   }
@@ -3964,9 +3968,9 @@ function dResolve(a, d, m){
   d.hp = Math.max(0, d.hp - dmg); d.fur = Math.min(100, d.fur + dmg * 1.3); a.fur = Math.min(100, a.fur + dmg * 1.1); d.flash = .07;
   const kd = d.hp <= 0 || m.kd === true || (m.kd === 'counter' && counter);
   d.t = 0; d.m = null;
-  if (kd) { d.st = 'fall'; d.vx = a.facing * (m.heavy ? 3.4 : 2.4); dClip(d, 'Hit_Knockback', .05); d.ct = 0; }
-  else { d.st = 'hurt'; d.stun = m.stun + (counter ? .12 : 0); dClip(d, m.h === 'hi' ? 'Hit_Head' : 'Hit_Chest', .05); d.ct = 0; d.vx = a.facing * m.push * 4; }
-  impact(at.x, at.y, at.z, m.heavy || counter ? 0xff2d55 : 0xffc83a, m.heavy || counter || kd); sfx(m.heavy || kd ? 'heavy' : 'hit');
+  if (kd) { d.st = 'fall'; d.vx = a.facing * (m.heavy ? 1.2 : .8); dClip(d, 'D_Fall', .05); d.ct = 1.05; d.prevAdv = dAdv('D_Fall', d.ct); }
+  else { d.st = 'hurt'; d.stun = m.stun + (counter ? .12 : 0); dClip(d, m.h === 'hi' ? (m.heavy || counter ? 'D_HitH' : 'D_HitL') : (m.heavy || counter ? 'D_HitSB' : 'D_HitS'), .05); d.ct = d.clip === 'D_HitL' ? .05 : .12; d.vx = a.facing * m.push * 4; }
+  impact(at.x, at.y, at.z, m.heavy || counter ? 0xff2d55 : 0xffc83a, m.heavy || counter || kd); if (m.heavy || counter || kd || a.combo >= 3) dPow(at, kd || counter); sfx(m.heavy || kd ? 'heavy' : 'hit');
   DU.stop = .05 + dmg * .005 + (kd ? .05 : 0); DU.shake = Math.max(DU.shake, (m.heavy ? .3 : .16) + (kd ? .2 : 0));
   if (a === DU.a) { DU.stats.hits++; DU.stats.dmg += dmg; DU.stats.combo = Math.max(DU.stats.combo, a.combo); }
   if (counter) dText('¡CONTRAATAQUE!', 'hot'); else if (a.combo >= 2) dText(a.combo + ' golpes', a === DU.a ? 'gold' : '');
@@ -4043,11 +4047,13 @@ function duelFrame(rdt){
   for (const I of [inputs[0], DU.ai.I]) for (const k in I.q) if (I.q[k] > 0) I.q[k] -= dt;
   if (DU.phase === 'intro' && DU.pt > 1.5) { DU.phase = 'fight'; dText('¡PELEA!', 'hot big'); sfx('go'); }
   if (DU.phase === 'fight') { DU.clock -= dt; if (DU.clock <= 0) { DU.clock = 0; dTimeUp(); } }
-  if (DU.phase === 'ko' && DU.pt > 1.2 && DU.koBy && DU.koBy.st !== 'win' && DU.koBy.st !== 'atk') { DU.koBy.st = 'win'; DU.koBy.t = 0; dClip(DU.koBy, 'Yes', .25); }
+  if (DU.phase === 'ko' && DU.pt > 1.2 && DU.koBy && DU.koBy.st !== 'win' && DU.koBy.st !== 'atk') { DU.koBy.st = 'win'; DU.koBy.t = 0; dClip(DU.koBy, 'D_Win', .25); }
   if (DU.phase === 'ko' && DU.pt > 3.4) dAfterRound();
   if (dt > 0) { dAI(dt); dFighter(DU.a, DU.b, dt); dFighter(DU.b, DU.a, dt); }
+  { const A = DU.a, B = DU.b, lying = st => st === 'down' || st === 'ko' || st === 'fall', d = B.x - A.x, m = Math.abs(d);   // bodies never overlap while both stand
+    if (!lying(A.st) && !lying(B.st) && m < DGAP) { const p = (DGAP - m) / 2, sg = d >= 0 ? 1 : -1, lo = ROOM_X - DHALF, hi = ROOM_X + DHALF; A.x = MU.clamp(A.x - sg * p, lo, hi); B.x = MU.clamp(B.x + sg * p, lo, hi); } }
   dPose(DU.a, dt || 1e-4); dPose(DU.b, dt || 1e-4);
-  updateFx(rdt); ambience(rdt); duelHud(rdt); duelCam(rdt); if (!dbg.norender) render();
+  updateFx(rdt); ambience(rdt); duelHud(rdt); duelCam(rdt); dComicPost(); if (!dbg.norender) render();
 }
 // for tests: run the duel for a while at 60 steps a second without drawing; fn(i, input, me, rival) can press buttons
 function duelSim(sec, fn){ const nr = dbg.norender; dbg.norender = true; for (let i = 0, n = sec * 60; i < n && mode === 'duel'; i++) { if (fn) fn(i, inputs[0], DU.a, DU.b); duelFrame(1 / 60); } dbg.norender = nr; }
@@ -4082,17 +4088,17 @@ function duelUi(){
     <div class="dclock"><b id="dclk">60</b></div>
     <div class="dside r"><div class="dname"><span class="dwins" id="dw1"></span><b id="dn1">RIVAL</b></div><div class="dbar"><i class="lag" id="dl1"></i><i class="fill" id="dh1"></i></div><div class="dfur" id="dfb1"><i id="df1"></i><span>Furia</span></div></div>
     <button type="button" id="dpauseB" class="dpb" aria-label="Pausa">II</button>
-    <div class="dpop" id="dpop"></div><div class="dmove" id="dmove"></div>`;
+    <div class="dpop" id="dpop"></div><div class="dmove" id="dmove"></div><div class="dflash" id="dflash"></div>`;
   app.appendChild(h);
   const m = document.createElement('div'); m.className = 'overlay mid'; m.id = 'duelSel'; m.hidden = true;
   m.innerHTML = `<div class="card wide dsel">
       <p class="eyebrow">Duelo · uno contra uno</p>
-      <div class="seg" role="group" aria-label="Modo"><button type="button" id="dModeL" aria-pressed="true">Liga del barrio</button><button type="button" id="dModeF" aria-pressed="false">Combate libre</button></div>
+      <div class="dtop"><div class="seg" role="group" aria-label="Modo"><button type="button" id="dModeL" aria-pressed="true">Liga del barrio</button><button type="button" id="dModeF" aria-pressed="false">Combate libre</button></div><div class="seg" role="group" aria-label="Estilo" hidden><button type="button" id="dStyC">Cómic</button><button type="button" id="dStyR">Realista</button></div></div>
       <div class="dcols"><div><h3>Tu luchador</h3><div class="droster" id="dRoster"></div></div>
       <div><h3 id="dRivT">Rivales</h3><ol class="dlad" id="dLadder"></ol></div></div>
       <details class="dmoves"><summary>Movimientos</summary><dl id="dMoves"></dl></details>
       <div class="ctas"><button class="cta" id="dGo" type="button">A pelear</button><button class="cta alt" id="dBack" type="button">Volver</button></div>
-      <p class="credit">Movimientos de artes marciales capturados de personas reales: CMU Graphics Lab Motion Capture Database.</p></div>`;
+      <p class="credit">Movimientos de lucha capturados de luchadores reales (Mixamo).</p></div>`;
   app.appendChild(m);
   const r = document.createElement('div'); r.className = 'overlay mid'; r.id = 'duelRes'; r.hidden = true;
   r.innerHTML = `<div class="card dres"><h2 id="dResT">¡Victoria!</h2><p class="lede" id="dResS"></p><div class="dgrid" id="dResG"></div>
@@ -4102,12 +4108,13 @@ function duelUi(){
   p.innerHTML = `<div class="card"><h2>Pausa</h2><dl class="dmovesl" id="dMoves2"></dl><div class="ctas"><button class="cta" id="dResume" type="button">Seguir</button><button class="cta alt" id="dQuit" type="button">Salir del duelo</button></div></div>`;
   app.appendChild(p);
   DU.el = { hud: h, sel: m, res: r, pause: p, hp0: $('#dh0'), lag0: $('#dl0'), fu0: $('#df0'), fb0: $('#dfb0'), hp1: $('#dh1'), lag1: $('#dl1'), fu1: $('#df1'), fb1: $('#dfb1'), n0: $('#dn0'), n1: $('#dn1'), w0: $('#dw0'), w1: $('#dw1'),
-    clock: $('#dclk'), pop: $('#dpop'), move: $('#dmove'), resT: $('#dResT'), resS: $('#dResS'), resG: $('#dResG'), resNext: $('#dResNext'), resAgain: $('#dResAgain') };
+    clock: $('#dclk'), pop: $('#dpop'), flash: $('#dflash'), move: $('#dmove'), resT: $('#dResT'), resS: $('#dResS'), resG: $('#dResG'), resNext: $('#dResNext'), resAgain: $('#dResAgain') };
   const MOVES_TXT = [['Moverse', 'Adelante y atrás. Atrás también cubre.'], ['Parada perfecta', 'Atrás justo cuando llega el golpe: el rival queda vendido.'], ['Puño', 'Directo. Si toca, Puño otra vez: cruzado, y otra: gancho.'],
-    ['Adelante + Puño', 'Oi-zuki: puñetazo de karate avanzando.'], ['Abajo + Puño', 'Ráfaga de tres golpes al cuerpo.'], ['Patada', 'Mae-geri, patada frontal. Si toca, Patada otra vez: mawashi-geri.'],
-    ['Adelante + Patada', 'Mawashi-geri, patada circular. Si pilla al rival atacando, lo tumba.'], ['Atrás + Patada', 'Yoko-geri, patada lateral que empuja lejos.'], ['Abajo + Patada', 'Patada baja, rápida.'],
-    ['Especial', 'Con media barra de furia: patada voladora que tumba.'], ['Encadenar', 'Un golpe solo enlaza con el siguiente si el anterior toca, aunque sea en la guardia.']];
+    ['Adelante + Puño', 'Codazo.'], ['Abajo + Puño', 'Uppercut: si pilla al rival atacando, lo tumba.'], ['Atrás + Puño', 'Dos golpes al cuerpo.'], ['Patada', 'Patada de empuje. Si toca, Patada otra vez: patada media.'],
+    ['Adelante + Patada', 'Patada circular. Si pilla al rival atacando, lo tumba.'], ['Atrás + Patada', 'Patada lateral que empuja lejos.'], ['Abajo + Patada', 'Patada baja, rápida.'],
+    ['Cruzado + Patada', 'Rodillazo, y después Puño: codazo.'], ['Especial', 'Con media barra de furia: patada huracán, tres patadas en el aire.'], ['Encadenar', 'Un golpe solo enlaza con el siguiente si el anterior toca, aunque sea en la guardia.']];
   for (const id of ['dMoves', 'dMoves2']) $('#' + id).innerHTML = MOVES_TXT.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+  const sty = v => { DU.comic = v; try { localStorage.setItem('ar-comic', v ? '1' : '0'); } catch (_) {} duelSelRender(); sfx('pick'); }; $('#dStyC').onclick = () => sty(true); $('#dStyR').onclick = () => sty(false);
   $('#dModeL').onclick = () => { DU.liga = true; duelSelRender(); sfx('pick'); }; $('#dModeF').onclick = () => { DU.liga = false; duelSelRender(); sfx('pick'); };
   $('#dGo').onclick = () => duelStart(); $('#dBack').onclick = () => { m.hidden = true; toTitle(); };
   $('#dResNext').onclick = () => { DU.rival++; duelStart(); }; $('#dResAgain').onclick = () => duelStart(); $('#dResMenu').onclick = () => { duelClose(); duelOpen(); };
@@ -4116,7 +4123,7 @@ function duelUi(){
 }
 DU.pick = 'hero';
 function duelSelRender(){
-  const E = duelUi(); $('#dModeL').setAttribute('aria-pressed', DU.liga); $('#dModeF').setAttribute('aria-pressed', !DU.liga);
+  const E = duelUi(); $('#dModeL').setAttribute('aria-pressed', DU.liga); $('#dStyC').setAttribute('aria-pressed', DU.comic); $('#dStyR').setAttribute('aria-pressed', !DU.comic); $('#dModeF').setAttribute('aria-pressed', !DU.liga);
   if (!unlockedChar(DU.pick)) DU.pick = 'hero';
   $('#dRoster').innerHTML = CHAR_ORDER.map(k => { const c = CHARS[k], lock = !unlockedChar(k);
     return `<button type="button" class="dfig${DU.pick === k ? ' on' : ''}" data-k="${k}"${lock ? ' disabled' : ''}><span class="face" style="--c:${CHAR_COL[k]}">${portraits[k] ? `<img src="${portraits[k]}" alt="">` : `<span>${c.name[0]}</span>`}</span><b>${c.name}</b><small>${lock ? 'Bloqueado' : c.tag}</small></button>`; }).join('');
@@ -4143,6 +4150,7 @@ function duelStart(){
   const ch = CHARS[DU.pick], def = EDEF[R.kind];
   DU.a = dMake(ch.look, ch.s, Math.round(100 * (ch.hp / 100) ** .5), ch.dmg, ch.name);
   DU.b = dMake(R.kind, Math.min(1.16, STYLES[R.kind].s), Math.round(100 + R.lvl * 30), .9 + R.lvl * .35, R.name);
+  if (DU.comic) { dComic(DU.a); dComic(DU.b); }
   DU.a.I = inputs[0]; DU.ai = { I: makeInput(), t: .5, hold: 0, lvl: R.lvl, react: 0, reacting: false, chained: false }; DU.b.I = DU.ai.I;
   DU.round = 1; DU.wins = [0, 0]; DU.stats = { hits: 0, tries: 0, combo: 0, parries: 0, blocks: 0, dmg: 0 }; DU.learn = {}; DU.paused = false;
   DU.cam = { x: ROOM_X, d: 7, y: 1.6, ly: 1.1 };
@@ -4152,9 +4160,36 @@ function duelStart(){
   dRoundStart(); last = performance.now();
 }
 function duelClear(){ for (const f of [DU.a, DU.b]) if (f) disposeFighter(f); DU.a = DU.b = null; }
-function duelClose(){ const E = duelUi(); duelClear(); E.hud.hidden = true; E.res.hidden = true; E.pause.hidden = true; E.sel.hidden = true; DU.paused = false; document.body.classList.remove('playing', 'duel'); dLabels(false); resize(); worldIx = -1; }
+function duelClose(){ const E = duelUi(); duelClear(); if (post.comp && post.comp.uniforms.comic) post.comp.uniforms.comic.value = 0; E.hud.hidden = true; E.res.hidden = true; E.pause.hidden = true; E.sel.hidden = true; DU.paused = false; document.body.classList.remove('playing', 'duel'); dLabels(false); resize(); worldIx = -1; }
 function duelPause(on){ if (mode !== 'duel' || DU.phase === 'end') return; DU.paused = on; DU.el.pause.hidden = !on; if (on) $('#dResume').focus({ preventScroll: true }); else { last = performance.now(); for (const I of [inputs[0]]) I.clear(); } }
-function dLabels(on){ for (const [id, a, b] of [['bA', 'Puño', 'Golpe'], ['bJ', 'Patada', 'Salto'], ['bS', 'Esp', 'Esp']]) { const e = $('#' + id); if (e) e.firstElementChild.textContent = on ? a : b; } }
+function dLabels(on){ for (const [id, a, b] of [['bA', 'Puño', 'Golpe'], ['bK', 'Patada', 'Patada'], ['bS', 'Esp', 'Esp']]) { const e = $('#' + id); if (e) e.firstElementChild.textContent = on ? a : b; } }
+
+/* ---------- estilo cómic: sombreado en tonos planos, contorno de tinta, trama en las sombras y onomatopeyas ---------- */
+DU.comic = false;   // probado y descartado: se queda el aspecto realista
+let _grad = null;
+function toonGrad(){ if (_grad) return _grad; const d = new Uint8Array([60, 60, 60, 255, 140, 140, 140, 255, 210, 210, 210, 255]); _grad = new T.DataTexture(d, 3, 1, T.RGBAFormat); _grad.minFilter = _grad.magFilter = T.NearestFilter; _grad.generateMipmaps = false; _grad.needsUpdate = true; return _grad; }
+function inkMat(skin, w){ const m = new T.MeshBasicMaterial({ color: 0x0a0812, side: T.BackSide, skinning: skin });
+  m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normalize(objectNormal) * ' + w.toFixed(4) + ';'); }; return m; }
+function dComic(f){
+  const swap = new Map(), outl = [];
+  f.root.traverse(o => { if (!o.isMesh || o.userData.ink) return; const m = o.material; if (!m || swap.has(m)) { if (m) o.material = swap.get(m); return; }
+    const t = new T.MeshToonMaterial({ map: m.map || null, color: (m.color ? m.color.clone() : new T.Color(1, 1, 1)).multiplyScalar(.78), gradientMap: toonGrad(), skinning: !!o.isSkinnedMesh, emissive: m.emissive ? m.emissive.clone() : new T.Color(0, 0, 0) });
+    if (m.map) t.map = m.map; swap.set(m, t); o.material = t; outl.push(o); });
+  for (const o of outl) { if (o.isSkinnedMesh) { const s = new T.SkinnedMesh(o.geometry, inkMat(true, .02)); s.bind(o.skeleton, o.bindMatrix); s.frustumCulled = false; s.userData.ink = true; o.parent.add(s); s.position.copy(o.position); s.quaternion.copy(o.quaternion); s.scale.copy(o.scale); }
+    else { const s = new T.Mesh(o.geometry, inkMat(false, .01)); s.matrixAutoUpdate = o.matrixAutoUpdate; s.matrix.copy(o.matrix); s.position.copy(o.position); s.userData.ink = true; o.parent.add(s); } }
+  for (let i = 0; i < f.mats.length; i++) if (swap.has(f.mats[i])) f.mats[i] = swap.get(f.mats[i]);
+}
+// a word on the hit, drawn like a comic panel: yellow letters, black ink, a red burst behind
+const POWS = ['¡POW!', '¡ZAS!', '¡PAM!', '¡BAM!', '¡CRAC!', '¡ZOK!'], powTex = {};
+function powMap(w){ if (powTex[w]) return powTex[w]; const [c, x] = cv(256, 160); x.translate(128, 80);
+  x.fillStyle = '#ff2d55'; x.strokeStyle = '#0a0812'; x.lineWidth = 6; x.beginPath(); for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2, r = i % 2 ? 46 : 74; x.lineTo(Math.cos(a) * r * 1.5, Math.sin(a) * r); } x.closePath(); x.fill(); x.stroke();
+  x.rotate(-.12); x.font = "400 54px 'Bungee','Impact',sans-serif"; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineWidth = 12; x.strokeText(w, 0, 4); x.fillStyle = '#ffe14a'; x.fillText(w, 0, 4);
+  const t = new T.CanvasTexture(c); return powTex[w] = t; }
+function dPow(at, big){ if (!DU.comic) return; const w = POWS[Math.random() * POWS.length | 0], s = fxSprite(powMap(w), 0xffffff, false); s.material.depthTest = false; s.renderOrder = 10; s.position.set(at.x, at.y + .25, at.z + .3);
+  const k = big ? 1.25 : .85; fxLive.push({ s, life: .55, max: .55, s0: .55 * k, s1: 1.05 * k, vx: 0, vy: .5, vz: 0, g: 0, a: 1 }); s.scale.set(.6 * k, .38 * k, 1);
+  if (big) { const e = DU.el.flash; e.classList.remove('go'); void e.offsetWidth; e.classList.add('go'); } }
+function dComicPost(){ if (!post.ok || !post.comp) return; const u = post.comp.uniforms; if (!u.comic) return; u.comic.value = DU.comic && mode === 'duel' ? 1 : 0; renderer.getDrawingBufferSize(_v2c); u.px.value.set(1 / _v2c.x, 1 / _v2c.y); }
+const _v2c = new T.Vector2();
 
 /* ---------- main loop ---------- */
 let last = performance.now();
