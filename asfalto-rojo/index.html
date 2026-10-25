@@ -432,7 +432,7 @@ kbd{font:inherit;font-weight:700;padding:0 5px;background:var(--ink-2);box-shado
         <button id="btnAds" type="button">Anúnciate en el juego</button>
         <button id="btnInstall" type="button" hidden>Instalar app</button>
       </div>
-      <p class="credit">Personajes y animaciones: Quaternius (CC0). Animaciones del Duelo: Mixamo (Adobe).</p>
+      <p class="credit">Personajes y animaciones: Quaternius (CC0). Personajes y animaciones de lucha: Mixamo (Adobe).</p>
     </div>
   </div>
 
@@ -2254,6 +2254,7 @@ function skinTexture(bodyKey, look, tint){
   return ASSET.tex[key] = t;
 }
 function makeModelFighter(kind, tint){
+  { const NB = MX.bodies[kind]; if (NB) return makeMxFighter(kind, tint, NB); }
   const st = STYLES[kind], L = LOOKS[kind], B = ASSET.body[L.body], mats = [];
   const root = new T.Group(), rig = new T.Group(), body = new T.Group(); root.add(rig); rig.add(body); rig.rotation.y = FACE;
   const model = T.SkeletonUtils.clone(B.scene); body.add(model);
@@ -2431,7 +2432,7 @@ function weaponMesh(k){
 function showWeapon(f){
   if (f.armaM) { if (f.armaM.parent) f.armaM.parent.remove(f.armaM); f.armaM = null; }
   if (!f.arma || !f.model) return;
-  const g = weaponMesh(f.arma.k); g.matrixAutoUpdate = false; g.matrix.copy(ASSET.body[f.model.look.body].grip); f.model.bones.hand_r.add(g); f.armaM = g;
+  const g = weaponMesh(f.arma.k); g.matrixAutoUpdate = false; g.matrix.copy((f.model.B || ASSET.body[f.model.look.body]).grip); f.model.bones.hand_r.add(g); f.armaM = g;
 }
 function giveWeapon(f, k, uses, fixed){ f.arma = { k, uses, fixed: !!fixed }; showWeapon(f); if (!f.isPlayer && !fixed) f.reach = EWATK[k].range * f.st.s * .92; }
 function loseWeapon(f, drop){ const a = f.arma; if (!a) return; f.arma = null; showWeapon(f); if (!f.isPlayer) f.reach = EATK[f.kind].range * f.st.s * .92; if (drop && a.uses > 0) spawnItem(a.k, f.isPlayer ? a.uses : Math.min(a.uses, WEAPONS[a.k].uses >> 1 || 1), f.x + rnd(-.5, .5), f.z + rnd(-.3, .3)); }
@@ -2951,6 +2952,7 @@ function startGame(){
   score = 0; playT = 0; bestCombo = 0; combo = 0; loadLevel(startLevel, true); banner('¡A por ellos!', 'Nivel ' + (levelIx + 1) + ' · ' + LV.name);
 }
 function loadLevel(ix, fresh){
+  mxEnsure(BOSS_OF[ix]); if (ix + 1 < BOSS_OF.length) mxEnsure(BOSS_OF[ix + 1]);
   if (IN) introCancel();
   netAll(['level', ix, fresh ? 1 : 0]); levelIx = ix; LV = LEVELS[ix]; inRoom = awaiting = false; trans = null; fadeEl.style.opacity = 0; useStreet(ix); clearActors(); if (!NET.client) for (const c of CRATES) spawnCrate(c[0], c[1], diffIx ? c[2] : 'batido');
   ui.go.textContent = 'Avanza ▶';
@@ -3857,7 +3859,7 @@ const DRIVAL = BOSS_OF.map((k, i) => ({ kind: k, name: EDEF[k].nombre, arena: i,
 /* ---------- the fighters ---------- */
 function dMake(look, s, hp, dmgK, name){
   const f = makeModelFighter(look, 0);
-  Object.assign(f, { look, sc: s * MSCALE, bulk: LOOKS[look].bulk || 1, name, x: 0, facing: 1, st: 'idle', t: 0, clip: 'D_Idle', ct: 0, fade: .15, hp, maxHp: hp, fur: 0, dmgK, m: null, landed: false, hitDone: false,
+  Object.assign(f, { look, sc: (f.model.B ? 1 + (s - 1) * .4 : s) * MSCALE, bulk: f.model.B ? 1 : (LOOKS[look].bulk || 1), name, x: 0, facing: 1, st: 'idle', t: 0, clip: 'D_Idle', ct: 0, fade: .15, hp, maxHp: hp, fur: 0, dmgK, m: null, landed: false, hitDone: false,
     backT: 0, backPress: 9, stun: 0, inv: 0, vx: 0, combo: 0, comboT: 0, I: null, flash: 0, used: {}, shownHp: hp });
   f.model.w = {}; f.model.acts = {}; f.root.position.set(0, 0, DZ);
   return f;
@@ -4141,6 +4143,7 @@ function duelOpen(){
   if (!ASSET.ok) return; audioInit(); hideAll(); ui.hud.hidden = true; duelUi(); mode = 'dsel'; DU.el.sel.hidden = false; DU.el.res.hidden = true; duelSelRender(); $('#dGo').focus({ preventScroll: true });
 }
 function duelStart(){
+  { const k = DRIVAL[DU.rival].kind; if (MX.ok && MX_FILE[k] && !mxHas(k)) { const b = $('#dGo'); if (b) { b.disabled = true; b.textContent = 'Cargando rival…'; } mxEnsure(k).then(() => { if (b) b.disabled = false; duelStart(); }); return; } }
   const E = duelUi(); E.sel.hidden = true; E.res.hidden = true; E.pause.hidden = true; hideAll(); ui.hud.hidden = true; if (IN) introCancel();
   duelClear();
   const R = DRIVAL[DU.rival], lv = LEVELS[R.arena];
@@ -4190,6 +4193,84 @@ function dPow(at, big){ if (!DU.comic) return; const w = POWS[Math.random() * PO
   if (big) { const e = DU.el.flash; e.classList.remove('go'); void e.offsetWidth; e.classList.add('go'); } }
 function dComicPost(){ if (!post.ok || !post.comp) return; const u = post.comp.uniforms; if (!u.comic) return; u.comic.value = DU.comic && mode === 'duel' ? 1 : 0; renderer.getDrawingBufferSize(_v2c); u.px.value.set(1 / _v2c.x, 1 / _v2c.y); }
 const _v2c = new T.Vector2();
+
+/* ============================================================
+   PERSONAJES NUEVOS: modelos de Mixamo (personas con ropa de verdad), uno por papel.
+   Sus huesos se llaman como los del esqueleto del juego (pelvis, spine_01, hand_r…), así que las mismas animaciones valen
+   para todos; como cada modelo tiene su propia pose de reposo, cada animación se corrige al cargarlo para ese cuerpo.
+   Si un modelo no ha llegado (sin conexión, o un jefe que aún se está cargando), sale el muñeco de siempre.
+   ============================================================ */
+const MX_FILE = { hero: 'c_hero', chaval: 'c_chaval', vera: 'c_vera', tinta: 'c_tinta', thug: 'c_thug', punk: 'c_punk', brute: 'c_brute', atleta: 'c_atleta', lanza: 'c_lanza',
+  capo1: 'c_capo1', capo2: 'c_capo2', capo3: 'c_capo3', boss: 'c_boss', capo4: 'c_capo4', capo5: 'c_capo5', capo6: 'c_capo6', capo7: 'c_capo7', capo8: 'c_capo8', capo9: 'c_capo9' };
+const MX_FIRST = ['hero', 'chaval', 'vera', 'tinta', 'thug', 'punk', 'brute', 'atleta', 'lanza'];
+const MX = { ok: false, ref: null, clips: null, bodies: {}, loading: {} };
+const _mq = new T.Quaternion(), _mq2 = new T.Quaternion();
+function mxLoadFile(src){
+  const pack = window.AR_MODELS || (window.AR_MODELS = {});
+  const parse = txt => new Promise((res, rej) => new T.GLTFLoader().parse(txt, '', res, rej));
+  if (pack[src]) return parse(pack[src]);
+  // the installed copy ships each model as its own script, loaded only when needed
+  return new Promise(res => { const s = document.createElement('script'); s.src = 'modelos/' + src + '.js'; s.onload = () => res(!!pack[src]); s.onerror = () => res(false); document.head.appendChild(s); })
+    .then(got => got ? parse(pack[src]) : fetch(MODEL_DIR + src).then(r => { if (!r.ok) throw new Error(src + ' ' + r.status); return r.text(); }).then(parse))
+    .then(g => { delete pack[src]; return g; });
+}
+const restWorld = scene => { scene.updateMatrixWorld(true); const R = {}, par = {}; scene.traverse(o => { if (o.isBone || o.name === 'RootNode') { R[o.name] = o.getWorldQuaternion(new T.Quaternion()); if (o.parent) par[o.name] = o.parent.name; } }); return { R, par }; };
+function mxInit(){
+  return mxLoadFile('m_anims.json').then(g => {
+    const rw = restWorld(g.scene), pel = g.scene.getObjectByName('pelvis');
+    MX.ref = { R: rw.R, hipsY: pel.position.y }; MX.clips = {}; for (const c of g.animations) MX.clips[c.name] = c; MX.ok = true;
+    return Promise.all(MX_FIRST.map(k => mxEnsure(k).catch(() => null)));
+  }).catch(e => { console.warn('Personajes nuevos no disponibles:', e && e.message); });
+}
+function mxEnsure(key){
+  if (!MX.ok || !MX_FILE[key]) return Promise.resolve(null);
+  if (MX.bodies[key]) return Promise.resolve(MX.bodies[key]);
+  return MX.loading[key] || (MX.loading[key] = mxLoadFile(MX_FILE[key] + '.json').then(g => (MX.bodies[key] = mxBody(g))).catch(e => { console.warn(key, e && e.message); return null; }));
+}
+const mxHas = key => !!MX.bodies[key];
+// one body: its own copy of every animation, corrected for its rest pose, plus the guard, the fist and where a weapon sits
+function mxBody(gltf){
+  const scene = gltf.scene, rw = restWorld(scene), ref = MX.ref, D = {};
+  for (const n in rw.R) if (ref.R[n]) D[n] = ref.R[n].clone().invert().multiply(rw.R[n]);
+  const pel = scene.getObjectByName('pelvis'), k = pel.position.y / ref.hipsY, set = {};
+  for (const name in MX.clips) { const c = MX.clips[name].clone();
+    for (const tr of c.tracks) { const dot = tr.name.lastIndexOf('.'), bn = tr.name.slice(0, dot), prop = tr.name.slice(dot + 1);
+      if (prop === 'quaternion' && D[bn]) { const Dp = D[rw.par[bn]], Dpi = Dp ? Dp.clone().invert() : null, v = tr.values;
+        for (let i = 0; i < v.length; i += 4) { _mq.fromArray(v, i); if (Dpi) _mq.premultiply(Dpi); _mq.multiply(D[bn]); _mq.toArray(v, i); } }
+      else if (prop === 'position' && bn === 'pelvis') for (let i = 0; i < tr.values.length; i++) tr.values[i] *= k; }
+    set[name] = c; }
+  // the fist: the fingers of the jab at the moment it lands; the guard: the jab's first frame; walking and jogging with the guard up
+  const jab = set.Punch_Jab, fist = {};
+  for (const tr of jab.tracks) { const bone = tr.name.split('.')[0]; if (!FINGER_RE.test(bone)) continue; const v = tr.createInterpolant().evaluate(.217); fist[bone] = new T.Quaternion(v[0], v[1], v[2], v[3]); }
+  for (const n in set) set[n].tracks = set[n].tracks.filter(tr => !FINGER_RE.test(tr.name));
+  const frozen = (clip, name, t) => new T.AnimationClip(name, 1, clip.tracks.map(tr => new tr.constructor(tr.name, [0], Array.from(tr.createInterpolant().evaluate(t)))));
+  set.Guard = frozen(jab, 'Guard', 0);
+  const guardArms = set.Guard.tracks.filter(tr => ARM_RE.test(tr.name));
+  for (const g of ['Jog_Fwd_Loop', 'Walk_Loop']) set[g + '_G'] = new T.AnimationClip(g + '_G', set[g].duration, set[g].tracks.filter(tr => !ARM_RE.test(tr.name)).concat(guardArms));
+  // a held weapon sits in the right fist, square to the forearm (as for the old bodies)
+  let sk = null; scene.traverse(o => { if (o.isSkinnedMesh && !sk && o.skeleton.bones.some(b => b.name === 'hand_r')) sk = o.skeleton; });
+  const bi = n => sk.bones.findIndex(b => b.name === n), hI = sk.boneInverses[bi('hand_r')], hp = new T.Vector3().setFromMatrixPosition(hI.clone().invert());
+  const dir = hp.clone().sub(new T.Vector3().setFromMatrixPosition(sk.boneInverses[bi('lowerarm_r')].clone().invert())).normalize();
+  const fwd = new T.Vector3(GRIP[0], GRIP[1], GRIP[2]), ax = fwd.sub(dir.clone().multiplyScalar(fwd.dot(dir))).normalize();
+  const grip = hI.clone().multiply(new T.Matrix4().compose(hp.clone().add(dir.clone().multiplyScalar(GRIP[3])), new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), ax), new T.Vector3(1, 1, 1)));
+  scene.updateMatrixWorld(true); const hipsW = pel.getWorldPosition(new T.Vector3()).y;
+  return { scene, clips: set, fist, grip, norm: .92 / hipsW };
+}
+function makeMxFighter(kind, tint, NB){
+  const st = STYLES[kind], L = LOOKS[kind];
+  const root = new T.Group(), rig = new T.Group(), body = new T.Group(); root.add(rig); rig.add(body); rig.rotation.y = FACE;
+  const model = T.SkeletonUtils.clone(NB.scene); model.scale.setScalar(NB.norm); body.add(model);
+  const mats = [], cache = new Map(), bones = {};
+  const one = (m, skin) => { if (!cache.has(m)) { const c = m.clone(); c.skinning = skin; if (c.transparent) { c.transparent = false; c.alphaTest = .5; c.depthWrite = true; }
+      if (tint && /^top/i.test(m.name)) c.color.set(tint); if (!c.emissive) c.emissive = new T.Color(0, 0, 0); cache.set(m, c); mats.push(c); } return cache.get(m); };
+  model.traverse(o => { if (o.isBone) { bones[o.name] = o; if (NB.fist[o.name]) o.quaternion.copy(NB.fist[o.name]); }
+    if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; o.receiveShadow = false; o.material = Array.isArray(o.material) ? o.material.map(m => one(m, !!o.isSkinnedMesh)) : one(o.material, !!o.isSkinnedMesh); } });
+  scene.add(root);
+  const stx = Object.assign({}, st, { s: 1 + (st.s - 1) * .4 }), look = Object.assign({}, L, { bulk: 1 });
+  return { kind, st: stx, root, rig, body, mats, flashN: mats.length, model: { obj: model, mixer: new T.AnimationMixer(model), acts: {}, w: {}, clips: NB.clips, bones, look, kb: 0, kick: 0, tgt: {}, B: NB },
+    pose: null, idleP: POSE.idle, x: 0, y: 0, z: 0, vx: 0, vy: 0, avx: 0, avz: 0, facing: 1, state: 'idle', t: 0, walkT: 0,
+    hp: 100, maxHp: 100, inv: 0, flash: 0, tele: false, spin: 0, seed: Math.random() * 10, hipY: .95 };
+}
 
 /* ---------- main loop ---------- */
 let last = performance.now();
@@ -4273,7 +4354,7 @@ function boot(){
   anunLoad(); buildRain(); buildWorld(0); setupPost(); label();   // the street stays empty until the fighters are loaded, so the plain stand-in dolls never flash on screen
   const pb = $('#btnPlay'); pb.disabled = true; pb.textContent = 'Cargando…';
   const ready = () => { pb.disabled = false; pb.textContent = 'Jugar'; $('#btnDuel').disabled = !(ASSET.ok && ASSET.duel); if (SALON) { openSelect(); avisar({ tipo: 'ejs-inicio' }); } netAuto(); };
-  loadAssets().then(() => { try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
+  loadAssets().then(() => mxInit()).then(() => { setTimeout(() => { for (const k in MX_FILE) mxEnsure(k); }, 4000); try { makePortraits(); } catch (e) { portraits = {}; } setPlayers(['hero']); attract(); ready(); })
     .catch(e => { console.warn('Modelos no disponibles, se usan los muñecos:', e && e.message); ASSET.ok = false; setPlayers(['hero']); attract(); ready(); });
   new ResizeObserver(resize).observe(view); applyQuality(); if (perf.soft) { const g = $('#gpuHint'); g.hidden = false; if (perf.basic) g.textContent = 'Windows no tiene instalado el controlador de tu tarjeta gráfica y dibuja con el procesador, por eso el juego va lento. Instala el controlador de NVIDIA, AMD o Intel desde su web (o con Windows Update) y reinicia. Si es una máquina virtual, activa en ella la aceleración 3D o juega desde el equipo real.'; }
   if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("150px 'Bungee'")]).then(() => { for (const s of sources) if (s.redraw) s.redraw(); }).catch(() => {});

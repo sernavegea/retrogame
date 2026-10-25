@@ -99,7 +99,7 @@ ESPACIOS PUBLICITARIOS
 CREDITOS Y LICENCIAS
   Cuerpos y animaciones: Quaternius (Universal Base Characters y Universal Animation Library), licencia CC0. https://quaternius.com
   Motor 3D: three.js, licencia MIT. https://threejs.org
-  Animaciones del Duelo: Mixamo (Adobe), uso libre en juegos.
+  Animaciones y personajes: Mixamo (Adobe), uso libre en juegos.
   Juego en red: PeerJS, licencia MIT. https://peerjs.com   Codigos QR: qrcode-generator (Kazuhiko Arase), licencia MIT.
 
 CALIDAD Y RENDIMIENTO
